@@ -66,7 +66,7 @@ def get_team_member(db: Session, member_id: int) -> Optional[models.TeamMember]:
     # We'll add squad_memberships as a property to be used by schema conversion
     # rather than trying to set 'squads' directly on the SQLAlchemy model
     
-    # Get squad memberships from the many-to-many relationship
+    # First try to get squad memberships from the many-to-many relationship
     stmt = text("""
         SELECT sm.squad_id, s.name as squad_name, sm.capacity, sm.role
         FROM squad_members sm
@@ -87,7 +87,8 @@ def get_team_member(db: Session, member_id: int) -> Optional[models.TeamMember]:
         for row in result
     ]
     
-    # If no squad memberships found and there's a squad_id, use that
+    # If no squad memberships found from the many-to-many relationship,
+    # check the legacy squad_id relationship
     if not squad_memberships and member.squad_id:
         squad = db.query(models.Squad).filter(models.Squad.id == member.squad_id).first()
         if squad:
@@ -101,7 +102,13 @@ def get_team_member(db: Session, member_id: int) -> Optional[models.TeamMember]:
             ]
     
     # Attach as a property, not overriding the SQLAlchemy relationship
+    # This ensures we're using our custom property and not the SQLAlchemy relationship
     setattr(member, "squad_memberships", squad_memberships)
+    
+    # IMPORTANT: Set squads to None to avoid validation errors with Pydantic
+    # This ensures we're using our squad_memberships property for conversion
+    if hasattr(member, '_sa_instance_state'):
+        member.__dict__['squads'] = None
     
     return member
 

@@ -89,7 +89,9 @@ def get_team_member(member_id: int, db: Session = Depends(get_db)):
     member = crud.get_team_member(db, member_id)
     if not member:
         raise HTTPException(status_code=404, detail="Team member not found")
-    return member
+        
+    # Create a response model with explicit model conversion to avoid validation errors
+    return schemas.TeamMemberDetail.from_orm(member)
 
 # Services
 @app.get("/services", response_model=List[schemas.Service])

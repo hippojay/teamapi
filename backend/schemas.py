@@ -42,16 +42,26 @@ class SquadMembership(BaseModel):
 class TeamMemberDetail(TeamMember):
     squads: List[SquadMembership] = []
     
-    # Custom constructor to handle squad_memberships property from the DB object
+    # Completely override the model_from_orm method
+    # This ensures we don't try to convert Squad objects directly
     @classmethod
     def from_orm(cls, obj):
-        # Create a regular TeamMemberDetail from the DB object
-        instance = super().from_orm(obj)
+        # Extract all the attributes from the object that match our model
+        obj_data = {}
+        for field in cls.__fields__:
+            if field != "squads" and hasattr(obj, field):
+                obj_data[field] = getattr(obj, field)
         
-        # Check if the DB object has squad_memberships property (from our custom function)
+        # Create instance without squads first
+        instance = cls(**obj_data)
+        
+        # Handle squad memberships separately
         if hasattr(obj, 'squad_memberships'):
             # Convert the squad_memberships dictionary items to SquadMembership objects
             instance.squads = [SquadMembership(**sm) for sm in obj.squad_memberships]
+        else:
+            # If squad_memberships is not available, ensure we have an empty list
+            instance.squads = []
             
         return instance
 
