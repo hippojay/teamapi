@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from enum import Enum
 
@@ -27,8 +27,7 @@ class TeamMember(TeamMemberBase):
     supervisor_id: Optional[int] = None
     image_url: Optional[str] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 # This represents a user's membership in a squad with specific capacity
 class SquadMembership(BaseModel):
@@ -37,8 +36,7 @@ class SquadMembership(BaseModel):
     capacity: float
     role: Optional[str] = None
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
         
 class TeamMemberDetail(TeamMember):
     squads: List[SquadMembership] = []
@@ -68,8 +66,7 @@ class Service(ServiceBase):
     id: int
     squad_id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ServiceDetail(Service):
     pass
@@ -83,8 +80,7 @@ class Dependency(DependencyBase):
     dependent_squad_id: int
     dependency_squad_id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class OnCallRosterBase(BaseModel):
     primary_name: str
@@ -96,8 +92,7 @@ class OnCallRoster(OnCallRosterBase):
     id: int
     squad_id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Squad models
 class SquadBase(BaseModel):
@@ -112,8 +107,7 @@ class Squad(SquadBase):
     id: int
     tribe_id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SquadDetail(Squad):
     members: List[TeamMember] = []
@@ -131,8 +125,7 @@ class Tribe(TribeBase):
     id: int
     area_id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TribeDetail(Tribe):
     squads: List[Squad] = []
@@ -147,8 +140,7 @@ class AreaBase(BaseModel):
 class Area(AreaBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AreaDetail(Area):
     tribes: List[Tribe] = []

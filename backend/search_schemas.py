@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 
 class SearchResultItem(BaseModel):
@@ -9,8 +9,7 @@ class SearchResultItem(BaseModel):
     parent_name: Optional[str] = None  # For context (e.g., squad's tribe)
     url: str  # Frontend URL to navigate to
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SearchResults(BaseModel):
     results: List[SearchResultItem] = []

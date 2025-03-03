@@ -150,14 +150,16 @@ const SearchBar = () => {
         <div className="absolute z-50 mt-2 w-96 bg-white rounded-lg shadow-lg border overflow-hidden right-0">
           <div className="p-2 border-b bg-gray-50">
             <div className="text-sm font-medium">
-              {isLoading ? (
-                'Searching...'
-              ) : results.length > 0 ? (
-                `${results.length} results for "${searchTerm}"`
-              ) : (
-                `No results for "${searchTerm}"`
-              )}
-            </div>
+            {isLoading ? (
+            'Searching...'
+            ) : results.length > 0 ? (
+            `${results.length} results for "${searchTerm}"`
+            ) : searchTerm.length >= 3 ? (
+            `No results for "${searchTerm}"`
+            ) : (
+                'Type at least 3 characters to search'
+                )}
+              </div>
           </div>
 
           <div className="max-h-80 overflow-y-auto">

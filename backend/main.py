@@ -133,10 +133,13 @@ def search(q: str, limit: int = 20, db: Session = Depends(get_db)):
     Search across all entity types (areas, tribes, squads, people, services)
     Requires at least 3 characters to perform a search
     """
-    if len(q) < 3:
+    # Clean and validate the search query
+    search_query = q.strip()
+    if len(search_query) < 3:
         return SearchResults(results=[], total=0)
     
-    results = search_crud.search_all(db, q, limit)
+    # Execute the search
+    results = search_crud.search_all(db, search_query, limit)
     return SearchResults(results=results, total=len(results))
 
 if __name__ == "__main__":

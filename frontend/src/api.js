@@ -109,11 +109,16 @@ const api = {
     }
     
     try {
-      const response = await fetch(`${API_URL}/search?q=${encodeURIComponent(query)}`);
+      // Ensure query is properly encoded
+      const encodedQuery = encodeURIComponent(query.trim());
+      const response = await fetch(`${API_URL}/search?q=${encodedQuery}`);
+      
       if (!response.ok) {
         throw new Error('Search failed');
       }
-      return response.json();
+      
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('Error performing search:', error);
       return { results: [], total: 0 };
