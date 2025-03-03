@@ -64,6 +64,16 @@ const UserDetailPage = () => {
     fetchData();
   }, [id]);
 
+  // Calculate total capacity across all squad memberships
+  const calculateTotalCapacity = (user) => {
+    if (!user.squads || user.squads.length === 0) {
+      return user.capacity;
+    }
+    
+    // Sum up capacity from all squad memberships
+    return user.squads.reduce((sum, squadMembership) => sum + squadMembership.capacity, 0);
+  };
+
   // Handle loading state
   if (loading) {
     return <div className="text-center py-10">Loading...</div>;
@@ -78,6 +88,10 @@ const UserDetailPage = () => {
   if (!user) {
     return <div className="text-center py-10">User not found</div>;
   }
+
+  // Get total capacity and check if overcapacity
+  const totalCapacity = calculateTotalCapacity(user);
+  const isOverCapacity = totalCapacity > 1.0;
 
   // Function to generate initials from name
   const getInitials = (name) => {
@@ -144,6 +158,14 @@ const UserDetailPage = () => {
                 <div className={`mt-2 font-medium ${getCapacityColor(user.capacity)}`}>
                   {(user.capacity * 100).toFixed(0)}% Allocation
                 </div>
+                {isOverCapacity && (
+                  <div className="mt-2 px-3 py-1 bg-red-100 border border-red-300 rounded-md text-red-700 text-sm flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>Overcapacity! Total allocation: {(totalCapacity * 100).toFixed(0)}%</span>
+                  </div>
+                )}
                 <div className="mt-2">
                   <span className={`px-2 py-1 rounded-full text-xs ${user.employment_type === 'core' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                     {user.employment_type === 'core' ? 'Core Employee' : 'Contractor'}
@@ -281,6 +303,23 @@ const UserDetailPage = () => {
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Additional Information</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
+                <span className="text-gray-600">Primary Capacity:</span>
+                <span className={`font-medium ${getCapacityColor(user.capacity)}`}>
+                  {(user.capacity * 100).toFixed(0)}%
+                </span>
+              </div>
+              {user.squads && user.squads.length > 1 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Allocation:</span>
+                  <span className={`font-medium ${getCapacityColor(totalCapacity)}`}>
+                    {(totalCapacity * 100).toFixed(0)}%
+                    {isOverCapacity && (
+                      <span className="ml-2 text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full">Overcapacity</span>
+                    )}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between">
                 <span className="text-gray-600">Role:</span>
                 <span>{user.role}</span>
               </div>
@@ -297,12 +336,6 @@ const UserDetailPage = () => {
                 <a href={`mailto:${user.email}`} className="text-blue-600 hover:underline">
                   {user.email}
                 </a>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total Capacity:</span>
-                <span className={`font-medium ${getCapacityColor(user.capacity)}`}>
-                  {(user.capacity * 100).toFixed(0)}%
-                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Employment Type:</span>
