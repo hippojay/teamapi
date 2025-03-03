@@ -80,7 +80,7 @@ def load_data_from_excel(file_path: str, db: Session):
             print(f"Created squad: {squad_name} (ID: {squad.id})")
     
     # Create Team Members
-    members_data = df[['Squad', 'Name', 'Business Email Address', 'Function', 'Current Months Allocation', 'Work Geography', 'Work City']].dropna(subset=['Squad', 'Name', 'Business Email Address'])
+    members_data = df[['Squad', 'Name', 'Business Email Address', 'template', 'Current Months Allocation', 'Work Geography', 'Work City']].dropna(subset=['Squad', 'Name', 'Business Email Address'])
     squad_member_counts = {}
     squad_capacity_totals = {}
     
@@ -113,7 +113,7 @@ def load_data_from_excel(file_path: str, db: Session):
         member = models.TeamMember(
             name=row['Name'],
             email=row['Business Email Address'],
-            role=row['Function'] if not pd.isna(row['Function']) else "Team Member",
+            role=row['template'] if not pd.isna(row['template']) else "Team Member",
             geography=row['Work Geography'] if 'Work Geography' in row and not pd.isna(row['Work Geography']) else None,
             location=row['Work City'] if 'Work City' in row and not pd.isna(row['Work City']) else None,
             squad_id=squad_objects[squad_name].id,
