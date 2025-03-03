@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+numpy
+pandas
+openpyxl
+pydantic
+python-multipart
+xlrd
