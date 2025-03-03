@@ -31,7 +31,11 @@ class Area(Base):
     name = Column(String, unique=True, index=True)
     description = Column(Text, nullable=True)
     member_count = Column(Integer, default=0)
+    core_count = Column(Integer, default=0)  # Count of regular employees
+    subcon_count = Column(Integer, default=0)  # Count of contractors
     total_capacity = Column(Float, default=0.0)
+    core_capacity = Column(Float, default=0.0)  # Capacity of regular employees
+    subcon_capacity = Column(Float, default=0.0)  # Capacity of contractors
     
     # Relationships
     tribes = relationship("Tribe", back_populates="area", cascade="all, delete-orphan")
@@ -44,7 +48,11 @@ class Tribe(Base):
     description = Column(Text, nullable=True)
     area_id = Column(Integer, ForeignKey("areas.id"))
     member_count = Column(Integer, default=0)
+    core_count = Column(Integer, default=0)  # Count of regular employees
+    subcon_count = Column(Integer, default=0)  # Count of contractors
     total_capacity = Column(Float, default=0.0)
+    core_capacity = Column(Float, default=0.0)  # Capacity of regular employees
+    subcon_capacity = Column(Float, default=0.0)  # Capacity of contractors
     
     # Relationships
     area = relationship("Area", back_populates="tribes")
@@ -59,7 +67,11 @@ class Squad(Base):
     status = Column(String, default="Active")
     timezone = Column(String, default="UTC")
     member_count = Column(Integer, default=0)
+    core_count = Column(Integer, default=0)  # Count of regular employees
+    subcon_count = Column(Integer, default=0)  # Count of contractors
     total_capacity = Column(Float, default=0.0)  # Sum of all member capacities
+    core_capacity = Column(Float, default=0.0)  # Capacity of regular employees
+    subcon_capacity = Column(Float, default=0.0)  # Capacity of contractors
     tribe_id = Column(Integer, ForeignKey("tribes.id"))
     
     # Relationships
@@ -89,6 +101,7 @@ class TeamMember(Base):
     geography = Column(String, nullable=True)  # Work Geography (Europe, UK, AMEA)
     capacity = Column(Float, default=1.0)  # Default capacity for primary squad
     image_url = Column(String, nullable=True)  # Profile picture URL
+    employment_type = Column(String, default="core", nullable=True)  # 'core' for regular employees, 'subcon' for contractors
     
     # Relationships
     # Legacy one-to-many relationship (to be deprecated)

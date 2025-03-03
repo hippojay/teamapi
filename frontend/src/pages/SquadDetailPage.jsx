@@ -157,6 +157,29 @@ const SquadDetailPage = () => {
               <Clock className="h-5 w-5" />
               <span>{squad.timezone}</span>
             </div>
+            
+            {/* Core vs Subcon stats */}
+            <div className="flex flex-col space-y-2 text-sm mb-4 p-3 bg-gray-50 rounded-lg">
+              <div className="font-medium text-gray-700">Team Composition:</div>
+              <div className="flex justify-between">
+                <span>Core Employees:</span>
+                <span className="font-medium text-emerald-600">{squad.core_count} ({squad.core_capacity.toFixed(1)} FTE)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Contractors:</span>
+                <span className="font-medium text-amber-600">{squad.subcon_count} ({squad.subcon_capacity.toFixed(1)} FTE)</span>
+              </div>
+              <div className="flex justify-between border-t pt-1">
+                <span>Core/Subcon Ratio:</span>
+                <span className="font-medium text-blue-600">
+                  {squad.core_count > 0 
+                    ? (squad.core_count / (squad.core_count + squad.subcon_count) * 100).toFixed(0) 
+                    : 0}% / {squad.subcon_count > 0 
+                    ? (squad.subcon_count / (squad.core_count + squad.subcon_count) * 100).toFixed(0) 
+                    : 0}%
+                </span>
+              </div>
+            </div>
             <p className="text-gray-600 mb-4">
               {squad.description || `The ${squad.name} squad is responsible for developing and maintaining services for the ${tribe ? tribe.name : ''} tribe.`}
             </p>
@@ -222,6 +245,11 @@ const SquadDetailPage = () => {
                     <div className="flex-grow">
                       <div className="font-medium">{member.name}</div>
                       <div className="text-sm text-gray-600">{member.role}</div>
+                      <div className="text-xs mt-1">
+                        <span className={`px-2 py-0.5 rounded-full ${member.employment_type === 'core' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                          {member.employment_type === 'core' ? 'Core Employee' : 'Contractor'}
+                        </span>
+                      </div>
                     </div>
                     <div className={`text-sm font-medium px-2 py-1 rounded-full ${getCapacityColor(member.capacity)}`}>
                       {(member.capacity * 100).toFixed(0)}%

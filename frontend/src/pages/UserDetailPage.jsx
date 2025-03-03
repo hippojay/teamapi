@@ -144,6 +144,11 @@ const UserDetailPage = () => {
                 <div className={`mt-2 font-medium ${getCapacityColor(user.capacity)}`}>
                   {(user.capacity * 100).toFixed(0)}% Allocation
                 </div>
+                <div className="mt-2">
+                  <span className={`px-2 py-1 rounded-full text-xs ${user.employment_type === 'core' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {user.employment_type === 'core' ? 'Core Employee' : 'Contractor'}
+                  </span>
+                </div>
               </div>
             </div>
             
@@ -297,6 +302,12 @@ const UserDetailPage = () => {
                 <span className="text-gray-600">Total Capacity:</span>
                 <span className={`font-medium ${getCapacityColor(user.capacity)}`}>
                   {(user.capacity * 100).toFixed(0)}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Employment Type:</span>
+                <span className={`font-medium ${user.employment_type === 'core' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  {user.employment_type === 'core' ? 'Core Employee' : 'Contractor'}
                 </span>
               </div>
             </div>

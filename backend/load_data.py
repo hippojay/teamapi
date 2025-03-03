@@ -80,9 +80,15 @@ def load_data_from_excel(file_path: str, db: Session):
             print(f"Created squad: {squad_name} (ID: {squad.id})")
     
     # Create Team Members
-    members_data = df[['Squad', 'Name', 'Business Email Address', 'template', 'Current Months Allocation', 'Work Geography', 'Work City']].dropna(subset=['Squad', 'Name', 'Business Email Address'])
+    members_data = df[['Squad', 'Name', 'Business Email Address', 'template', 'Current Months Allocation', 'Work Geography', 'Work City', 'Regular / Temporary']].dropna(subset=['Squad', 'Name', 'Business Email Address'])
+    
+    # Initialize tracking dictionaries for counts and capacities
     squad_member_counts = {}
     squad_capacity_totals = {}
+    squad_core_counts = {}
+    squad_core_capacity = {}
+    squad_subcon_counts = {}
+    squad_subcon_capacity = {}
     
     for _, row in members_data.iterrows():
         squad_name = row['Squad']
@@ -93,11 +99,27 @@ def load_data_from_excel(file_path: str, db: Session):
         if squad_name not in squad_member_counts:
             squad_member_counts[squad_name] = 0
             squad_capacity_totals[squad_name] = 0.0
+            squad_core_counts[squad_name] = 0
+            squad_core_capacity[squad_name] = 0.0
+            squad_subcon_counts[squad_name] = 0
+            squad_subcon_capacity[squad_name] = 0.0
             
         # Extract capacity from Current Months Allocation
         capacity = 1.0  # Default to 100% if not specified
         if 'Current Months Allocation' in row and not pd.isna(row['Current Months Allocation']):
             capacity = float(row['Current Months Allocation'])
+        
+        # Determine employment type based on 'Regular / Temporary' field
+        employment_type = "core"  # Default
+        if 'Regular / Temporary' in row and not pd.isna(row['Regular / Temporary']):
+            if row['Regular / Temporary'].lower() == "regular":
+                employment_type = "core"
+                squad_core_counts[squad_name] += 1
+                squad_core_capacity[squad_name] += capacity
+            else:  # Anything else is considered a contractor ("Contingent", etc.)
+                employment_type = "subcon"
+                squad_subcon_counts[squad_name] += 1
+                squad_subcon_capacity[squad_name] += capacity
             
         # Create a user avatar URL for some users (randomly)
         image_url = None
@@ -118,7 +140,8 @@ def load_data_from_excel(file_path: str, db: Session):
             location=row['Work City'] if 'Work City' in row and not pd.isna(row['Work City']) else None,
             squad_id=squad_objects[squad_name].id,
             capacity=capacity,
-            image_url=image_url
+            image_url=image_url,
+            employment_type=employment_type
         )
         db.add(member)
         
@@ -130,41 +153,80 @@ def load_data_from_excel(file_path: str, db: Session):
         squad = squad_objects[squad_name]
         squad.member_count = count
         squad.total_capacity = round(squad_capacity_totals.get(squad_name, 0.0), 2)
-        print(f"Updated squad '{squad_name}' with {count} members and total capacity of {squad_capacity_totals.get(squad_name, 0.0):.2f} FTE")
+        squad.core_count = squad_core_counts.get(squad_name, 0)
+        squad.core_capacity = round(squad_core_capacity.get(squad_name, 0.0), 2)
+        squad.subcon_count = squad_subcon_counts.get(squad_name, 0)
+        squad.subcon_capacity = round(squad_subcon_capacity.get(squad_name, 0.0), 2)
+        print(f"Updated squad '{squad_name}' with {count} members (Core: {squad.core_count}, Subcon: {squad.subcon_count}) and total capacity of {squad.total_capacity:.2f} FTE (Core: {squad.core_capacity:.2f}, Subcon: {squad.subcon_capacity:.2f})")
     
     # Update tribe and area counts and capacities
     tribe_member_counts = {}
     tribe_capacity_totals = {}
+    tribe_core_counts = {}
+    tribe_core_capacity = {}
+    tribe_subcon_counts = {}
+    tribe_subcon_capacity = {}
+    
     area_member_counts = {}
     area_capacity_totals = {}
+    area_core_counts = {}
+    area_core_capacity = {}
+    area_subcon_counts = {}
+    area_subcon_capacity = {}
     
     # Calculate tribe totals
     for tribe_name, tribe in tribe_objects.items():
         tribe_squads = db.query(models.Squad).filter_by(tribe_id=tribe.id).all()
         member_count = sum([squad.member_count for squad in tribe_squads])
         capacity = sum([squad.total_capacity for squad in tribe_squads])
+        core_count = sum([squad.core_count for squad in tribe_squads])
+        core_capacity = sum([squad.core_capacity for squad in tribe_squads])
+        subcon_count = sum([squad.subcon_count for squad in tribe_squads])
+        subcon_capacity = sum([squad.subcon_capacity for squad in tribe_squads])
         
         tribe.member_count = member_count
         tribe.total_capacity = round(capacity, 2)
+        tribe.core_count = core_count
+        tribe.core_capacity = round(core_capacity, 2)
+        tribe.subcon_count = subcon_count
+        tribe.subcon_capacity = round(subcon_capacity, 2)
         
         tribe_member_counts[tribe_name] = member_count
         tribe_capacity_totals[tribe_name] = capacity
-        print(f"Updated tribe '{tribe_name}' with {member_count} members and total capacity of {capacity:.2f} FTE")
+        tribe_core_counts[tribe_name] = core_count
+        tribe_core_capacity[tribe_name] = core_capacity
+        tribe_subcon_counts[tribe_name] = subcon_count
+        tribe_subcon_capacity[tribe_name] = subcon_capacity
+        
+        print(f"Updated tribe '{tribe_name}' with {member_count} members (Core: {core_count}, Subcon: {subcon_count}) and total capacity of {capacity:.2f} FTE (Core: {core_capacity:.2f}, Subcon: {subcon_capacity:.2f})")
         
         # Add to area counts
         area_name = area_objects[tribe.area.name].name
         if area_name not in area_member_counts:
             area_member_counts[area_name] = 0
             area_capacity_totals[area_name] = 0.0
+            area_core_counts[area_name] = 0
+            area_core_capacity[area_name] = 0.0
+            area_subcon_counts[area_name] = 0
+            area_subcon_capacity[area_name] = 0.0
         
         area_member_counts[area_name] += member_count
         area_capacity_totals[area_name] += capacity
+        area_core_counts[area_name] += core_count
+        area_core_capacity[area_name] += core_capacity
+        area_subcon_counts[area_name] += subcon_count
+        area_subcon_capacity[area_name] += subcon_capacity
     
     # Update area counts
     for area_name, area in area_objects.items():
         area.member_count = area_member_counts.get(area_name, 0)
         area.total_capacity = round(area_capacity_totals.get(area_name, 0.0), 2)
-        print(f"Updated area '{area_name}' with {area.member_count} members and total capacity of {area.total_capacity:.2f} FTE")
+        area.core_count = area_core_counts.get(area_name, 0)
+        area.core_capacity = round(area_core_capacity.get(area_name, 0.0), 2)
+        area.subcon_count = area_subcon_counts.get(area_name, 0)
+        area.subcon_capacity = round(area_subcon_capacity.get(area_name, 0.0), 2)
+        
+        print(f"Updated area '{area_name}' with {area.member_count} members (Core: {area.core_count}, Subcon: {area.subcon_count}) and total capacity of {area.total_capacity:.2f} FTE (Core: {area.core_capacity:.2f}, Subcon: {area.subcon_capacity:.2f})")
     
     # Add supervisor relationships
     members = db.query(models.TeamMember).all()

@@ -20,6 +20,7 @@ class TeamMemberBase(BaseModel):
     location: Optional[str] = None
     geography: Optional[str] = None
     capacity: float = 1.0
+    employment_type: Optional[str] = "core"  # 'core' or 'subcon'
 
 class TeamMember(TeamMemberBase):
     id: int
@@ -101,7 +102,11 @@ class SquadBase(BaseModel):
     status: str
     timezone: str
     member_count: int
+    core_count: int = 0
+    subcon_count: int = 0
     total_capacity: float
+    core_capacity: float = 0.0
+    subcon_capacity: float = 0.0
 
 class Squad(SquadBase):
     id: int
@@ -119,7 +124,11 @@ class TribeBase(BaseModel):
     name: str
     description: Optional[str] = None
     member_count: int = 0
+    core_count: int = 0
+    subcon_count: int = 0
     total_capacity: float = 0.0
+    core_capacity: float = 0.0
+    subcon_capacity: float = 0.0
 
 class Tribe(TribeBase):
     id: int
@@ -135,7 +144,11 @@ class AreaBase(BaseModel):
     name: str
     description: Optional[str] = None
     member_count: int = 0
+    core_count: int = 0
+    subcon_count: int = 0
     total_capacity: float = 0.0
+    core_capacity: float = 0.0
+    subcon_capacity: float = 0.0
 
 class Area(AreaBase):
     id: int
