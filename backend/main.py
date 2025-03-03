@@ -113,6 +113,11 @@ def get_dependencies(squad_id: int, db: Session = Depends(get_db)):
     dependencies = crud.get_dependencies(db, squad_id)
     return dependencies
 
+@app.get("/dependencies", response_model=List[schemas.Dependency])
+def get_all_dependencies(db: Session = Depends(get_db)):
+    dependencies = crud.get_all_dependencies(db)
+    return dependencies
+
 # On-call roster
 @app.get("/on-call/{squad_id}", response_model=schemas.OnCallRoster)
 def get_on_call(squad_id: int, db: Session = Depends(get_db)):

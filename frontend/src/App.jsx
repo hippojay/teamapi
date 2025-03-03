@@ -14,6 +14,7 @@ import ServicesPage from './pages/ServicesPage';
 import ServiceDetailPage from './pages/ServiceDetailPage';
 import UserDetailPage from './pages/UserDetailPage';
 import UsersPage from './pages/UsersPage';
+import DependencyMapPage from './pages/DependencyMapPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -42,6 +43,9 @@ function App() {
           {/* Users */}
           <Route path="/users" element={<UsersPage />} />
           <Route path="/users/:id" element={<UserDetailPage />} />
+          
+          {/* Dependencies */}
+          <Route path="/dependencies" element={<DependencyMapPage />} />
           
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />

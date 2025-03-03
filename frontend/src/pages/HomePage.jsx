@@ -165,6 +165,28 @@ const HomePage = () => {
         ))}
       </div>
       
+      {/* Dependency Preview */}
+      <h2 className="text-xl font-semibold mb-4">Team Dependencies</h2>
+      <div className="bg-white p-6 rounded-lg shadow-sm border mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-gray-600">
+            Visualize dependencies between squads to understand how teams work together.
+          </p>
+          <Link 
+            to="/dependencies"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            View Full Map
+          </Link>
+        </div>
+        <div className="bg-gray-50 h-40 rounded-lg flex items-center justify-center">
+          <div className="text-center">
+            <GitBranch className="h-10 w-10 mx-auto text-gray-400 mb-2" />
+            <span className="text-gray-500">Interactive dependency visualization</span>
+          </div>
+        </div>
+      </div>
+      
       {/* Quick Links */}
       <h2 className="text-xl font-semibold mb-4">Quick Links</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -202,10 +224,10 @@ const HomePage = () => {
               </Link>
             </li>
             <li>
-              <a href="#" className="text-blue-600 hover:underline flex items-center">
+              <Link to="/dependencies" className="text-blue-600 hover:underline flex items-center">
                 <GitBranch className="h-4 w-4 mr-2" />
                 View Dependencies Map
-              </a>
+              </Link>
             </li>
           </ul>
         </div>

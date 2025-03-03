@@ -119,6 +119,9 @@ def get_service(db: Session, service_id: int) -> Optional[models.Service]:
 def get_dependencies(db: Session, squad_id: int) -> List[models.Dependency]:
     return db.query(models.Dependency).filter(models.Dependency.dependent_squad_id == squad_id).all()
 
+def get_all_dependencies(db: Session) -> List[models.Dependency]:
+    return db.query(models.Dependency).all()
+
 # On-call roster operations
 def get_on_call(db: Session, squad_id: int) -> Optional[models.OnCallRoster]:
     return db.query(models.OnCallRoster).filter(models.OnCallRoster.squad_id == squad_id).first()

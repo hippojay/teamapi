@@ -82,6 +82,11 @@ const api = {
     return response.json();
   },
   
+  getAllDependencies: async () => {
+    const response = await fetch(`${API_URL}/dependencies`);
+    return response.json();
+  },
+  
   // On-Call Roster
   getOnCall: async (squadId) => {
     try {
