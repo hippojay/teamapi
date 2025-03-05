@@ -31,7 +31,45 @@ def get_squads_by_tribe(db: Session, tribe_id: int) -> List[models.Squad]:
     return db.query(models.Squad).filter(models.Squad.tribe_id == tribe_id).all()
 
 def get_squad(db: Session, squad_id: int) -> Optional[models.Squad]:
-    return db.query(models.Squad).filter(models.Squad.id == squad_id).first()
+    # First, get the squad
+    squad = db.query(models.Squad).filter(models.Squad.id == squad_id).first()
+    
+    if not squad:
+        return None
+    
+    # Get team members with capacity information
+    stmt = text("""
+        SELECT tm.*, sm.capacity, sm.role as squad_role
+        FROM team_members tm
+        JOIN squad_members sm ON tm.id = sm.member_id
+        WHERE sm.squad_id = :squad_id
+    """)
+    
+    result = db.execute(stmt, {"squad_id": squad_id}).fetchall()
+    
+    # Create team member objects with capacity information
+    team_members_with_capacity = []
+    for row in result:
+        # Create a team member dict with all attributes
+        member = {
+            "id": row.id,
+            "name": row.name,
+            "email": row.email,
+            "role": row.squad_role if row.squad_role else row.role,  # Use squad-specific role if available
+            "supervisor_id": row.supervisor_id,
+            "location": row.location,
+            "geography": row.geography,
+            "image_url": row.image_url,
+            "employment_type": row.employment_type,
+            "is_external": row.is_external,
+            "capacity": row.capacity  # Add capacity from squad_members
+        }
+        team_members_with_capacity.append(member)
+    
+    # Replace the team_members list with our enhanced version
+    squad.team_members = team_members_with_capacity
+    
+    return squad
 
 # Team Member operations
 def get_team_members(db: Session) -> List[models.TeamMember]:

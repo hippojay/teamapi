@@ -73,7 +73,8 @@ def get_squad(squad_id: int, db: Session = Depends(get_db)):
     squad = crud.get_squad(db, squad_id)
     if not squad:
         raise HTTPException(status_code=404, detail="Squad not found")
-    return squad
+    # Use from_orm method to convert model to response schema
+    return schemas.SquadDetail.from_orm(squad)
 
 # Team Members
 @app.get("/team-members", response_model=List[schemas.TeamMember])

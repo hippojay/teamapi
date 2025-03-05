@@ -231,9 +231,9 @@ const SquadDetailPage = () => {
               <Users className="h-5 w-5 mr-2" />
               Team Members
             </h3>
-            {squad.members && squad.members.length > 0 ? (
+            {squad.team_members && squad.team_members.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {squad.members.map(member => (
+                {squad.team_members.map(member => (
                   <Link 
                     key={member.id} 
                     to={`/users/${member.id}`}
@@ -251,8 +251,8 @@ const SquadDetailPage = () => {
                         </span>
                       </div>
                     </div>
-                    <div className={`text-sm font-medium px-2 py-1 rounded-full ${getCapacityColor(member.capacity)}`}>
-                      {(member.capacity * 100).toFixed(0)}%
+                    <div className={`text-sm font-medium px-2 py-1 rounded-full ${getCapacityColor(member.capacity || 1.0)}`}>
+                      {((member.capacity || 1.0) * 100).toFixed(0)}%
                     </div>
                   </Link>
                 ))}

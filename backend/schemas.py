@@ -127,6 +127,28 @@ class SquadDetail(Squad):
     team_members: List[TeamMember] = []
     services: List[Service] = []
     on_call: Optional[OnCallRoster] = None
+    
+    # Override the model_from_orm method to handle custom team_members attribute
+    @classmethod
+    def from_orm(cls, obj):
+        # Extract all the attributes from the object that match our model
+        obj_data = {}
+        for field in cls.__fields__:
+            if field != "team_members" and hasattr(obj, field):
+                obj_data[field] = getattr(obj, field)
+        
+        # Create instance without team_members first
+        instance = cls(**obj_data)
+        
+        # Handle team_members list separately
+        if hasattr(obj, 'team_members') and isinstance(obj.team_members, list):
+            # Convert the team_members list to TeamMember objects
+            instance.team_members = [TeamMember(**member) if isinstance(member, dict) else member for member in obj.team_members]
+        else:
+            # If team_members is not available or not a list, ensure we have an empty list
+            instance.team_members = []
+            
+        return instance
 
 # Tribe models
 class TribeBase(BaseModel):
