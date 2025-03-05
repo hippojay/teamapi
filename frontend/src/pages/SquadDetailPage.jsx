@@ -245,10 +245,15 @@ const SquadDetailPage = () => {
                     <div className="flex-grow">
                       <div className="font-medium">{member.name}</div>
                       <div className="text-sm text-gray-600">{member.role}</div>
-                      <div className="text-xs mt-1">
+                      <div className="text-xs mt-1 flex flex-wrap gap-1">
                         <span className={`px-2 py-0.5 rounded-full ${member.employment_type === 'core' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                           {member.employment_type === 'core' ? 'Core Employee' : 'Contractor'}
                         </span>
+                        {member.employment_type === 'subcon' && member.vendor_name && (
+                          <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                            {member.vendor_name}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className={`text-sm font-medium px-2 py-1 rounded-full ${getCapacityColor(member.capacity || 1.0)}`}>

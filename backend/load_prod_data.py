@@ -84,7 +84,7 @@ def load_data_from_excel(file_path: str, db: Session):
     
     # Create Team Members
     members_data = df[['Squad', 'Name', 'Business Email Address', 'Position', 'Current Phasing', 
-                       'Work Geography', 'Work City', 'Regular / Temporary', 'Supervisor Name']].dropna(subset=['Squad', 'Name', 'Business Email Address'])
+                       'Work Geography', 'Work City', 'Regular / Temporary', 'Supervisor Name','Vendor Name']].dropna(subset=['Squad', 'Name', 'Business Email Address'])
     
     # Initialize tracking dictionaries for counts and capacities
     squad_member_counts = {}
@@ -133,6 +133,11 @@ def load_data_from_excel(file_path: str, db: Session):
                 employment_type = "subcon"
                 squad_subcon_counts[squad_name] += 1
                 squad_subcon_capacity[squad_name] += capacity
+
+                # For contractors, check if there's a vendor name provided
+                vendor_name = None
+                if 'Vendor Name' in row and not pd.isna(row['Vendor Name']):
+                    vendor_name = row['Vendor Name']
             
         # No random image URL generation for production data
         image_url = None
@@ -169,6 +174,7 @@ def load_data_from_excel(file_path: str, db: Session):
                 location=row['Work City'] if 'Work City' in row and not pd.isna(row['Work City']) else None,
                 image_url=image_url,
                 employment_type=employment_type,
+                vendor_name=vendor_name if employment_type == "subcon" else None,
                 is_external=False  # Regular team member
             )
             db.add(member)

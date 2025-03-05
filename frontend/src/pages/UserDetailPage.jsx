@@ -164,10 +164,15 @@ const UserDetailPage = () => {
                     <span>Overcapacity! Total allocation: {(totalCapacity * 100).toFixed(0)}%</span>
                   </div>
                 )}
-                <div className="mt-2">
+                <div className="mt-2 flex flex-wrap gap-1">
                   <span className={`px-2 py-1 rounded-full text-xs ${user.employment_type === 'core' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                     {user.employment_type === 'core' ? 'Core Employee' : 'Contractor'}
                   </span>
+                  {user.employment_type === 'subcon' && user.vendor_name && (
+                    <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
+                      {user.vendor_name}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -341,6 +346,12 @@ const UserDetailPage = () => {
                   {user.employment_type === 'core' ? 'Core Employee' : 'Contractor'}
                 </span>
               </div>
+              {user.employment_type === 'subcon' && user.vendor_name && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Vendor:</span>
+                <span className="font-medium text-blue-600">{user.vendor_name}</span>
+              </div>
+              )}
             </div>
           </div>
         </div>

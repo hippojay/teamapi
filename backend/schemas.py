@@ -20,6 +20,7 @@ class TeamMemberBase(BaseModel):
     location: Optional[str] = None
     geography: Optional[str] = None
     employment_type: Optional[str] = "core"  # 'core' or 'subcon'
+    vendor_name: Optional[str] = None  # Vendor name for contractors
     is_external: bool = False  # Flag for external supervisors
 
 class TeamMember(TeamMemberBase):
