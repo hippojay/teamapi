@@ -97,6 +97,7 @@ class TeamMember(Base):
     geography = Column(String, nullable=True)  # Work Geography (Europe, UK, AMEA)
     image_url = Column(String, nullable=True)  # Profile picture URL
     employment_type = Column(String, default="core", nullable=True)  # 'core' for regular employees, 'subcon' for contractors
+    is_external = Column(Boolean, default=False)  # Flag for external supervisors not in the squad setup
     
     # Relationships
     # Many-to-many relationship through squad_members association table

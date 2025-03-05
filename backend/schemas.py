@@ -19,8 +19,8 @@ class TeamMemberBase(BaseModel):
     role: str
     location: Optional[str] = None
     geography: Optional[str] = None
-    capacity: float = 1.0
     employment_type: Optional[str] = "core"  # 'core' or 'subcon'
+    is_external: bool = False  # Flag for external supervisors
 
 class TeamMember(TeamMemberBase):
     id: int

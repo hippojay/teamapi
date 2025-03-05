@@ -79,8 +79,14 @@ def load_data_from_excel(file_path: str, db: Session):
             squad_objects[squad_name] = squad
             print(f"Created squad: {squad_name} (ID: {squad.id})")
     
+    # Create dictionaries to track team members and supervisors
+    members_by_email = {}
+    members_by_name = {}
+    supervisors_by_name = {}
+    
     # Create Team Members
-    members_data = df[['Squad', 'Name', 'Business Email Address', 'template', 'Current Months Allocation', 'Work Geography', 'Work City', 'Regular / Temporary']].dropna(subset=['Squad', 'Name', 'Business Email Address'])
+    members_data = df[['Squad', 'Name', 'Business Email Address', 'template', 'Current Months Allocation', 
+                       'Work Geography', 'Work City', 'Regular / Temporary', 'Supervisor Name']].dropna(subset=['Squad', 'Name', 'Business Email Address'])
     
     # Initialize tracking dictionaries for counts and capacities
     squad_member_counts = {}
@@ -90,9 +96,15 @@ def load_data_from_excel(file_path: str, db: Session):
     squad_subcon_counts = {}
     squad_subcon_capacity = {}
     
-    # Create a dictionary to track members by email to handle duplicates in different squads
-    members_by_email = {}
+    # Process supervisors first - Create unique supervisors who aren't already team members
+    supervisor_names = set()
+    for _, row in members_data.iterrows():
+        if not pd.isna(row['Supervisor Name']):
+            supervisor_names.add(row['Supervisor Name'])
     
+    # We'll create these supervisors after processing team members
+    
+    # Process team members
     for _, row in members_data.iterrows():
         squad_name = row['Squad']
         if pd.isna(squad_name) or squad_name not in squad_objects:
@@ -137,6 +149,7 @@ def load_data_from_excel(file_path: str, db: Session):
         
         # Check if this member already exists (by email)
         email = row['Business Email Address']
+        name = row['Name']
         
         if email in members_by_email:
             # Member already exists, add them to the squad through squad_members table
@@ -155,13 +168,14 @@ def load_data_from_excel(file_path: str, db: Session):
         else:
             # Create new team member
             member = models.TeamMember(
-                name=row['Name'],
+                name=name,
                 email=email,
                 role=row['template'] if not pd.isna(row['template']) else "Team Member",
                 geography=row['Work Geography'] if 'Work Geography' in row and not pd.isna(row['Work Geography']) else None,
                 location=row['Work City'] if 'Work City' in row and not pd.isna(row['Work City']) else None,
                 image_url=image_url,
-                employment_type=employment_type
+                employment_type=employment_type,
+                is_external=False  # Regular team member
             )
             db.add(member)
             db.flush()  # Flush to get the member ID
@@ -176,12 +190,53 @@ def load_data_from_excel(file_path: str, db: Session):
                 )
             )
             
-            # Store in dictionary for potential future squad assignments
+            # Store in dictionaries for reference
             members_by_email[email] = member
+            members_by_name[name] = member
             print(f"Created new member {member.name} in squad {squad_name} with capacity {capacity}")
-        
-    # Make sure to commit team members before counting
+    
+    # Make sure to commit team members before adding supervisors
     db.flush()
+    
+    # Now create supervisors who aren't already team members
+    for supervisor_name in supervisor_names:
+        # Skip if this supervisor is already a team member
+        if supervisor_name in members_by_name:
+            supervisors_by_name[supervisor_name] = members_by_name[supervisor_name]
+            continue
+            
+        # Create a placeholder email for the supervisor
+        email_prefix = supervisor_name.lower().replace(' ', '.')
+        supervisor_email = f"{email_prefix}@example.com"
+        
+        # Create external supervisor
+        supervisor = models.TeamMember(
+            name=supervisor_name,
+            email=supervisor_email,
+            role="Supervisor",  # Default role for external supervisors
+            is_external=True  # Mark as external supervisor
+        )
+        db.add(supervisor)
+        db.flush()  # Flush to get the ID
+        
+        supervisors_by_name[supervisor_name] = supervisor
+        print(f"Created external supervisor: {supervisor_name}")
+    
+    # Now set supervisor relationships based on the Supervisor Name field
+    for _, row in members_data.iterrows():
+        if pd.isna(row['Supervisor Name']):
+            continue
+            
+        member_email = row['Business Email Address']
+        supervisor_name = row['Supervisor Name']
+        
+        if member_email in members_by_email and supervisor_name in supervisors_by_name:
+            member = members_by_email[member_email]
+            supervisor = supervisors_by_name[supervisor_name]
+            
+            # Set the supervisor relationship
+            member.supervisor_id = supervisor.id
+            print(f"Set supervisor for {member.name}: {supervisor.name}")
     
     # Update member counts and total capacity directly
     for squad_name, count in squad_member_counts.items():
@@ -262,39 +317,6 @@ def load_data_from_excel(file_path: str, db: Session):
         area.subcon_capacity = round(area_subcon_capacity.get(area_name, 0.0), 2)
         
         print(f"Updated area '{area_name}' with {area.member_count} members (Core: {area.core_count}, Subcon: {area.subcon_count}) and total capacity of {area.total_capacity:.2f} FTE (Core: {area.core_capacity:.2f}, Subcon: {area.subcon_capacity:.2f})")
-    
-    # Add supervisor relationships
-    members = db.query(models.TeamMember).all()
-    for member in members:
-        # 70% chance of having a supervisor from the same squad
-        if random.random() < 0.7:
-            # Get this member's squads from squad_members
-            member_squads_query = text("""
-                SELECT squad_id FROM squad_members WHERE member_id = :member_id
-            """)
-            member_squads = [row[0] for row in db.execute(member_squads_query, {"member_id": member.id}).fetchall()]
-            
-            if member_squads:
-                # Get potential supervisors from the same squads
-                potential_supervisors = []
-                for squad_id in member_squads:
-                    supervisors_query = text("""
-                        SELECT m.id FROM team_members m
-                        JOIN squad_members sm ON m.id = sm.member_id
-                        WHERE sm.squad_id = :squad_id AND m.id != :member_id
-                    """)
-                    supervisors = [row[0] for row in db.execute(
-                        supervisors_query, 
-                        {"squad_id": squad_id, "member_id": member.id}
-                    ).fetchall()]
-                    potential_supervisors.extend(supervisors)
-                
-                # If there are potential supervisors in any of the same squads, assign one
-                if potential_supervisors:
-                    member.supervisor_id = random.choice(potential_supervisors)
-                
-    # We no longer need to artificially add secondary squad members
-    # as we're now loading the actual squad memberships from the data
     
     # Generate Services (sample data)
     for squad_name, squad in squad_objects.items():
