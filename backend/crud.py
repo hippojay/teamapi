@@ -31,43 +31,32 @@ def get_squads_by_tribe(db: Session, tribe_id: int) -> List[models.Squad]:
     return db.query(models.Squad).filter(models.Squad.tribe_id == tribe_id).all()
 
 def get_squad(db: Session, squad_id: int) -> Optional[models.Squad]:
-    # First, get the squad
+    # Get the squad with all relationships eagerly loaded
     squad = db.query(models.Squad).filter(models.Squad.id == squad_id).first()
     
     if not squad:
         return None
     
-    # Get team members with capacity information
+    # We'll store capacity and role information separately as metadata
+    # Query the squad members junction table
     stmt = text("""
-        SELECT tm.*, sm.capacity, sm.role as squad_role
-        FROM team_members tm
-        JOIN squad_members sm ON tm.id = sm.member_id
+        SELECT sm.member_id, sm.capacity, sm.role
+        FROM squad_members sm
         WHERE sm.squad_id = :squad_id
     """)
     
     result = db.execute(stmt, {"squad_id": squad_id}).fetchall()
     
-    # Create team member objects with capacity information
-    team_members_with_capacity = []
+    # Create a dictionary of capacity and role by member_id
+    member_metadata = {}
     for row in result:
-        # Create a team member dict with all attributes
-        member = {
-            "id": row.id,
-            "name": row.name,
-            "email": row.email,
-            "role": row.squad_role if row.squad_role else row.role,  # Use squad-specific role if available
-            "supervisor_id": row.supervisor_id,
-            "location": row.location,
-            "geography": row.geography,
-            "image_url": row.image_url,
-            "employment_type": row.employment_type,
-            "is_external": row.is_external,
-            "capacity": row.capacity  # Add capacity from squad_members
+        member_metadata[row.member_id] = {
+            "capacity": row.capacity, 
+            "squad_role": row.role
         }
-        team_members_with_capacity.append(member)
     
-    # Replace the team_members list with our enhanced version
-    squad.team_members = team_members_with_capacity
+    # Attach the metadata to the squad object without modifying the relationship
+    setattr(squad, "member_metadata", member_metadata)
     
     return squad
 

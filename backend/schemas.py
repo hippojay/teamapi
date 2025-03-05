@@ -123,12 +123,16 @@ class Squad(SquadBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+class TeamMemberWithCapacity(TeamMember):
+    capacity: float = 1.0
+    squad_role: Optional[str] = None
+
 class SquadDetail(Squad):
-    team_members: List[TeamMember] = []
+    team_members: List[TeamMemberWithCapacity] = []
     services: List[Service] = []
     on_call: Optional[OnCallRoster] = None
     
-    # Override the model_from_orm method to handle custom team_members attribute
+    # Override the model_from_orm method to handle team members with capacity
     @classmethod
     def from_orm(cls, obj):
         # Extract all the attributes from the object that match our model
@@ -140,14 +144,30 @@ class SquadDetail(Squad):
         # Create instance without team_members first
         instance = cls(**obj_data)
         
-        # Handle team_members list separately
-        if hasattr(obj, 'team_members') and isinstance(obj.team_members, list):
-            # Convert the team_members list to TeamMember objects
-            instance.team_members = [TeamMember(**member) if isinstance(member, dict) else member for member in obj.team_members]
-        else:
-            # If team_members is not available or not a list, ensure we have an empty list
-            instance.team_members = []
+        # Process team members with their capacity information
+        member_metadata = getattr(obj, 'member_metadata', {})
+        
+        if hasattr(obj, 'team_members'):
+            enhanced_members = []
             
+            for member in obj.team_members:
+                # Create a base team member from the model
+                member_dict = {}
+                for key, value in member.__dict__.items():
+                    if not key.startswith('_'):
+                        member_dict[key] = value
+                
+                # Add capacity and role from metadata if available
+                if member.id in member_metadata:
+                    member_dict['capacity'] = member_metadata[member.id]['capacity']
+                    if member_metadata[member.id]['squad_role']:
+                        member_dict['squad_role'] = member_metadata[member.id]['squad_role']
+                        member_dict['role'] = member_metadata[member.id]['squad_role']
+                
+                enhanced_members.append(TeamMemberWithCapacity(**member_dict))
+            
+            instance.team_members = enhanced_members
+        
         return instance
 
 # Tribe models
