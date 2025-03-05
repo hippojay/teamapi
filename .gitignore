@@ -4,3 +4,5 @@ backend/__pycache__*
 package-lock.json
 backend/team_portal.db
 launch.json
+*.xlsx
+*.xlsb

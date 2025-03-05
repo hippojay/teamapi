@@ -83,7 +83,7 @@ def load_data_from_excel(file_path: str, db: Session):
     supervisors_by_name = {}
     
     # Create Team Members
-    members_data = df[['Squad', 'Name', 'Business Email Address', 'template', 'Current Months Allocation', 
+    members_data = df[['Squad', 'Name', 'Business Email Address', 'Position', 'Current Phasing', 
                        'Work Geography', 'Work City', 'Regular / Temporary', 'Supervisor Name']].dropna(subset=['Squad', 'Name', 'Business Email Address'])
     
     # Initialize tracking dictionaries for counts and capacities
@@ -117,10 +117,10 @@ def load_data_from_excel(file_path: str, db: Session):
             squad_subcon_counts[squad_name] = 0
             squad_subcon_capacity[squad_name] = 0.0
             
-        # Extract capacity from Current Months Allocation
+        # Extract capacity from Current Phasing
         capacity = 1.0  # Default to 100% if not specified
-        if 'Current Months Allocation' in row and not pd.isna(row['Current Months Allocation']):
-            capacity = float(row['Current Months Allocation'])
+        if 'Current Phasing' in row and not pd.isna(row['Current Phasing']):
+            capacity = float(row['Current Phasing'])
         
         # Determine employment type based on 'Regular / Temporary' field
         employment_type = "core"  # Default
@@ -155,7 +155,7 @@ def load_data_from_excel(file_path: str, db: Session):
                     member_id=member.id,
                     squad_id=squad_objects[squad_name].id,
                     capacity=capacity,
-                    role=row['template'] if not pd.isna(row['template']) else "Team Member"
+                    role=row['Position'] if not pd.isna(row['Position']) else "Team Member"
                 )
             )
             print(f"Added existing member {member.name} to additional squad {squad_name} with capacity {capacity}")
@@ -164,7 +164,7 @@ def load_data_from_excel(file_path: str, db: Session):
             member = models.TeamMember(
                 name=name,
                 email=email,
-                role=row['template'] if not pd.isna(row['template']) else "Team Member",
+                role=row['Position'] if not pd.isna(row['Position']) else "Team Member",
                 geography=row['Work Geography'] if 'Work Geography' in row and not pd.isna(row['Work Geography']) else None,
                 location=row['Work City'] if 'Work City' in row and not pd.isna(row['Work City']) else None,
                 image_url=image_url,
@@ -321,7 +321,7 @@ def load_data_from_excel(file_path: str, db: Session):
 
 if __name__ == "__main__":
     # Check if Excel file exists
-    file_path = "dummy_test_people_data.xlsb.xlsx"
+    file_path = "whowhatwhere-prod.xlsx"
     if not os.path.exists(file_path):
         print(f"Error: File not found: {file_path}")
     else:
