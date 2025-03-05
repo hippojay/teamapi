@@ -1,5 +1,6 @@
 import React from 'react';
-import { Users, Home as HomeIcon, Grid, Database, Layers, User } from 'lucide-react';
+import { Users, Home as HomeIcon, Database, Layers, User } from 'lucide-react';
+import CustomGrid from './CustomGrid';
 import { Link, useLocation } from 'react-router-dom';
 import SearchBar from './SearchBar';
 
@@ -22,7 +23,7 @@ const Layout = ({ children }) => {
         {/* Logo/App Name */}
         <div className="p-6 border-b">
           <Link to="/" className="text-xl font-bold text-gray-800 no-underline flex items-center">
-            <Grid className="h-6 w-6 mr-2 text-blue-600" />
+            <CustomGrid className="h-6 w-6 mr-2 text-blue-600" />
             Who What Where
           </Link>
         </div>
@@ -48,7 +49,7 @@ const Layout = ({ children }) => {
                   isActive('/areas') ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600' : ''
                 }`}
               >
-                <Grid className="h-5 w-5 mr-3" />
+                <CustomGrid className="h-5 w-5 mr-3" />
                 <span className="font-medium">Areas</span>
               </Link>
             </li>
