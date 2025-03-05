@@ -97,7 +97,7 @@ const UsersPage = () => {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Team Members</h1>
-        <p className="text-gray-600">View and filter all team members across the organization.</p>
+        <p className="text-gray-600">View and filter all team members across the organisation.</p>
       </div>
       
       {/* Filters */}

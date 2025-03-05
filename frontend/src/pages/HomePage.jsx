@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Database, GitBranch, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../api';
-import OrganizationalGrid from '../components/OrganizationalGrid';
+import OrganisationalGrid from '../components/OrganisationalGrid';
 
 const HomePage = () => {
   const [stats, setStats] = useState({
@@ -125,10 +125,10 @@ const HomePage = () => {
         </div>
       </div>
       
-      {/* Organizational Grid */}
+      {/* Organisational Grid */}
       <div className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">Organization Structure</h2>
-        <OrganizationalGrid />
+        <h2 className="text-xl font-semibold mb-4">Organisation Structure</h2>
+        <OrganisationalGrid />
       </div>
       
       {/* Featured Squads */}
@@ -177,7 +177,7 @@ const HomePage = () => {
       <div className="bg-white p-6 rounded-lg shadow-sm border mb-8">
         <div className="flex items-center justify-between mb-4">
           <p className="text-gray-600">
-            Visualize dependencies between squads to understand how teams work together.
+            Visualise dependencies between squads to understand how teams work together.
           </p>
           <Link 
             to="/dependencies"
@@ -189,7 +189,7 @@ const HomePage = () => {
         <div className="bg-gray-50 h-40 rounded-lg flex items-center justify-center">
           <div className="text-center">
             <GitBranch className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-            <span className="text-gray-500">Interactive dependency visualization</span>
+            <span className="text-gray-500">Interactive dependency visualisation</span>
           </div>
         </div>
       </div>
@@ -198,7 +198,7 @@ const HomePage = () => {
       <h2 className="text-xl font-semibold mb-4">Quick Links</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-3">Explore Organization</h3>
+          <h3 className="text-lg font-semibold mb-3">Explore Organisation</h3>
           <ul className="space-y-2">
             <li>
               <Link to="/areas" className="text-blue-600 hover:underline flex items-center">

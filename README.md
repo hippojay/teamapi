@@ -1,6 +1,6 @@
 # Who What Where - Team API Portal
 
-A prototype of a "Who What Where" team API portal that shows organizational structure, teams, services, and dependencies.
+A prototype of a "Who What Where" team API portal that shows organisational structure, teams, services, and dependencies.
 
 ## Setup and Installation
 
@@ -35,7 +35,7 @@ This will:
 
 ## Features
 
-- **Organizational Structure**: Browse through Areas, Tribes, and Squads
+- **Organisational Structure**: Browse through Areas, Tribes, and Squads
 - **Search**: Search across all entity types (areas, tribes, squads, people, services)
 - **Team Capacity**: View team member allocations and total team capacity
 - **Service Information**: Browse services with status and version information

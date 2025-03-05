@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const OrganizationalGrid = () => {
+const OrganisationalGrid = () => {
   const [selectedBox, setSelectedBox] = useState(null);
   const navigate = useNavigate();
   
@@ -13,8 +13,7 @@ const OrganizationalGrid = () => {
   
   return (
     <div className="w-full max-w-3xl mx-auto">
-      <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">Organizational Structure</h2>
-      
+     
       <div className="relative border-2 border-gray-800 rounded-lg shadow-lg p-0 bg-gray-800">
         {/* Main grid container - using grid layout with black background for gaps */}
         <div className="grid grid-rows-3 gap-4 h-[400px] bg-gray-800 p-4">
@@ -79,7 +78,7 @@ const OrganizationalGrid = () => {
                 onClick={() => handleBoxClick('/services/3', 'Sales Aggregation')} 
                 className="h-16 w-28 rounded-lg bg-white border-2 border-gray-800 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors duration-200"
               >
-                <span className="text-sm font-medium text-gray-800">Sales Aggregation</span>
+                <span className="text-sm justify-center font-medium text-gray-800">Sales Aggregation</span>
               </div>
               
               <div 
@@ -96,4 +95,4 @@ const OrganizationalGrid = () => {
   );
 };
 
-export default OrganizationalGrid;
+export default OrganisationalGrid;

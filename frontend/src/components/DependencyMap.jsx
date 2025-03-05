@@ -37,7 +37,7 @@ const DependencyMap = () => {
     fetchData();
   }, []);
   
-  // Create the visualization whenever data changes
+  // Create the visualisation whenever data changes
   useEffect(() => {
     if (loading || squads.length === 0 || dependencies.length === 0) return;
     
@@ -87,7 +87,7 @@ const DependencyMap = () => {
         type: dep.dependency_type
       }));
     
-    // Clear previous visualization
+    // Clear previous visualisation
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
     
