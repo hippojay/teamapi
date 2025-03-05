@@ -74,11 +74,6 @@ const HomePage = () => {
     <div>
       <h1 className="text-3xl font-bold mb-6">Team API Portal</h1>
       
-      {/* Organizational Grid */}
-      <div className="mb-10">
-        <OrganizationalGrid />
-      </div>
-      
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -128,6 +123,12 @@ const HomePage = () => {
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* Organizational Grid */}
+      <div className="mb-10">
+        <h2 className="text-xl font-semibold mb-4">Organization Structure</h2>
+        <OrganizationalGrid />
       </div>
       
       {/* Featured Squads */}
