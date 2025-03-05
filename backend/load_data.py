@@ -90,6 +90,9 @@ def load_data_from_excel(file_path: str, db: Session):
     squad_subcon_counts = {}
     squad_subcon_capacity = {}
     
+    # Create a dictionary to track members by email to handle duplicates in different squads
+    members_by_email = {}
+    
     for _, row in members_data.iterrows():
         squad_name = row['Squad']
         if pd.isna(squad_name) or squad_name not in squad_objects:
@@ -131,19 +134,51 @@ def load_data_from_excel(file_path: str, db: Session):
         # Increment counter and total capacity
         squad_member_counts[squad_name] += 1
         squad_capacity_totals[squad_name] += capacity
+        
+        # Check if this member already exists (by email)
+        email = row['Business Email Address']
+        
+        if email in members_by_email:
+            # Member already exists, add them to the squad through squad_members table
+            member = members_by_email[email]
             
-        member = models.TeamMember(
-            name=row['Name'],
-            email=row['Business Email Address'],
-            role=row['template'] if not pd.isna(row['template']) else "Team Member",
-            geography=row['Work Geography'] if 'Work Geography' in row and not pd.isna(row['Work Geography']) else None,
-            location=row['Work City'] if 'Work City' in row and not pd.isna(row['Work City']) else None,
-            squad_id=squad_objects[squad_name].id,
-            capacity=capacity,
-            image_url=image_url,
-            employment_type=employment_type
-        )
-        db.add(member)
+            # Add to squad_members table with provided capacity
+            db.execute(
+                models.squad_members.insert().values(
+                    member_id=member.id,
+                    squad_id=squad_objects[squad_name].id,
+                    capacity=capacity,
+                    role=row['template'] if not pd.isna(row['template']) else "Team Member"
+                )
+            )
+            print(f"Added existing member {member.name} to additional squad {squad_name} with capacity {capacity}")
+        else:
+            # Create new team member
+            member = models.TeamMember(
+                name=row['Name'],
+                email=email,
+                role=row['template'] if not pd.isna(row['template']) else "Team Member",
+                geography=row['Work Geography'] if 'Work Geography' in row and not pd.isna(row['Work Geography']) else None,
+                location=row['Work City'] if 'Work City' in row and not pd.isna(row['Work City']) else None,
+                image_url=image_url,
+                employment_type=employment_type
+            )
+            db.add(member)
+            db.flush()  # Flush to get the member ID
+            
+            # Add to squad_members table
+            db.execute(
+                models.squad_members.insert().values(
+                    member_id=member.id,
+                    squad_id=squad_objects[squad_name].id,
+                    capacity=capacity,
+                    role=member.role
+                )
+            )
+            
+            # Store in dictionary for potential future squad assignments
+            members_by_email[email] = member
+            print(f"Created new member {member.name} in squad {squad_name} with capacity {capacity}")
         
     # Make sure to commit team members before counting
     db.flush()
@@ -232,46 +267,34 @@ def load_data_from_excel(file_path: str, db: Session):
     members = db.query(models.TeamMember).all()
     for member in members:
         # 70% chance of having a supervisor from the same squad
-        if random.random() < 0.7 and member.squad_id:
-            potential_supervisors = [
-                m for m in members
-                if m.id != member.id and m.squad_id == member.squad_id
-            ]
+        if random.random() < 0.7:
+            # Get this member's squads from squad_members
+            member_squads_query = text("""
+                SELECT squad_id FROM squad_members WHERE member_id = :member_id
+            """)
+            member_squads = [row[0] for row in db.execute(member_squads_query, {"member_id": member.id}).fetchall()]
             
-            # If there are potential supervisors in the same squad, assign one
-            if potential_supervisors:
-                member.supervisor_id = random.choice(potential_supervisors).id
+            if member_squads:
+                # Get potential supervisors from the same squads
+                potential_supervisors = []
+                for squad_id in member_squads:
+                    supervisors_query = text("""
+                        SELECT m.id FROM team_members m
+                        JOIN squad_members sm ON m.id = sm.member_id
+                        WHERE sm.squad_id = :squad_id AND m.id != :member_id
+                    """)
+                    supervisors = [row[0] for row in db.execute(
+                        supervisors_query, 
+                        {"squad_id": squad_id, "member_id": member.id}
+                    ).fetchall()]
+                    potential_supervisors.extend(supervisors)
                 
-    # Add squad_members table entries
-    # Check if the squad_members table exists
-    inspector = inspect(engine)
-    if 'squad_members' in inspector.get_table_names():
-        print("Populating squad_members table for multi-squad membership...")
-        # For some members (20%), add a secondary squad membership
-        for member in random.sample(members, int(len(members) * 0.2)):
-            # Find a different squad for secondary membership
-            if member.squad_id:
-                other_squads = [
-                    s for s in squad_objects.values()
-                    if s.id != member.squad_id
-                ]
+                # If there are potential supervisors in any of the same squads, assign one
+                if potential_supervisors:
+                    member.supervisor_id = random.choice(potential_supervisors)
                 
-                if other_squads:
-                    secondary_squad = random.choice(other_squads)
-                    # Add to squad_members with a partial capacity
-                    secondary_capacity = round(random.uniform(0.1, 0.5), 2)  # 10-50% allocation
-                    
-                    # Create association - using SQLAlchemy text() for proper SQL execution
-                    stmt = text(f"INSERT INTO squad_members (member_id, squad_id, capacity, role) "
-                             f"VALUES ({member.id}, {secondary_squad.id}, {secondary_capacity}, '{member.role}')")
-                    db.execute(stmt)
-                    
-                    # Also add their primary squad
-                    stmt = text(f"INSERT INTO squad_members (member_id, squad_id, capacity, role) "
-                             f"VALUES ({member.id}, {member.squad_id}, {member.capacity}, '{member.role}')")
-                    db.execute(stmt)
-                    
-                    print(f"Added user {member.name} to secondary squad {secondary_squad.name} with {secondary_capacity*100:.0f}% capacity")
+    # We no longer need to artificially add secondary squad members
+    # as we're now loading the actual squad memberships from the data
     
     # Generate Services (sample data)
     for squad_name, squad in squad_objects.items():
@@ -310,18 +333,25 @@ def load_data_from_excel(file_path: str, db: Session):
     
     # Generate On-Call Rosters (sample data)
     for squad in all_squads:
-        # Get some team members from the squad
-        members = db.query(models.TeamMember).filter_by(squad_id=squad.id).all()
-        if len(members) >= 2:
-            primary = random.choice(members)
-            secondary = random.choice([m for m in members if m.id != primary.id])
+        # Get team members for this squad using squad_members association
+        members_query = text("""
+            SELECT m.id, m.name, m.email 
+            FROM team_members m
+            JOIN squad_members sm ON m.id = sm.member_id
+            WHERE sm.squad_id = :squad_id
+        """)
+        squad_members = db.execute(members_query, {"squad_id": squad.id}).fetchall()
+        
+        if len(squad_members) >= 2:
+            primary = random.choice(squad_members)
+            secondary = random.choice([m for m in squad_members if m[0] != primary[0]])
             
             on_call = models.OnCallRoster(
                 squad_id=squad.id,
-                primary_name=primary.name,
-                primary_contact=primary.email,
-                secondary_name=secondary.name,
-                secondary_contact=secondary.email
+                primary_name=primary[1],
+                primary_contact=primary[2],
+                secondary_name=secondary[1],
+                secondary_contact=secondary[2]
             )
             db.add(on_call)
     

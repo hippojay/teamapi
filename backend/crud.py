@@ -39,22 +39,16 @@ def get_team_members(db: Session) -> List[models.TeamMember]:
 
 def get_team_members_by_squad(db: Session, squad_id: int) -> List[models.TeamMember]:
     """
-    Get team members for a squad using the squad_members association table,
-    but fall back to legacy direct relationship if needed
+    Get team members for a squad using the squad_members association table.
+    This will include all team members assigned to the squad with their appropriate capacities.
     """
-    # Try to get members from the many-to-many relationship
+    # Use the many-to-many relationship through squad_members
     stmt = select(models.TeamMember).join(
         models.squad_members,
         models.TeamMember.id == models.squad_members.c.member_id
     ).where(models.squad_members.c.squad_id == squad_id)
     
-    members = db.execute(stmt).scalars().all()
-    
-    # If no members found, try the legacy relationship
-    if not members:
-        members = db.query(models.TeamMember).filter(models.TeamMember.squad_id == squad_id).all()
-    
-    return members
+    return db.execute(stmt).scalars().all()
 
 def get_team_member(db: Session, member_id: int) -> Optional[models.TeamMember]:
     # Get the team member
@@ -63,10 +57,7 @@ def get_team_member(db: Session, member_id: int) -> Optional[models.TeamMember]:
     if not member:
         return None
     
-    # We'll add squad_memberships as a property to be used by schema conversion
-    # rather than trying to set 'squads' directly on the SQLAlchemy model
-    
-    # First try to get squad memberships from the many-to-many relationship
+    # Get squad memberships from the many-to-many relationship
     stmt = text("""
         SELECT sm.squad_id, s.name as squad_name, sm.capacity, sm.role
         FROM squad_members sm
@@ -76,33 +67,18 @@ def get_team_member(db: Session, member_id: int) -> Optional[models.TeamMember]:
     
     result = db.execute(stmt, {"member_id": member_id}).fetchall()
     
-    # Store as a property on the member object, not as a direct relationship
+    # Store memberships as a property on the member object
     squad_memberships = [
         {
             "squad_id": row[0],
             "squad_name": row[1],
-            "capacity": row[2] if row[2] is not None else member.capacity,
+            "capacity": row[2],
             "role": row[3] if row[3] is not None else member.role
         }
         for row in result
     ]
     
-    # If no squad memberships found from the many-to-many relationship,
-    # check the legacy squad_id relationship
-    if not squad_memberships and member.squad_id:
-        squad = db.query(models.Squad).filter(models.Squad.id == member.squad_id).first()
-        if squad:
-            squad_memberships = [
-                {
-                    "squad_id": squad.id,
-                    "squad_name": squad.name,
-                    "capacity": member.capacity,
-                    "role": member.role
-                }
-            ]
-    
     # Attach as a property, not overriding the SQLAlchemy relationship
-    # This ensures we're using our custom property and not the SQLAlchemy relationship
     setattr(member, "squad_memberships", squad_memberships)
     
     # IMPORTANT: Set squads to None to avoid validation errors with Pydantic

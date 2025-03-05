@@ -24,7 +24,6 @@ class TeamMemberBase(BaseModel):
 
 class TeamMember(TeamMemberBase):
     id: int
-    squad_id: int
     supervisor_id: Optional[int] = None
     image_url: Optional[str] = None
 
@@ -125,7 +124,7 @@ class Squad(SquadBase):
     model_config = ConfigDict(from_attributes=True)
 
 class SquadDetail(Squad):
-    members: List[TeamMember] = []
+    team_members: List[TeamMember] = []
     services: List[Service] = []
     on_call: Optional[OnCallRoster] = None
 

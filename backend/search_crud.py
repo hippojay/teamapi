@@ -63,7 +63,7 @@ def search_all(db: Session, query: str, limit: int = 20):
             name=person.name,
             type="person",
             description=person.role,
-            parent_name=person.squad.name if person.squad else None,
+            parent_name=None,  # No longer using person.squad
             url=f"/users/{person.id}"
         ) for person in people
     ])

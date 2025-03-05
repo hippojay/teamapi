@@ -76,12 +76,9 @@ class Squad(Base):
     
     # Relationships
     tribe = relationship("Tribe", back_populates="squads")
-    # Legacy one-to-many relationship (to be deprecated)
-    members = relationship("TeamMember", back_populates="squad", cascade="all, delete-orphan")
-    # New many-to-many relationship through squad_members association table
+    # Many-to-many relationship through squad_members association table
     team_members = relationship("TeamMember", secondary=squad_members, 
-                              back_populates="squads", 
-                              overlaps="members")
+                              back_populates="squads")
     services = relationship("Service", back_populates="squad", cascade="all, delete-orphan")
     dependencies = relationship("Dependency", 
                               foreign_keys="[Dependency.dependent_squad_id]",
@@ -95,21 +92,16 @@ class TeamMember(Base):
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     role = Column(String)
-    squad_id = Column(Integer, ForeignKey("squads.id"), nullable=True)  # Legacy column for backwards compatibility
     supervisor_id = Column(Integer, ForeignKey("team_members.id"), nullable=True)
     location = Column(String, nullable=True)
     geography = Column(String, nullable=True)  # Work Geography (Europe, UK, AMEA)
-    capacity = Column(Float, default=1.0)  # Default capacity for primary squad
     image_url = Column(String, nullable=True)  # Profile picture URL
     employment_type = Column(String, default="core", nullable=True)  # 'core' for regular employees, 'subcon' for contractors
     
     # Relationships
-    # Legacy one-to-many relationship (to be deprecated)
-    squad = relationship("Squad", back_populates="members")
-    # New many-to-many relationship through squad_members association table
+    # Many-to-many relationship through squad_members association table
     squads = relationship("Squad", secondary=squad_members, 
-                        back_populates="team_members",
-                        overlaps="squad")
+                        back_populates="team_members")
     direct_reports = relationship("TeamMember", 
                                 foreign_keys=[supervisor_id],
                                 backref="supervisor",
