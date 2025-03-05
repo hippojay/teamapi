@@ -67,11 +67,11 @@ const UserDetailPage = () => {
   // Calculate total capacity across all squad memberships
   const calculateTotalCapacity = (user) => {
     if (!user.squads || user.squads.length === 0) {
-      return user.capacity;
+      return user.capacity || 0;
     }
     
     // Sum up capacity from all squad memberships
-    return user.squads.reduce((sum, squadMembership) => sum + squadMembership.capacity, 0);
+    return user.squads.reduce((sum, squadMembership) => sum + (squadMembership.capacity || 0), 0);
   };
 
   // Handle loading state
@@ -153,8 +153,8 @@ const UserDetailPage = () => {
                     <span className="font-medium">Location:</span> {user.location}
                   </div>
                 )}
-                <div className={`mt-2 font-medium ${getCapacityColor(user.capacity)}`}>
-                  {(user.capacity * 100).toFixed(0)}% Allocation
+                <div className={`mt-2 font-medium ${getCapacityColor(user.capacity || 0)}`}>
+                  {((user.capacity || 0) * 100).toFixed(0)}% Allocation
                 </div>
                 {isOverCapacity && (
                   <div className="mt-2 px-3 py-1 bg-red-100 border border-red-300 rounded-md text-red-700 text-sm flex items-center">
@@ -203,8 +203,8 @@ const UserDetailPage = () => {
                       >
                         {squadMembership.squad_name}
                       </Link>
-                      <span className={`font-medium ${getCapacityColor(squadMembership.capacity)}`}>
-                        {(squadMembership.capacity * 100).toFixed(0)}% Allocation
+                      <span className={`font-medium ${getCapacityColor(squadMembership.capacity || 0)}`}>
+                        {((squadMembership.capacity || 0) * 100).toFixed(0)}% Allocation
                       </span>
                     </div>
                     <div className="text-sm text-gray-600">
@@ -222,8 +222,8 @@ const UserDetailPage = () => {
                   >
                     {squad.name}
                   </Link>
-                  <span className={`font-medium ${getCapacityColor(user.capacity)}`}>
-                    {(user.capacity * 100).toFixed(0)}% Allocation
+                  <span className={`font-medium ${getCapacityColor(user.capacity || 0)}`}>
+                    {((user.capacity || 0) * 100).toFixed(0)}% Allocation
                   </span>
                 </div>
                 <div className="text-sm text-gray-600">
@@ -302,8 +302,8 @@ const UserDetailPage = () => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Primary Capacity:</span>
-                <span className={`font-medium ${getCapacityColor(user.capacity)}`}>
-                  {(user.capacity * 100).toFixed(0)}%
+                <span className={`font-medium ${getCapacityColor(user.capacity || 0)}`}>
+                  {((user.capacity || 0) * 100).toFixed(0)}%
                 </span>
               </div>
               {user.squads && user.squads.length > 1 && (

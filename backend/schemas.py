@@ -33,7 +33,7 @@ class TeamMember(TeamMemberBase):
 class SquadMembership(BaseModel):
     squad_id: int
     squad_name: str
-    capacity: float
+    capacity: Optional[float] = 1.0
     role: Optional[str] = None
     
     model_config = ConfigDict(from_attributes=True)
