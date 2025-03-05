@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Database, GitBranch, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../api';
+import OrganizationalGrid from '../components/OrganizationalGrid';
 
 const HomePage = () => {
   const [stats, setStats] = useState({
@@ -72,6 +73,11 @@ const HomePage = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Team API Portal</h1>
+      
+      {/* Organizational Grid */}
+      <div className="mb-10">
+        <OrganizationalGrid />
+      </div>
       
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
