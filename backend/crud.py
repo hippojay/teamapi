@@ -62,7 +62,51 @@ def get_squad(db: Session, squad_id: int) -> Optional[models.Squad]:
 
 # Team Member operations
 def get_team_members(db: Session) -> List[models.TeamMember]:
-    return db.query(models.TeamMember).all()
+    """
+    Get all team members with their total capacity calculated from all squad memberships.
+    """
+    members = db.query(models.TeamMember).all()
+    
+    # Get all squad memberships
+    stmt = text("""
+        SELECT sm.member_id, sm.squad_id, s.name as squad_name, sm.capacity, sm.role
+        FROM squad_members sm
+        JOIN squads s ON sm.squad_id = s.id
+    """)
+    
+    result = db.execute(stmt).fetchall()
+    
+    # Create a dictionary to store squad memberships by member_id
+    memberships_by_member = {}
+    for row in result:
+        if row.member_id not in memberships_by_member:
+            memberships_by_member[row.member_id] = []
+        
+        memberships_by_member[row.member_id].append({
+            "squad_id": row.squad_id,
+            "squad_name": row.squad_name,
+            "capacity": row.capacity,
+            "role": row.role
+        })
+    
+    # Attach memberships and calculate total capacity for each member
+    for member in members:
+        memberships = memberships_by_member.get(member.id, [])
+        
+        # Calculate total capacity across all squad memberships
+        total_capacity = sum(m["capacity"] for m in memberships) if memberships else 0
+        
+        # Store primary squad if any (just use the first one for simplicity)
+        if memberships:
+            setattr(member, "squad_id", memberships[0]["squad_id"])
+        else:
+            setattr(member, "squad_id", None)
+        
+        # Store the capacity and memberships as properties
+        setattr(member, "capacity", total_capacity)
+        setattr(member, "squad_memberships", memberships)
+    
+    return members
 
 def get_team_members_by_squad(db: Session, squad_id: int) -> List[models.TeamMember]:
     """
@@ -75,7 +119,76 @@ def get_team_members_by_squad(db: Session, squad_id: int) -> List[models.TeamMem
         models.TeamMember.id == models.squad_members.c.member_id
     ).where(models.squad_members.c.squad_id == squad_id)
     
-    return db.execute(stmt).scalars().all()
+    members = db.execute(stmt).scalars().all()
+    
+    # Get specific capacity and role information for this squad
+    capacity_stmt = text("""
+        SELECT member_id, capacity, role
+        FROM squad_members
+        WHERE squad_id = :squad_id
+    """)
+    
+    capacity_result = db.execute(capacity_stmt, {"squad_id": squad_id}).fetchall()
+    
+    # Create a dictionary of capacity by member_id
+    capacity_by_member = {}
+    for row in capacity_result:
+        capacity_by_member[row.member_id] = {
+            "capacity": row.capacity,
+            "role": row.role
+        }
+    
+    # Also get all squad memberships for each member to calculate total capacity
+    all_memberships_stmt = text("""
+        SELECT sm.member_id, sm.squad_id, s.name as squad_name, sm.capacity, sm.role
+        FROM squad_members sm
+        JOIN squads s ON sm.squad_id = s.id
+        WHERE sm.member_id IN :member_ids
+    """)
+    
+    member_ids = [member.id for member in members]
+    all_memberships_result = db.execute(all_memberships_stmt, {"member_ids": tuple(member_ids) if member_ids else (0,)}).fetchall()
+    
+    # Group memberships by member_id
+    memberships_by_member = {}
+    for row in all_memberships_result:
+        if row.member_id not in memberships_by_member:
+            memberships_by_member[row.member_id] = []
+        
+        memberships_by_member[row.member_id].append({
+            "squad_id": row.squad_id,
+            "squad_name": row.squad_name,
+            "capacity": row.capacity,
+            "role": row.role
+        })
+    
+    # Attach capacity, role, and total capacity to each member
+    for member in members:
+        # Set squad-specific capacity and role
+        if member.id in capacity_by_member:
+            squad_capacity = capacity_by_member[member.id]["capacity"]
+            squad_role = capacity_by_member[member.id]["role"]
+        else:
+            squad_capacity = 0
+            squad_role = None
+        
+        # Set the capacity for this specific squad
+        setattr(member, "capacity", squad_capacity)
+        if squad_role:
+            setattr(member, "role", squad_role)
+        
+        # Set squad_id
+        setattr(member, "squad_id", squad_id)
+        
+        # Calculate total capacity across all squads
+        all_memberships = memberships_by_member.get(member.id, [])
+        total_capacity = sum(m["capacity"] for m in all_memberships) if all_memberships else 0
+        setattr(member, "total_capacity", total_capacity)
+        
+        # Store all memberships
+        setattr(member, "squad_memberships", all_memberships)
+    
+    return members
 
 def get_team_member(db: Session, member_id: int) -> Optional[models.TeamMember]:
     # Get the team member

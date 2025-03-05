@@ -15,7 +15,9 @@ const UserDetailPage = () => {
   
   // Helper function to get color based on capacity
   const getCapacityColor = (capacity) => {
-    if (capacity > 1.0) {
+    if (!capacity && capacity !== 0) {
+      return "text-gray-600"; // Handle undefined/NaN cases
+    } else if (capacity > 1.0) {
       return "text-red-600"; // Over capacity (red)
     } else if (capacity >= 0.8) {
       return "text-green-600"; // Good capacity (green)
@@ -65,9 +67,11 @@ const UserDetailPage = () => {
   }, [id]);
 
   // Calculate total capacity across all squad memberships
+  // Note: With the updated database model, capacity is only stored in squad_members association table,
+  // not directly on the TeamMember model anymore
   const calculateTotalCapacity = (user) => {
     if (!user.squads || user.squads.length === 0) {
-      return user.capacity || 0;
+      return 0; // No squads means no capacity
     }
     
     // Sum up capacity from all squad memberships
@@ -153,8 +157,8 @@ const UserDetailPage = () => {
                     <span className="font-medium">Location:</span> {user.location}
                   </div>
                 )}
-                <div className={`mt-2 font-medium ${getCapacityColor(user.capacity || 0)}`}>
-                  {((user.capacity || 0) * 100).toFixed(0)}% Allocation
+                <div className={`mt-2 font-medium ${getCapacityColor(totalCapacity)}`}>
+                  {(totalCapacity * 100).toFixed(0)}% Allocation
                 </div>
                 {isOverCapacity && (
                   <div className="mt-2 px-3 py-1 bg-red-100 border border-red-300 rounded-md text-red-700 text-sm flex items-center">
@@ -227,8 +231,8 @@ const UserDetailPage = () => {
                   >
                     {squad.name}
                   </Link>
-                  <span className={`font-medium ${getCapacityColor(user.capacity || 0)}`}>
-                    {((user.capacity || 0) * 100).toFixed(0)}% Allocation
+                  <span className={`font-medium ${getCapacityColor(totalCapacity)}`}>
+                    {(totalCapacity * 100).toFixed(0)}% Allocation
                   </span>
                 </div>
                 <div className="text-sm text-gray-600">
@@ -307,8 +311,8 @@ const UserDetailPage = () => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Primary Capacity:</span>
-                <span className={`font-medium ${getCapacityColor(user.capacity || 0)}`}>
-                  {((user.capacity || 0) * 100).toFixed(0)}%
+                <span className={`font-medium ${getCapacityColor(totalCapacity)}`}>
+                  {(totalCapacity * 100).toFixed(0)}%
                 </span>
               </div>
               {user.squads && user.squads.length > 1 && (

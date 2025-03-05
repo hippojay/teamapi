@@ -74,7 +74,9 @@ const UsersPage = () => {
   
   // Get capacity color
   const getCapacityColor = (capacity) => {
-    if (capacity > 1.0) {
+    if (!capacity && capacity !== 0) {
+      return "bg-gray-100 text-gray-800"; // Handle undefined/NaN cases
+    } else if (capacity > 1.0) {
       return "bg-red-100 text-red-800"; // Over capacity (red)
     } else if (capacity >= 0.8) {
       return "bg-green-100 text-green-800"; // Good capacity (green)
@@ -197,7 +199,7 @@ const UsersPage = () => {
               </div>
               <div className="mt-4 flex justify-between items-center">
                 <span className={`text-sm px-3 py-1 rounded-full ${getCapacityColor(user.capacity)}`}>
-                  {(user.capacity * 100).toFixed(0)}% Capacity
+                  {user.capacity !== null && user.capacity !== undefined ? `${(user.capacity * 100).toFixed(0)}%` : '0%'} Capacity
                 </span>
                 {user.squad_id && (
                   <span className="text-sm text-blue-600 font-medium">

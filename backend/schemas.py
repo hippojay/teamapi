@@ -27,6 +27,8 @@ class TeamMember(TeamMemberBase):
     id: int
     supervisor_id: Optional[int] = None
     image_url: Optional[str] = None
+    capacity: Optional[float] = None  # Added capacity field for total capacity
+    squad_id: Optional[int] = None  # For backwards compatibility
 
     model_config = ConfigDict(from_attributes=True)
 
