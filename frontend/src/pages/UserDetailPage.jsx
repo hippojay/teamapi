@@ -108,8 +108,6 @@ const UserDetailPage = () => {
       <div className="flex items-center text-sm text-gray-600 mb-6">
         <Link to="/" className="hover:text-blue-500">Home</Link>
         <ChevronRight className="h-4 w-4 mx-2" />
-        <Link to="/squads" className="hover:text-blue-500">Squads</Link>
-        <ChevronRight className="h-4 w-4 mx-2" />
         {squad && (
           <>
             <Link to={`/squads/${squad.id}`} className="hover:text-blue-500">{squad.name}</Link>
