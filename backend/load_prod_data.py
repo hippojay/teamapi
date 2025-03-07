@@ -5,10 +5,101 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from database import SessionLocal, engine, Base
 import models
-from models import ServiceStatus, DependencyType
+from models import ServiceStatus, DependencyType, ServiceType
 
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)
+
+def load_services_data(file_path: str, db: Session, append_mode: bool = False, sheet_name: str = "Services"):
+    """
+    Load services data from Excel file into the database
+    
+    Parameters:
+    - file_path: Path to the Excel file
+    - db: Database session
+    - append_mode: If True, will update existing records rather than creating duplicates
+    - sheet_name: Name of the Excel sheet to load (default: "Services")
+    """
+    print(f"Loading services data from {file_path}, sheet: {sheet_name}")
+    
+    # Read the Excel file
+    try:
+        df = pd.read_excel(file_path, sheet_name=sheet_name)
+        print(f"Successfully read Excel file with {len(df)} rows")
+    except Exception as e:
+        print(f"Error reading Excel file or sheet '{sheet_name}': {e}")
+        return
+    
+    # Get existing squads by name for reference
+    squads_by_name = {squad.name: squad for squad in db.query(models.Squad).all()}
+    
+    # Get existing services if in append mode
+    existing_services = {}
+    if append_mode:
+        for service in db.query(models.Service).all():
+            key = f"{service.name}_{service.squad_id}"
+            existing_services[key] = service
+    
+    # Process each service
+    for _, row in df.iterrows():
+        # Skip rows with missing required fields
+        if pd.isna(row['Service Name']) or pd.isna(row['Squad Name']):
+            print(f"Skipping row with missing required fields: {row}")
+            continue
+        
+        # Get the squad_id from the squad name
+        squad_name = row['Squad Name']
+        if squad_name not in squads_by_name:
+            print(f"Warning: Squad '{squad_name}' not found for service '{row['Service Name']}'. Skipping.")
+            continue
+        
+        squad_id = squads_by_name[squad_name].id
+        
+        # Determine service type from the Type column
+        service_type = ServiceType.API  # Default
+        if 'Type' in row and not pd.isna(row['Type']):
+            type_str = row['Type'].lower()
+            if type_str == 'api':
+                service_type = ServiceType.API
+            elif 'repo' in type_str or 'repository' in type_str:
+                service_type = ServiceType.REPO
+            elif 'platform' in type_str:
+                service_type = ServiceType.PLATFORM
+            elif 'web' in type_str or 'webpage' in type_str:
+                service_type = ServiceType.WEBPAGE
+            elif 'app' in type_str or 'module' in type_str:
+                service_type = ServiceType.APP_MODULE
+        
+        # Check if this service already exists
+        service_key = f"{row['Service Name']}_{squad_id}"
+        if append_mode and service_key in existing_services:
+            # Update existing service
+            service = existing_services[service_key]
+            service.description = row['Description'] if 'Description' in row and not pd.isna(row['Description']) else service.description
+            service.service_type = service_type
+            service.url = row['URL'] if 'URL' in row and not pd.isna(row['URL']) else service.url
+            service.version = row['Version'] if 'Version' in row and not pd.isna(row['Version']) else service.version
+            service.status = ServiceStatus.HEALTHY  # Default to healthy
+            
+            print(f"Updated existing service: {service.name} (ID: {service.id})")
+        else:
+            # Create new service
+            service = models.Service(
+                name=row['Service Name'],
+                description=row['Description'] if 'Description' in row and not pd.isna(row['Description']) else "",
+                service_type=service_type,
+                url=row['URL'] if 'URL' in row and not pd.isna(row['URL']) else None,
+                version=row['Version'] if 'Version' in row and not pd.isna(row['Version']) else "1.0.0",
+                status=ServiceStatus.HEALTHY,  # Default to healthy
+                uptime=99.9,  # Default uptime
+                squad_id=squad_id
+            )
+            db.add(service)
+            print(f"Created new service: {service.name} (Type: {service.service_type.value})")
+    
+    # Commit all changes
+    db.commit()
+    print(f"Services data successfully loaded from {file_path}!")
 
 def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False, sheet_name: str = "Sheet1"):
     """
@@ -501,6 +592,7 @@ def parse_args():
     parser.add_argument('--files', nargs='+', help='Multiple files to load (space-separated)')
     parser.add_argument('--sheet', '-s', type=str, dest='sheet_name', default="Sheet1", 
                         help='Name of the Excel sheet to load (default: "Sheet1")')
+    parser.add_argument('--services', action='store_true', help='Load services data from the Excel file')
     
     return parser.parse_args()
 
@@ -537,6 +629,13 @@ if __name__ == "__main__":
             # First file uses append mode only if specified
             # Subsequent files always use append mode
             should_append = args.append or i > 0
-            load_data_from_excel(file_path, db, append_mode=should_append, sheet_name=args.sheet_name)
+            
+            if args.services:
+                # Load services data
+                service_sheet = "Sheet1" if args.sheet_name == "Sheet1" else args.sheet_name
+                load_services_data(file_path, db, append_mode=should_append, sheet_name=service_sheet)
+            else:
+                # Load regular team data
+                load_data_from_excel(file_path, db, append_mode=should_append, sheet_name=args.sheet_name)
     finally:
         db.close()

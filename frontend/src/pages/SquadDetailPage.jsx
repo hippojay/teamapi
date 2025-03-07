@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Users, Database, GitBranch, Bell, Clock, ChevronRight } from 'lucide-react';
+import { Users, Database, GitBranch, Bell, Clock, ChevronRight, Globe, Server, Smartphone, Code } from 'lucide-react';
 import DescriptionEditor from '../components/DescriptionEditor';
 import api from '../api';
 
@@ -83,6 +83,23 @@ const SquadDetailPage = () => {
   if (!squad) {
     return <div className="text-center py-10">Squad not found</div>;
   }
+
+  const getServiceIcon = (serviceType) => {
+    switch (serviceType) {
+      case 'api':
+        return <Code className="h-4 w-4 text-blue-600" />;
+      case 'repository':
+        return <GitBranch className="h-4 w-4 text-purple-600" />;
+      case 'platform':
+        return <Server className="h-4 w-4 text-green-600" />;
+      case 'webpage':
+        return <Globe className="h-4 w-4 text-orange-600" />;
+      case 'app_module':
+        return <Smartphone className="h-4 w-4 text-red-600" />;
+      default:
+        return <Database className="h-4 w-4 text-gray-600" />;
+    }
+  };
 
   const getStatusBadge = (status) => {
     switch (status.toLowerCase()) {
@@ -214,29 +231,37 @@ const SquadDetailPage = () => {
               <Database className="h-5 w-5 mr-2" />
               Owned Services
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-2">
               {services.length > 0 ? (
                 services.map(service => (
-                  <div key={service.id} className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-800">{service.name}</h4>
+                  <Link key={service.id} to={`/services/${service.id}`} 
+                    className="flex items-center justify-between px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center">
+                      <div className="mr-2">
+                        {getServiceIcon(service.service_type)}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-800">{service.name}</span>
+                        <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600">
+                          {service.service_type || 'api'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">v{service.version}</span>
                       {getStatusBadge(service.status)}
+                      <ChevronRight className="h-4 w-4 text-gray-400" />
                     </div>
-                    <p className="text-gray-600 text-sm mb-2">{service.description}</p>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <span>{service.uptime}% Uptime</span>
-                      <span>•</span>
-                      <span>v{service.version}</span>
-                      <span>•</span>
-                      {service.api_docs_url && (
-                        <a href={service.api_docs_url} className="text-blue-500 hover:underline">API Docs</a>
-                      )}
-                    </div>
-                  </div>
+                  </Link>
                 ))
               ) : (
                 <div className="text-gray-500 text-center py-4">No services found</div>
               )}
+            </div>
+            <div className="mt-3 pt-3 border-t text-right">
+              <button className="text-sm text-blue-600 hover:text-blue-800">
+                Add Service
+              </button>
             </div>
           </div>
 

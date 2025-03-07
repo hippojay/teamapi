@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Database, ChevronRight, Activity, GitBranch, Code } from 'lucide-react';
+import { Database, ChevronRight, Activity, GitBranch, Code, Globe, Server, Smartphone } from 'lucide-react';
 import api from '../api';
 
 const ServiceDetailPage = () => {
@@ -86,8 +86,13 @@ const ServiceDetailPage = () => {
       <div className="bg-white p-6 rounded-lg shadow-sm border mb-6">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-semibold flex items-center">
-            <Database className="h-6 w-6 mr-2 text-blue-500" />
+            {service.service_type === 'api' && <Code className="h-6 w-6 mr-2 text-blue-500" />}
+            {service.service_type === 'repository' && <GitBranch className="h-6 w-6 mr-2 text-blue-500" />}
+            {service.service_type === 'platform' && <Server className="h-6 w-6 mr-2 text-blue-500" />}
+            {service.service_type === 'webpage' && <Globe className="h-6 w-6 mr-2 text-blue-500" />}
+            {service.service_type === 'app_module' && <Smartphone className="h-6 w-6 mr-2 text-blue-500" />}
             {service.name}
+            <span className="text-sm ml-2 px-2 py-1 bg-gray-100 text-gray-700 rounded-full">{service.service_type}</span>
           </h1>
           {getStatusBadge(service.status)}
         </div>
@@ -102,12 +107,12 @@ const ServiceDetailPage = () => {
             </span>
             <span>•</span>
             <span>v{service.version}</span>
-            {service.api_docs_url && (
+            {service.url && (
               <>
                 <span>•</span>
-                <a href={service.api_docs_url} className="text-blue-500 hover:underline flex items-center">
+                <a href={service.url} className="text-blue-500 hover:underline flex items-center">
                   <Code className="h-4 w-4 mr-1" />
-                  API Docs
+                  {service.service_type === 'api' ? 'API Docs' : 'Link'}
                 </a>
               </>
             )}
@@ -160,10 +165,14 @@ const ServiceDetailPage = () => {
               <span className="text-gray-600">Uptime:</span>
               <span>{service.uptime}%</span>
             </div>
-            {service.api_docs_url && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Service Type:</span>
+              <span>{service.service_type}</span>
+            </div>
+            {service.url && (
               <div className="flex justify-between">
-                <span className="text-gray-600">API Documentation:</span>
-                <a href={service.api_docs_url} className="text-blue-500 hover:underline">
+                <span className="text-gray-600">{service.service_type === 'api' ? 'API Documentation' : 'URL'}:</span>
+                <a href={service.url} className="text-blue-500 hover:underline">
                   Link
                 </a>
               </div>

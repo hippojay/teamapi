@@ -137,6 +137,13 @@ class TeamMember(Base):
                                 backref="supervisor",
                                 remote_side=[id])
 
+class ServiceType(enum.Enum):
+    API = "api"
+    REPO = "repository"
+    PLATFORM = "platform"
+    WEBPAGE = "webpage"
+    APP_MODULE = "app_module"
+
 class Service(Base):
     __tablename__ = "services"
 
@@ -148,6 +155,8 @@ class Service(Base):
     version = Column(String, default="1.0.0")
     api_docs_url = Column(String, nullable=True)
     squad_id = Column(Integer, ForeignKey("squads.id"))
+    service_type = Column(Enum(ServiceType), default=ServiceType.API)
+    url = Column(String, nullable=True)  # Generic URL for any service type
     
     # Relationships
     squad = relationship("Squad", back_populates="services")

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Database, ChevronRight } from 'lucide-react';
+import { Database, ChevronRight, Globe, GitBranch, Server, Smartphone, Code } from 'lucide-react';
 import api from '../api';
 
 const ServicesPage = () => {
@@ -76,7 +76,11 @@ const ServicesPage = () => {
               <div key={service.id} className="bg-white p-6 rounded-lg shadow-sm border">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                    <Database className="h-5 w-5 mr-2 text-blue-500" />
+                    {service.service_type === 'api' && <Code className="h-5 w-5 mr-2 text-blue-500" />}
+                    {service.service_type === 'repository' && <GitBranch className="h-5 w-5 mr-2 text-blue-500" />}
+                    {service.service_type === 'platform' && <Server className="h-5 w-5 mr-2 text-blue-500" />}
+                    {service.service_type === 'webpage' && <Globe className="h-5 w-5 mr-2 text-blue-500" />}
+                    {service.service_type === 'app_module' && <Smartphone className="h-5 w-5 mr-2 text-blue-500" />}
                     {service.name}
                   </h2>
                   {getStatusBadge(service.status)}
@@ -96,13 +100,13 @@ const ServicesPage = () => {
                   <span>{service.uptime}% Uptime</span>
                   <span>•</span>
                   <span>v{service.version}</span>
-                  {service.api_docs_url && (
-                    <>
-                      <span>•</span>
-                      <a href={service.api_docs_url} className="text-blue-500 hover:underline">
-                        API Docs
-                      </a>
-                    </>
+                  {service.url && (
+                  <>
+                  <span>•</span>
+                  <a href={service.url} className="text-blue-500 hover:underline">
+                  {service.service_type === 'api' ? 'API Docs' : 'Link'}
+                  </a>
+                  </>
                   )}
                 </div>
               </div>

@@ -9,6 +9,13 @@ class ServiceStatus(str, Enum):
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     DOWN = "down"
+    
+class ServiceType(str, Enum):
+    API = "api"
+    REPO = "repository"
+    PLATFORM = "platform"
+    WEBPAGE = "webpage"
+    APP_MODULE = "app_module"
 
 class DependencyType(str, Enum):
     REQUIRED = "required"
@@ -76,6 +83,8 @@ class ServiceBase(BaseModel):
     uptime: float
     version: str
     api_docs_url: Optional[str] = None
+    service_type: ServiceType = ServiceType.API
+    url: Optional[str] = None
 
 class Service(ServiceBase):
     id: int
