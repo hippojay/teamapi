@@ -1,6 +1,8 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
 from typing import List, Optional
 from enum import Enum
+
+from datetime import datetime
 
 # Enums
 class ServiceStatus(str, Enum):
@@ -211,3 +213,44 @@ class Area(AreaBase):
 
 class AreaDetail(Area):
     tribes: List[Tribe] = []
+
+
+# User and Authentication schemas
+class UserBase(BaseModel):
+    username: str
+    email: EmailStr
+    is_admin: bool = False
+
+class UserCreate(UserBase):
+    password: str
+
+class User(UserBase):
+    id: int
+    is_active: bool
+    created_at: datetime
+    last_login: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+# Token schemas
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+# Description Edit schemas
+class DescriptionUpdate(BaseModel):
+    description: str
+
+class DescriptionEdit(BaseModel):
+    id: int
+    entity_type: str
+    entity_id: int
+    description: str
+    edited_by: int
+    edited_at: datetime
+    editor: User
+
+    model_config = ConfigDict(from_attributes=True)

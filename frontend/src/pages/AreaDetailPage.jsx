@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Users, ChevronRight } from 'lucide-react';
 import TeamCompositionBar from '../components/TeamCompositionBar';
+import DescriptionEditor from '../components/DescriptionEditor';
 import api from '../api';
 
 const AreaDetailPage = () => {
@@ -90,9 +91,17 @@ const AreaDetailPage = () => {
             subcon_capacity={area.subcon_capacity || 0}
           />
         )}
-        {area.description && (
-          <p className="text-gray-600 mb-2">{area.description}</p>
-        )}
+        <div className="text-gray-600 mb-2">
+          <DescriptionEditor
+            entityType="area"
+            entityId={area.id}
+            initialDescription={area.description}
+            onDescriptionUpdated={(newDescription) => {
+              // Update the local state with the new description
+              setArea({...area, description: newDescription});
+            }}
+          />
+        </div>
       </div>
 
       {/* Tribes in this Area */}

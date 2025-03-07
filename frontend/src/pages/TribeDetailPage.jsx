@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Users, ChevronRight, Clock } from 'lucide-react';
 import TeamCompositionBar from '../components/TeamCompositionBar';
+import DescriptionEditor from '../components/DescriptionEditor';
 import api from '../api';
 
 const TribeDetailPage = () => {
@@ -111,9 +112,17 @@ const TribeDetailPage = () => {
           core_capacity={tribe.core_capacity} 
           subcon_capacity={tribe.subcon_capacity}
         />
-        {tribe.description && (
-          <p className="text-gray-600 mb-2">{tribe.description}</p>
-        )}
+        <div className="text-gray-600 mb-2">
+          <DescriptionEditor
+            entityType="tribe"
+            entityId={tribe.id}
+            initialDescription={tribe.description}
+            onDescriptionUpdated={(newDescription) => {
+              // Update the local state with the new description
+              setTribe({...tribe, description: newDescription});
+            }}
+          />
+        </div>
       </div>
 
       {/* Squads in this Tribe */}

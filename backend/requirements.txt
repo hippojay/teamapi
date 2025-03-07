@@ -7,3 +7,6 @@ openpyxl
 pydantic
 python-multipart
 xlrd
+python-jose[cryptography]
+passlib[bcrypt]
+email-validator

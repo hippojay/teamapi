@@ -1,4 +1,5 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Text, Enum, Table
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Text, Enum, Table, DateTime
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import enum
 
@@ -23,6 +24,33 @@ class ServiceStatus(enum.Enum):
 class DependencyType(enum.Enum):
     REQUIRED = "required"
     OPTIONAL = "optional"
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=func.now())
+    last_login = Column(DateTime, nullable=True)
+
+class DescriptionEdit(Base):
+    __tablename__ = "description_edits"
+
+    id = Column(Integer, primary_key=True, index=True)
+    entity_type = Column(String)  # 'area', 'tribe', 'squad'
+    entity_id = Column(Integer)
+    description = Column(Text)
+    edited_by = Column(Integer, ForeignKey("users.id"))
+    edited_at = Column(DateTime, default=func.now())
+    
+    # Relationship to the user who made the edit
+    editor = relationship("User")
+
 
 class Area(Base):
     __tablename__ = "areas"

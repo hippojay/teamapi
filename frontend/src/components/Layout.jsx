@@ -1,10 +1,16 @@
-import React from 'react';
-import { Users, Home as HomeIcon, Database, Layers, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronDown } from 'lucide-react';
 import CustomGrid from './CustomGrid';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import LoginModal from './LoginModal';
 import SearchBar from './SearchBar';
 
 const Layout = ({ children }) => {
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -100,10 +106,26 @@ const Layout = ({ children }) => {
           </ul>
         </nav>
         
-        {/* Footer - Optional */}
+        {/* Footer with Login Button */}
         <div className="p-4 border-t text-xs text-gray-500">
-          <p>Who What Where - v1.0</p>
+          <p className="mb-3">Who What Where - v1.0</p>
+          
+          {!isAuthenticated && (
+            <button 
+              onClick={() => setShowLoginModal(true)}
+              className="w-full flex items-center justify-center space-x-2 p-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <LogIn className="h-4 w-4" />
+              <span>Log In</span>
+            </button>
+          )}
         </div>
+        
+        {/* Login Modal */}
+        <LoginModal 
+          isOpen={showLoginModal} 
+          onClose={() => setShowLoginModal(false)} 
+        />
       </div>
       
       {/* Main Content */}
@@ -126,8 +148,35 @@ const Layout = ({ children }) => {
             <SearchBar />
           </div>
           
-          <div className="w-1/3">
-            {/* Empty div to maintain spacing */}
+          <div className="w-1/3 flex justify-end">
+            {isAuthenticated && user && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center space-x-1 text-gray-700 hover:text-gray-900 p-2 rounded-md hover:bg-gray-100"
+                >
+                  <User className="h-5 w-5" />
+                  <span>{user.username}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+                
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border overflow-hidden z-10">
+                    <button
+                      onClick={() => {
+                        logout();
+                        setShowUserMenu(false);
+                        navigate('/');
+                      }}
+                      className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Log out
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </header>
         

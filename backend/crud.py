@@ -5,30 +5,87 @@ from sqlalchemy.sql import text
 
 import models
 import schemas
+import user_crud
 
 # Area operations
 def get_areas(db: Session) -> List[models.Area]:
-    return db.query(models.Area).all()
+    areas = db.query(models.Area).all()
+    
+    # Check for edited descriptions
+    for area in areas:
+        edited_description = user_crud.get_entity_description(db, "area", area.id)
+        if edited_description is not None:
+            area.description = edited_description
+            
+    return areas
 
 def get_area(db: Session, area_id: int) -> Optional[models.Area]:
-    return db.query(models.Area).filter(models.Area.id == area_id).first()
+    area = db.query(models.Area).filter(models.Area.id == area_id).first()
+    
+    if area:
+        # Check for edited description
+        edited_description = user_crud.get_entity_description(db, "area", area_id)
+        if edited_description is not None:
+            area.description = edited_description
+            
+    return area
 
 # Tribe operations
 def get_tribes(db: Session) -> List[models.Tribe]:
-    return db.query(models.Tribe).all()
+    tribes = db.query(models.Tribe).all()
+    
+    # Check for edited descriptions
+    for tribe in tribes:
+        edited_description = user_crud.get_entity_description(db, "tribe", tribe.id)
+        if edited_description is not None:
+            tribe.description = edited_description
+            
+    return tribes
 
 def get_tribes_by_area(db: Session, area_id: int) -> List[models.Tribe]:
-    return db.query(models.Tribe).filter(models.Tribe.area_id == area_id).all()
+    tribes = db.query(models.Tribe).filter(models.Tribe.area_id == area_id).all()
+    
+    # Check for edited descriptions
+    for tribe in tribes:
+        edited_description = user_crud.get_entity_description(db, "tribe", tribe.id)
+        if edited_description is not None:
+            tribe.description = edited_description
+            
+    return tribes
 
 def get_tribe(db: Session, tribe_id: int) -> Optional[models.Tribe]:
-    return db.query(models.Tribe).filter(models.Tribe.id == tribe_id).first()
+    tribe = db.query(models.Tribe).filter(models.Tribe.id == tribe_id).first()
+    
+    if tribe:
+        # Check for edited description
+        edited_description = user_crud.get_entity_description(db, "tribe", tribe_id)
+        if edited_description is not None:
+            tribe.description = edited_description
+            
+    return tribe
 
 # Squad operations
 def get_squads(db: Session) -> List[models.Squad]:
-    return db.query(models.Squad).all()
+    squads = db.query(models.Squad).all()
+    
+    # Check for edited descriptions
+    for squad in squads:
+        edited_description = user_crud.get_entity_description(db, "squad", squad.id)
+        if edited_description is not None:
+            squad.description = edited_description
+            
+    return squads
 
 def get_squads_by_tribe(db: Session, tribe_id: int) -> List[models.Squad]:
-    return db.query(models.Squad).filter(models.Squad.tribe_id == tribe_id).all()
+    squads = db.query(models.Squad).filter(models.Squad.tribe_id == tribe_id).all()
+    
+    # Check for edited descriptions
+    for squad in squads:
+        edited_description = user_crud.get_entity_description(db, "squad", squad.id)
+        if edited_description is not None:
+            squad.description = edited_description
+            
+    return squads
 
 def get_squad(db: Session, squad_id: int) -> Optional[models.Squad]:
     # Get the squad with all relationships eagerly loaded
@@ -36,6 +93,11 @@ def get_squad(db: Session, squad_id: int) -> Optional[models.Squad]:
     
     if not squad:
         return None
+    
+    # Check for edited description
+    edited_description = user_crud.get_entity_description(db, "squad", squad_id)
+    if edited_description is not None:
+        squad.description = edited_description
     
     # We'll store capacity and role information separately as metadata
     # Query the squad members junction table

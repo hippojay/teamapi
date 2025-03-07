@@ -15,9 +15,15 @@ A prototype of a "Who What Where" team API portal that shows organisational stru
 1. Make the run script executable:
    ```bash
    chmod +x run.sh
+   chmod +x init_db_and_admin.sh
    ```
 
-2. Run the script:
+2. Initialize the database and create an admin user:
+   ```bash
+   ./init_db_and_admin.sh
+   ```
+
+3. Run the application:
    ```bash
    ./run.sh
    ```
@@ -41,6 +47,8 @@ This will:
 - **Service Information**: Browse services with status and version information
 - **Dependency Management**: See how teams depend on each other
 - **On-Call Information**: View who's on call for each team
+- **Editable Descriptions**: Authenticated users can edit descriptions for Areas, Tribes, and Squads
+- **Authentication**: User login system to control who can edit descriptions
 
 ## Project Structure
 
@@ -58,6 +66,8 @@ The backend API is built with FastAPI and provides endpoints for:
 - Dependencies
 - On-Call information
 - Search functionality
+- User authentication
+- Description editing and history
 
 ### Frontend (React)
 

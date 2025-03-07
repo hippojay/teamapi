@@ -16,11 +16,13 @@ import UserDetailPage from './pages/UserDetailPage';
 import UsersPage from './pages/UsersPage';
 import DependencyMapPage from './pages/DependencyMapPage';
 import NotFoundPage from './pages/NotFoundPage';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
-    <Router>
-      <Layout>
+    <AuthProvider>
+      <Router>
+        <Layout>
         <Routes>
           <Route path="/" element={<HomePage />} />
           
@@ -50,8 +52,9 @@ function App() {
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-      </Layout>
-    </Router>
+        </Layout>
+      </Router>
+    </AuthProvider>
   );
 }
 

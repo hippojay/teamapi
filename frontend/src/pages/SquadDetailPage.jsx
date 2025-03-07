@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Users, Database, GitBranch, Bell, Clock, ChevronRight } from 'lucide-react';
+import DescriptionEditor from '../components/DescriptionEditor';
 import api from '../api';
 
 const SquadDetailPage = () => {
@@ -187,9 +188,17 @@ const SquadDetailPage = () => {
                 <div>Contractors ({Math.round(squad.subcon_capacity > 0 ? (squad.subcon_capacity / (squad.core_capacity + squad.subcon_capacity) * 100) : 0)}%)</div>
               </div>
             </div>
-            <p className="text-gray-600 mb-4">
-              {squad.description || `The ${squad.name} squad is responsible for developing and maintaining services for the ${tribe ? tribe.name : ''} tribe.`}
-            </p>
+            <div className="text-gray-600 mb-4">
+              <DescriptionEditor
+                entityType="squad"
+                entityId={squad.id}
+                initialDescription={squad.description || `The ${squad.name} squad is responsible for developing and maintaining services for the ${tribe ? tribe.name : ''} tribe.`}
+                onDescriptionUpdated={(newDescription) => {
+                  // Update the local state with the new description
+                  setSquad({...squad, description: newDescription});
+                }}
+              />
+            </div>
             <div className="flex space-x-4">
               <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
                 Contact Squad

@@ -1,7 +1,106 @@
 const API_URL = 'http://localhost:8000';
 
+// Get token from localStorage
+const getToken = () => localStorage.getItem('token');
+
+// Helper function to create headers with authorization token
+const getAuthHeaders = () => {
+  const token = getToken();
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': token ? `Bearer ${token}` : ''
+  };
+};
+
 // API Service for the Team Portal
 const api = {
+  // Authentication
+  login: async (username, password) => {
+    const formData = new URLSearchParams();
+    formData.append('username', username);
+    formData.append('password', password);
+    
+    const response = await fetch(`${API_URL}/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error('Login failed');
+    }
+    
+    const data = await response.json();
+    // Store token in localStorage
+    localStorage.setItem('token', data.access_token);
+    return data;
+  },
+  
+  logout: () => {
+    localStorage.removeItem('token');
+  },
+  
+  getCurrentUser: async () => {
+    const token = getToken();
+    if (!token) return null;
+    
+    try {
+      const response = await fetch(`${API_URL}/users/me`, {
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          return null;
+        }
+        throw new Error('Failed to get user data');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
+  },
+  
+  // Description editing
+  getDescription: async (entityType, entityId) => {
+    const response = await fetch(`${API_URL}/descriptions/${entityType}/${entityId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to get ${entityType} description`);
+    }
+    return response.json();
+  },
+  
+  updateDescription: async (entityType, entityId, description) => {
+    const response = await fetch(`${API_URL}/descriptions/${entityType}/${entityId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ description })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || `Failed to update ${entityType} description`);
+    }
+    
+    return response.json();
+  },
+  
+  getDescriptionHistory: async (entityType, entityId) => {
+    const response = await fetch(`${API_URL}/descriptions/${entityType}/${entityId}/history`, {
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get ${entityType} description history`);
+    }
+    
+    return response.json();
+  },
   // Areas
   getAreas: async () => {
     const response = await fetch(`${API_URL}/areas`);
