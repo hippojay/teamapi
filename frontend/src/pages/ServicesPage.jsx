@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Database, ChevronRight, Globe, GitBranch, Server, Smartphone, Code } from 'lucide-react';
+import { ChevronRight, Globe, GitBranch, Server, Smartphone, Code } from 'lucide-react';
 import api from '../api';
 
 const ServicesPage = () => {
