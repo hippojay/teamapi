@@ -23,9 +23,9 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r shadow-sm flex flex-col">
+    <div className="flex min-h-screen bg-gray-50 overflow-hidden">
+      {/* Sidebar - Fixed */}
+      <div className="fixed h-full w-64 bg-white border-r shadow-sm flex flex-col z-20 overflow-y-auto">
         {/* Logo/App Name */}
         <div className="p-6 border-b">
           <Link to="/" className="text-xl font-bold text-gray-800 no-underline flex items-center">
@@ -107,13 +107,13 @@ const Layout = ({ children }) => {
         </nav>
         
         {/* Footer with Login Button */}
-        <div className="p-4 border-t text-xs text-gray-500">
+        <div className="mt-auto p-4 border-t text-xs text-gray-500">
           <p className="mb-3">Who What Where - v1.0</p>
           
           {!isAuthenticated && (
             <button 
               onClick={() => setShowLoginModal(true)}
-              className="w-full flex items-center justify-center space-x-2 p-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              className="w-full flex items-center justify-center space-x-2 p-2 text-blue-600 hover:bg-blue-50 border shadow-sm rounded-md transition-colors"
             >
               <LogIn className="h-4 w-4" />
               <span>Log In</span>
@@ -122,16 +122,18 @@ const Layout = ({ children }) => {
         </div>
         
         {/* Login Modal */}
-        <LoginModal 
-          isOpen={showLoginModal} 
-          onClose={() => setShowLoginModal(false)} 
-        />
+        {showLoginModal && (
+          <LoginModal 
+            isOpen={showLoginModal} 
+            onClose={() => setShowLoginModal(false)} 
+          />
+        )}
       </div>
       
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white border-b shadow-sm p-4 flex justify-between items-center">
+      {/* Main Content - Adjusted with left margin for sidebar */}
+      <div className="flex-1 flex flex-col ml-64">
+        {/* Header - Fixed */}
+        <header className="fixed top-0 right-0 left-64 bg-white border-b shadow-sm p-4 flex justify-between items-center z-20">
           <div className="w-1/3">
             <h1 className="text-xl font-bold text-gray-800">
               {/* Dynamic Page Title */}
@@ -180,8 +182,8 @@ const Layout = ({ children }) => {
           </div>
         </header>
         
-        {/* Content */}
-        <main className="flex-1 p-6 overflow-auto">
+        {/* Content - Adjusted with top margin for header */}
+        <main className="flex-1 p-6 mt-16 overflow-auto">
           {children}
         </main>
         

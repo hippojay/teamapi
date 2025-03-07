@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -32,8 +33,11 @@ const LoginModal = ({ isOpen, onClose }) => {
     }
   };
   
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  // Using React Portal to render the modal at the document body level
+  // This ensures it appears above all other UI elements regardless of
+  // their z-index or position in the DOM hierarchy
+  return createPortal(
+    <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-[9999]" style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0}}>
       <div className="bg-white rounded-lg p-6 shadow-xl w-full max-w-md relative">
         <button 
           onClick={onClose}
@@ -85,7 +89,8 @@ const LoginModal = ({ isOpen, onClose }) => {
           </button>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
