@@ -194,6 +194,42 @@ def get_service(service_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Service not found")
     return service
 
+@app.post("/services", response_model=schemas.Service, status_code=201)
+def create_service(
+    service: schemas.ServiceCreate, 
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Verify the squad exists
+    squad = crud.get_squad(db, service.squad_id)
+    if not squad:
+        raise HTTPException(status_code=404, detail="Squad not found")
+        
+    return crud.create_service(db, service)
+
+@app.put("/services/{service_id}", response_model=schemas.Service)
+def update_service(
+    service_id: int, 
+    service_update: schemas.ServiceUpdate,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    updated_service = crud.update_service(db, service_id, service_update)
+    if not updated_service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    return updated_service
+
+@app.delete("/services/{service_id}", status_code=204)
+def delete_service(
+    service_id: int,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    success = crud.delete_service(db, service_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Service not found")
+    return None
+
 # Dependencies
 @app.get("/dependencies/{squad_id}", response_model=List[schemas.Dependency])
 def get_dependencies(squad_id: int, db: Session = Depends(get_db)):

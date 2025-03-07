@@ -46,6 +46,24 @@ const ServiceDetailPage = () => {
     fetchData();
   }, [id]);
 
+  const getServiceIcon = (serviceType) => {
+    switch (serviceType && serviceType.toLowerCase()) {
+      case 'api':
+        return <Code className="h-6 w-6 mr-2 text-blue-500" />;
+      case 'repo':
+      case 'repository':
+        return <GitBranch className="h-6 w-6 mr-2 text-purple-500" />;
+      case 'platform':
+        return <Server className="h-6 w-6 mr-2 text-green-500" />;
+      case 'webpage':
+        return <Globe className="h-6 w-6 mr-2 text-orange-500" />;
+      case 'app_module':
+        return <Smartphone className="h-6 w-6 mr-2 text-red-500" />;
+      default:
+        return <Code className="h-6 w-6 mr-2 text-blue-500" />;
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status.toLowerCase()) {
       case 'healthy':
@@ -86,13 +104,11 @@ const ServiceDetailPage = () => {
       <div className="bg-white p-6 rounded-lg shadow-sm border mb-6">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-semibold flex items-center">
-            {service.service_type === 'api' && <Code className="h-6 w-6 mr-2 text-blue-500" />}
-            {service.service_type === 'repository' && <GitBranch className="h-6 w-6 mr-2 text-blue-500" />}
-            {service.service_type === 'platform' && <Server className="h-6 w-6 mr-2 text-blue-500" />}
-            {service.service_type === 'webpage' && <Globe className="h-6 w-6 mr-2 text-blue-500" />}
-            {service.service_type === 'app_module' && <Smartphone className="h-6 w-6 mr-2 text-blue-500" />}
+            {getServiceIcon(service.service_type)}
             {service.name}
-            <span className="text-sm ml-2 px-2 py-1 bg-gray-100 text-gray-700 rounded-full">{service.service_type}</span>
+            <span className="text-sm ml-2 px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
+              {(service.service_type || 'API').toLowerCase()}
+            </span>
           </h1>
           {getStatusBadge(service.status)}
         </div>
@@ -112,7 +128,7 @@ const ServiceDetailPage = () => {
                 <span>•</span>
                 <a href={service.url} className="text-blue-500 hover:underline flex items-center">
                   <Code className="h-4 w-4 mr-1" />
-                  {service.service_type === 'api' ? 'API Docs' : 'Link'}
+                  {(service.service_type === 'API') ? 'API Docs' : 'Link'}
                 </a>
               </>
             )}
@@ -167,11 +183,11 @@ const ServiceDetailPage = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Service Type:</span>
-              <span>{service.service_type}</span>
+              <span>{(service.service_type || 'API').toLowerCase()}</span>
             </div>
             {service.url && (
               <div className="flex justify-between">
-                <span className="text-gray-600">{service.service_type === 'api' ? 'API Documentation' : 'URL'}:</span>
+                <span className="text-gray-600">{(service.service_type === 'API') ? 'API Documentation' : 'URL'}:</span>
                 <a href={service.url} className="text-blue-500 hover:underline">
                   Link
                 </a>

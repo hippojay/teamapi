@@ -17,9 +17,9 @@ squad_members = Table(
 )
 
 class ServiceStatus(enum.Enum):
-    HEALTHY = "healthy"
-    DEGRADED = "degraded"
-    DOWN = "down"
+    HEALTHY = "HEALTHY"
+    DEGRADED = "DEGRADED"
+    DOWN = "DOWN"
 
 class DependencyType(enum.Enum):
     REQUIRED = "required"
@@ -138,11 +138,11 @@ class TeamMember(Base):
                                 remote_side=[id])
 
 class ServiceType(enum.Enum):
-    API = "api"
-    REPO = "repository"
-    PLATFORM = "platform"
-    WEBPAGE = "webpage"
-    APP_MODULE = "app_module"
+    API = "API"
+    REPO = "REPO"
+    PLATFORM = "PLATFORM"
+    WEBPAGE = "WEBPAGE"
+    APP_MODULE = "APP_MODULE"
 
 class Service(Base):
     __tablename__ = "services"

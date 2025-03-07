@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Users, Database, GitBranch, Bell, Clock, ChevronRight, Globe, Server, Smartphone, Code } from 'lucide-react';
+import { Users, Database, GitBranch, Bell, Clock, ChevronRight, Globe, Server, Smartphone, Code, Plus, Edit, Trash2 } from 'lucide-react';
 import DescriptionEditor from '../components/DescriptionEditor';
+import ServiceEditor from '../components/ServiceEditor';
+import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
 const SquadDetailPage = () => {
@@ -16,6 +18,9 @@ const SquadDetailPage = () => {
   const [area, setArea] = useState(null);
   const [showTeamCompositionModal, setShowTeamCompositionModal] = useState(false);
   const modalRef = useRef(null);
+  const { isAuthenticated } = useAuth();
+  const [editingService, setEditingService] = useState(null);
+  const [isAddingService, setIsAddingService] = useState(false);
   
   // Helper function to get color based on capacity
   const getCapacityColor = (capacity) => {
@@ -29,6 +34,8 @@ const SquadDetailPage = () => {
       return "text-gray-600"; // Low capacity (default gray)
     }
   };
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,9 +92,10 @@ const SquadDetailPage = () => {
   }
 
   const getServiceIcon = (serviceType) => {
-    switch (serviceType) {
+    switch (serviceType && serviceType.toLowerCase()) {
       case 'api':
         return <Code className="h-4 w-4 text-blue-600" />;
+      case 'repo':
       case 'repository':
         return <GitBranch className="h-4 w-4 text-purple-600" />;
       case 'platform':
@@ -123,6 +131,107 @@ const SquadDetailPage = () => {
       default:
         return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{type}</span>;
     }
+  };
+
+  const handleServiceSave = async (savedService) => {
+    // Refresh the services list from server
+    const servicesData = await api.getServices(id);
+    setServices(servicesData);
+    
+    // Close editor
+    setEditingService(null);
+    setIsAddingService(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingService(null);
+    setIsAddingService(false);
+  };
+
+  const handleDeleteService = async (serviceId) => {
+    if (!window.confirm('Are you sure you want to delete this service?')) {
+      return;
+    }
+    
+    try {
+      await api.deleteService(serviceId);
+      // Refresh services list
+      const servicesData = await api.getServices(id);
+      setServices(servicesData);
+    } catch (err) {
+      console.error('Error deleting service:', err);
+      alert('Failed to delete service. Please try again.');
+    }
+  };
+
+  const renderServiceItem = (service) => {
+    if (editingService === service.id) {
+      return (
+        <div key={`editing-${service.id}`} className="mb-4">
+          <ServiceEditor 
+            service={service}
+            onSave={handleServiceSave}
+            onCancel={handleCancelEdit}
+          />
+        </div>
+      );
+    }
+    
+    return (
+      <div key={service.id} 
+          className="flex items-center justify-between px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors">
+        <div className="flex items-center">
+          <div className="mr-2">
+            {getServiceIcon(service.service_type)}
+          </div>
+          <div>
+            <span className="font-medium text-gray-800">{service.name}</span>
+            <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600">
+            {(service.service_type || 'API').toLowerCase()}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-xs text-gray-500">v{service.version}</span>
+          {getStatusBadge(service.status)}
+          
+          {isAuthenticated && (
+            <>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setEditingService(service.id);
+                }}
+                className="p-1 text-gray-400 hover:text-blue-500"
+                title="Edit"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+              
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDeleteService(service.id);
+                }}
+                className="p-1 text-gray-400 hover:text-red-500"
+                title="Delete"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </>
+          )}
+          
+          <Link 
+            to={`/services/${service.id}`}
+            className="p-1 text-gray-400 hover:text-blue-500"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -231,38 +340,37 @@ const SquadDetailPage = () => {
               <Database className="h-5 w-5 mr-2" />
               Owned Services
             </h3>
+            
+            {/* Adding new service form */}
+            {isAddingService && (
+              <div className="mb-6">
+                <ServiceEditor
+                  squad={squad}
+                  isCreating={true}
+                  onSave={handleServiceSave}
+                  onCancel={handleCancelEdit}
+                />
+              </div>
+            )}
+            
             <div className="space-y-2">
               {services.length > 0 ? (
-                services.map(service => (
-                  <Link key={service.id} to={`/services/${service.id}`} 
-                    className="flex items-center justify-between px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center">
-                      <div className="mr-2">
-                        {getServiceIcon(service.service_type)}
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-800">{service.name}</span>
-                        <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600">
-                          {service.service_type || 'api'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-500">v{service.version}</span>
-                      {getStatusBadge(service.status)}
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
-                    </div>
-                  </Link>
-                ))
+                services.map(service => renderServiceItem(service))
               ) : (
                 <div className="text-gray-500 text-center py-4">No services found</div>
               )}
             </div>
-            <div className="mt-3 pt-3 border-t text-right">
-              <button className="text-sm text-blue-600 hover:text-blue-800">
-                Add Service
-              </button>
-            </div>
+            {isAuthenticated && !isAddingService && (
+              <div className="mt-3 pt-3 border-t text-right">
+                <button 
+                  className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 flex items-center ml-auto"
+                  onClick={() => setIsAddingService(true)}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Service
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Team Members */}

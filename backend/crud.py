@@ -7,6 +7,58 @@ import models
 import schemas
 import user_crud
 
+# Function to safely query services table with proper enum handling
+def get_services_query(db: Session):
+    """Create a query for services that handles potential enum conversion issues"""
+    # Use a direct SQL query to fetch the raw data first
+    stmt = text("""
+        SELECT 
+            id, name, description, status, uptime, version, 
+            api_docs_url, squad_id, service_type, url
+        FROM services
+    """)
+    
+    result = db.execute(stmt).fetchall()
+    
+    services = []
+    
+    # Manually convert each row to a Service object with correct enum handling
+    for row in result:
+        try:
+            # Handle status enum
+            try:
+                status = models.ServiceStatus(row.status) if row.status else models.ServiceStatus.HEALTHY
+            except ValueError:
+                # Try uppercase
+                status = models.ServiceStatus(row.status.upper()) if row.status else models.ServiceStatus.HEALTHY
+            
+            # Handle service_type enum
+            try:
+                service_type = models.ServiceType(row.service_type) if row.service_type else models.ServiceType.API
+            except ValueError:
+                # Try uppercase
+                service_type = models.ServiceType(row.service_type.upper()) if row.service_type else models.ServiceType.API
+            
+            # Create Service object
+            service = models.Service(
+                id=row.id,
+                name=row.name,
+                description=row.description,
+                status=status,
+                uptime=row.uptime if row.uptime is not None else 99.9,
+                version=row.version if row.version is not None else "1.0.0",
+                api_docs_url=row.api_docs_url,
+                squad_id=row.squad_id,
+                service_type=service_type,
+                url=row.url
+            )
+            
+            services.append(service)
+        except Exception as e:
+            print(f"Error processing service ID {row.id}: {e}")
+    
+    return services
+
 # Area operations
 def get_areas(db: Session) -> List[models.Area]:
     areas = db.query(models.Area).all()
@@ -292,13 +344,75 @@ def get_team_member(db: Session, member_id: int) -> Optional[models.TeamMember]:
 
 # Service operations
 def get_services(db: Session) -> List[models.Service]:
-    return db.query(models.Service).all()
+    # Use the safe query function to avoid enum issues
+    return get_services_query(db)
 
 def get_services_by_squad(db: Session, squad_id: int) -> List[models.Service]:
-    return db.query(models.Service).filter(models.Service.squad_id == squad_id).all()
+    # Use the safe query function and filter by squad_id in Python
+    all_services = get_services_query(db)
+    return [s for s in all_services if s.squad_id == squad_id]
 
 def get_service(db: Session, service_id: int) -> Optional[models.Service]:
-    return db.query(models.Service).filter(models.Service.id == service_id).first()
+    # Use the safe query function and filter by service_id in Python
+    all_services = get_services_query(db)
+    for service in all_services:
+        if service.id == service_id:
+            return service
+    return None
+
+def create_service(db: Session, service: schemas.ServiceCreate) -> models.Service:
+    # Ensure we use the enum values from the models module
+    status_value = models.ServiceStatus[service.status.upper()] if isinstance(service.status, str) else service.status
+    service_type_value = models.ServiceType[service.service_type.upper()] if isinstance(service.service_type, str) else service.service_type
+    
+    db_service = models.Service(
+        name=service.name,
+        description=service.description,
+        status=status_value,
+        uptime=service.uptime,
+        version=service.version,
+        service_type=service_type_value,
+        url=service.url,
+        squad_id=service.squad_id
+    )
+    db.add(db_service)
+    db.commit()
+    db.refresh(db_service)
+    return db_service
+
+def update_service(db: Session, service_id: int, service_data: schemas.ServiceUpdate) -> Optional[models.Service]:
+    # Get existing service
+    db_service = db.query(models.Service).filter(models.Service.id == service_id).first()
+    if not db_service:
+        return None
+        
+    # Update fields if provided
+    update_data = service_data.dict(exclude_unset=True)
+    
+    # Handle enum values explicitly
+    if 'status' in update_data and update_data['status'] is not None:
+        status = update_data['status']
+        update_data['status'] = models.ServiceStatus[status.upper()] if isinstance(status, str) else status
+        
+    if 'service_type' in update_data and update_data['service_type'] is not None:
+        service_type = update_data['service_type']
+        update_data['service_type'] = models.ServiceType[service_type.upper()] if isinstance(service_type, str) else service_type
+    
+    for key, value in update_data.items():
+        setattr(db_service, key, value)
+    
+    db.commit()
+    db.refresh(db_service)
+    return db_service
+
+def delete_service(db: Session, service_id: int) -> bool:
+    db_service = db.query(models.Service).filter(models.Service.id == service_id).first()
+    if not db_service:
+        return False
+    
+    db.delete(db_service)
+    db.commit()
+    return True
 
 # Dependency operations
 def get_dependencies(db: Session, squad_id: int) -> List[models.Dependency]:

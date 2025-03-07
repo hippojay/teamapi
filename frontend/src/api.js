@@ -175,6 +175,50 @@ const api = {
     return response.json();
   },
   
+  createService: async (serviceData) => {
+    const response = await fetch(`${API_URL}/services`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(serviceData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to create service');
+    }
+    
+    return response.json();
+  },
+  
+  updateService: async (serviceId, serviceData) => {
+    const response = await fetch(`${API_URL}/services/${serviceId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(serviceData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update service');
+    }
+    
+    return response.json();
+  },
+  
+  deleteService: async (serviceId) => {
+    const response = await fetch(`${API_URL}/services/${serviceId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to delete service');
+    }
+    
+    return true;
+  },
+  
   // Dependencies
   getDependencies: async (squadId) => {
     const response = await fetch(`${API_URL}/dependencies/${squadId}`);

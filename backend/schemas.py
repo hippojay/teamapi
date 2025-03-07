@@ -6,16 +6,16 @@ from datetime import datetime
 
 # Enums
 class ServiceStatus(str, Enum):
-    HEALTHY = "healthy"
-    DEGRADED = "degraded"
-    DOWN = "down"
+    HEALTHY = "HEALTHY"
+    DEGRADED = "DEGRADED"
+    DOWN = "DOWN"
     
 class ServiceType(str, Enum):
-    API = "api"
-    REPO = "repository"
-    PLATFORM = "platform"
-    WEBPAGE = "webpage"
-    APP_MODULE = "app_module"
+    API = "API"
+    REPO = "REPO"
+    PLATFORM = "PLATFORM"
+    WEBPAGE = "WEBPAGE"
+    APP_MODULE = "APP_MODULE"
 
 class DependencyType(str, Enum):
     REQUIRED = "required"
@@ -94,6 +94,25 @@ class Service(ServiceBase):
 
 class ServiceDetail(Service):
     pass
+
+class ServiceCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    status: ServiceStatus = ServiceStatus.HEALTHY
+    uptime: float = 99.9
+    version: str = "1.0.0"
+    service_type: ServiceType = ServiceType.API
+    url: Optional[str] = None
+    squad_id: int
+
+class ServiceUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[ServiceStatus] = None
+    uptime: Optional[float] = None
+    version: Optional[str] = None
+    service_type: Optional[ServiceType] = None
+    url: Optional[str] = None
 
 class DependencyBase(BaseModel):
     dependency_name: str

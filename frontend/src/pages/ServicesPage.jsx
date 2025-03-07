@@ -35,6 +35,24 @@ const ServicesPage = () => {
     fetchData();
   }, []);
 
+  const getServiceIcon = (serviceType) => {
+    switch (serviceType && serviceType.toLowerCase()) {
+      case 'api':
+        return <Code className="h-5 w-5 mr-2 text-blue-500" />;
+      case 'repo':
+      case 'repository':
+        return <GitBranch className="h-5 w-5 mr-2 text-purple-500" />;
+      case 'platform':
+        return <Server className="h-5 w-5 mr-2 text-green-500" />;
+      case 'webpage':
+        return <Globe className="h-5 w-5 mr-2 text-orange-500" />;
+      case 'app_module':
+        return <Smartphone className="h-5 w-5 mr-2 text-red-500" />;
+      default:
+        return <Code className="h-5 w-5 mr-2 text-blue-500" />;
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status.toLowerCase()) {
       case 'healthy':
@@ -76,11 +94,7 @@ const ServicesPage = () => {
               <div key={service.id} className="bg-white p-6 rounded-lg shadow-sm border">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                    {service.service_type === 'api' && <Code className="h-5 w-5 mr-2 text-blue-500" />}
-                    {service.service_type === 'repository' && <GitBranch className="h-5 w-5 mr-2 text-blue-500" />}
-                    {service.service_type === 'platform' && <Server className="h-5 w-5 mr-2 text-blue-500" />}
-                    {service.service_type === 'webpage' && <Globe className="h-5 w-5 mr-2 text-blue-500" />}
-                    {service.service_type === 'app_module' && <Smartphone className="h-5 w-5 mr-2 text-blue-500" />}
+                    {getServiceIcon(service.service_type)}
                     {service.name}
                   </h2>
                   {getStatusBadge(service.status)}
@@ -104,7 +118,7 @@ const ServicesPage = () => {
                   <>
                   <span>•</span>
                   <a href={service.url} className="text-blue-500 hover:underline">
-                  {service.service_type === 'api' ? 'API Docs' : 'Link'}
+                  {(service.service_type === 'API') ? 'API Docs' : 'Link'}
                   </a>
                   </>
                   )}

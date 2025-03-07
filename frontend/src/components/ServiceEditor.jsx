@@ -1,0 +1,224 @@
+import React, { useState, useEffect } from 'react';
+import { X, Check, Code, GitBranch, Server, Globe, Smartphone } from 'lucide-react';
+import api from '../api';
+
+const ServiceEditor = ({ 
+  service = null, 
+  squad = null, 
+  onSave, 
+  onCancel,
+  isCreating = false 
+}) => {
+  const initialState = service ? {
+    name: service.name || '',
+    description: service.description || '',
+    status: service.status || 'HEALTHY',
+    version: service.version || '1.0.0',
+    service_type: service.service_type || 'API',
+    url: service.url || '',
+    uptime: service.uptime || 99.9,
+    squad_id: service.squad_id || (squad ? squad.id : null)
+  } : {
+    name: '',
+    description: '',
+    status: 'HEALTHY',
+    version: '1.0.0',
+    service_type: 'API',
+    url: '',
+    uptime: 99.9,
+    squad_id: squad ? squad.id : null
+  };
+
+  const [formData, setFormData] = useState(initialState);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      setError('Service name is required');
+      return false;
+    }
+    
+    if (!formData.squad_id) {
+      setError('Squad selection is required');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    setSaving(true);
+    setError('');
+    
+    try {
+      let savedService;
+      
+      if (isCreating) {
+        savedService = await api.createService(formData);
+      } else {
+        savedService = await api.updateService(service.id, formData);
+      }
+      
+      onSave(savedService);
+    } catch (err) {
+      console.error('Failed to save service:', err);
+      setError(err.message || 'Failed to save service. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white p-4 rounded-md border shadow-sm">
+      <h3 className="text-lg font-semibold mb-4">
+        {isCreating ? 'Add New Service' : 'Edit Service'}
+      </h3>
+      
+      <form onSubmit={handleSubmit}>
+        {error && (
+          <div className="mb-4 p-2 bg-red-50 text-red-700 border border-red-200 rounded-md text-sm">
+            {error}
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Name field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Service Name*
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          {/* Version field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Version
+            </label>
+            <input
+              type="text"
+              name="version"
+              value={formData.version}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="1.0.0"
+            />
+          </div>
+        </div>
+        
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description
+          </label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            rows="2"
+            placeholder="Add a brief description of this service"
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Service Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Service Type
+            </label>
+            <select
+              name="service_type"
+              value={formData.service_type}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="API">API</option>
+              <option value="REPO">Code Repository</option>
+              <option value="PLATFORM">Platform Service</option>
+              <option value="WEBPAGE">Web Page</option>
+              <option value="APP_MODULE">Mobile App Module</option>
+            </select>
+          </div>
+          
+          {/* Status field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Status
+            </label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="HEALTHY">Healthy</option>
+              <option value="DEGRADED">Degraded</option>
+              <option value="DOWN">Down</option>
+            </select>
+          </div>
+        </div>
+        
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            URL
+          </label>
+          <input
+            type="url"
+            name="url"
+            value={formData.url || ''}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder={
+              formData.service_type === 'API' ? 'https://example.com/api/docs' :
+              formData.service_type === 'REPO' ? 'https://github.com/org/repo' :
+              formData.service_type === 'PLATFORM' ? 'https://platform.example.com' :
+              formData.service_type === 'WEBPAGE' ? 'https://example.com/page' :
+              'https://app.example.com/module'
+            }
+          />
+        </div>
+        
+        <div className="flex justify-end space-x-2 pt-2 border-t">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 flex items-center"
+            disabled={saving}
+          >
+            <X className="h-4 w-4 mr-1" />
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
+            disabled={saving}
+          >
+            <Check className="h-4 w-4 mr-1" />
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default ServiceEditor;
