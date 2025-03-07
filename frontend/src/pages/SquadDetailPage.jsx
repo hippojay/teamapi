@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Users, Database, GitBranch, Bell, Clock, ChevronRight } from 'lucide-react';
 import DescriptionEditor from '../components/DescriptionEditor';
 import api from '../api';
 
 const SquadDetailPage = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [squad, setSquad] = useState(null);
   const [services, setServices] = useState([]);
   const [dependencies, setDependencies] = useState([]);
