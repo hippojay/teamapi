@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Check, Code, GitBranch, Server, Globe, Smartphone } from 'lucide-react';
 import api from '../api';
 
@@ -80,9 +80,28 @@ const ServiceEditor = ({
     }
   };
 
+  // Helper function to render service type icon
+  const renderServiceTypeIcon = () => {
+    switch(formData.service_type) {
+      case 'API':
+        return <Server className="h-5 w-5 text-blue-500 mr-2" />;
+      case 'REPO':
+        return <GitBranch className="h-5 w-5 text-green-500 mr-2" />;
+      case 'PLATFORM':
+        return <Globe className="h-5 w-5 text-purple-500 mr-2" />;
+      case 'WEBPAGE':
+        return <Code className="h-5 w-5 text-gray-500 mr-2" />;
+      case 'APP_MODULE':
+        return <Smartphone className="h-5 w-5 text-indigo-500 mr-2" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="bg-white p-4 rounded-md border shadow-sm">
-      <h3 className="text-lg font-semibold mb-4">
+      <h3 className="text-lg font-semibold mb-4 flex items-center">
+        {renderServiceTypeIcon()}
         {isCreating ? 'Add New Service' : 'Edit Service'}
       </h3>
       
