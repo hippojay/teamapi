@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronRight } from 'lucide-react';
 import CustomGrid from './CustomGrid';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +14,34 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
+  const userMenuRef = useRef(null);
+
+  // Create a separate ref for the dropdown menu
+  const dropdownRef = useRef(null);
+
+  // Handle click outside of user menu to close it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Only close if clicking outside both the button and dropdown
+      if (
+        userMenuRef.current && 
+        !userMenuRef.current.contains(event.target) &&
+        (!dropdownRef.current || !dropdownRef.current.contains(event.target))
+      ) {
+        setShowUserMenu(false);
+      }
+    };
+
+    // Add event listener when the menu is shown
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    // Clean up the event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
 
   // Function to check if a route is active
   const isActive = (path) => {
@@ -106,11 +135,11 @@ const Layout = ({ children }) => {
           </ul>
         </nav>
         
-        {/* Footer with Login Button */}
+        {/* Footer with Authentication Controls */}
         <div className="mt-auto p-4 border-t text-xs text-gray-500">
           <p className="mb-3">Who What Where - v1.0</p>
           
-          {!isAuthenticated && (
+          {!isAuthenticated ? (
             <button 
               onClick={() => setShowLoginModal(true)}
               className="w-full flex items-center justify-center space-x-2 p-2 text-blue-600 hover:bg-blue-50 border shadow-sm rounded-md transition-colors"
@@ -118,6 +147,64 @@ const Layout = ({ children }) => {
               <LogIn className="h-4 w-4" />
               <span>Log In</span>
             </button>
+          ) : (
+            <div className="relative" ref={userMenuRef}>
+              <button 
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="w-full flex items-center justify-between p-2 text-gray-700 hover:bg-gray-100 border shadow-sm rounded-md transition-colors"
+              >
+                <div className="flex items-center">
+                  <User className="h-4 w-4 text-blue-600 mr-2" />
+                  <span className="font-medium text-sm">{user?.username}</span>
+                </div>
+                <ChevronRight className="h-3 w-3" />
+              </button>
+              
+              {showUserMenu && createPortal(
+                <div 
+                  ref={dropdownRef}
+                  className="fixed bg-white rounded-md shadow-xl border overflow-hidden z-[9999]"
+                  style={{
+                    left: userMenuRef.current ? userMenuRef.current.getBoundingClientRect().right + 8 + 'px' : '16rem',
+                    top: userMenuRef.current ? userMenuRef.current.getBoundingClientRect().top + 'px' : 'auto',
+                    width: '12rem',
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  <button
+                    onClick={(e) => {
+                      // Stop event propagation to prevent click-outside from triggering
+                      e.stopPropagation();
+                      console.log("Logout clicked");
+                      
+                      try {
+                        // Perform logout
+                        logout();
+                        // Ensure user state is cleared by checking localStorage
+                        localStorage.removeItem('token');
+                        console.log("Logout successful");
+                        
+                        // Close menu and navigate to home after a short delay
+                        setShowUserMenu(false);
+                        
+                        // Small timeout to ensure state updates before navigation
+                        setTimeout(() => {
+                          navigate('/');
+                          window.location.reload(); // Force a refresh to ensure new state takes effect
+                        }, 100);
+                      } catch (error) {
+                        console.error("Logout error:", error);
+                      }
+                    }}
+                    className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 flex items-center"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    <span>Log out</span>
+                  </button>
+                </div>,
+                document.body
+              )}
+            </div>
           )}
         </div>
         
@@ -134,7 +221,7 @@ const Layout = ({ children }) => {
       <div className="flex-1 flex flex-col ml-64">
         {/* Header - Fixed */}
         <header className="fixed top-0 right-0 left-64 bg-white border-b shadow-sm p-4 flex justify-between items-center z-20">
-          <div className="w-1/3">
+          <div className="w-2/5">
             <h1 className="text-xl font-bold text-gray-800">
               {/* Dynamic Page Title */}
               {currentPath === '/' ? 'Home' : 
@@ -146,39 +233,8 @@ const Layout = ({ children }) => {
             </h1>
           </div>
           
-          <div className="w-1/3 flex justify-center">
+          <div className="w-3/5 flex justify-end">
             <SearchBar />
-          </div>
-          
-          <div className="w-1/3 flex justify-end">
-            {isAuthenticated && user && (
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-gray-900 p-2 rounded-md hover:bg-gray-100"
-                >
-                  <User className="h-5 w-5" />
-                  <span>{user.username}</span>
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-                
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border overflow-hidden z-10">
-                    <button
-                      onClick={() => {
-                        logout();
-                        setShowUserMenu(false);
-                        navigate('/');
-                      }}
-                      className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 flex items-center"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Log out
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </header>
         
