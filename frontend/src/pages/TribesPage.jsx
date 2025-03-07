@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, ChevronRight } from 'lucide-react';
+import TeamCompositionBar from '../components/TeamCompositionBar';
 import api from '../api';
 
 const TribesPage = () => {
@@ -90,6 +91,18 @@ const TribesPage = () => {
                   <Link to={`/areas/${tribe.area_id}`} className="text-blue-600 hover:underline">
                     {areas[tribe.area_id].name}
                   </Link>
+                </div>
+              )}
+              
+              {/* Team Composition Bar */}
+              {tribe.core_count !== undefined && (
+                <div className="mb-3">
+                  <TeamCompositionBar 
+                    core_count={tribe.core_count || 0} 
+                    subcon_count={tribe.subcon_count || 0}
+                    core_capacity={tribe.core_capacity || 0} 
+                    subcon_capacity={tribe.subcon_capacity || 0}
+                  />
                 </div>
               )}
               {tribe.description && (

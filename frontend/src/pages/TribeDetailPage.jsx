@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Users, ChevronRight, Clock } from 'lucide-react';
+import TeamCompositionBar from '../components/TeamCompositionBar';
 import api from '../api';
 
 const TribeDetailPage = () => {
@@ -103,28 +104,13 @@ const TribeDetailPage = () => {
           </span>
         </div>
         
-        {/* Core vs Subcon stats */}
-        <div className="flex flex-col space-y-2 text-sm mb-3 p-3 bg-gray-50 rounded-lg">
-          <div className="font-medium text-gray-700">Tribe Composition:</div>
-          <div className="flex justify-between">
-            <span>Core Employees:</span>
-            <span className="font-medium text-emerald-600">{tribe.core_count} ({tribe.core_capacity.toFixed(1)} FTE)</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Contractors:</span>
-            <span className="font-medium text-amber-600">{tribe.subcon_count} ({tribe.subcon_capacity.toFixed(1)} FTE)</span>
-          </div>
-          <div className="flex justify-between border-t pt-1">
-            <span>Core/Subcon Ratio:</span>
-            <span className="font-medium text-blue-600">
-              {tribe.core_count > 0 
-                ? (tribe.core_count / (tribe.core_count + tribe.subcon_count) * 100).toFixed(0) 
-                : 0}% / {tribe.subcon_count > 0 
-                ? (tribe.subcon_count / (tribe.core_count + tribe.subcon_count) * 100).toFixed(0) 
-                : 0}%
-            </span>
-          </div>
-        </div>
+        {/* Team Composition Bar */}
+        <TeamCompositionBar 
+          core_count={tribe.core_count} 
+          subcon_count={tribe.subcon_count}
+          core_capacity={tribe.core_capacity} 
+          subcon_capacity={tribe.subcon_capacity}
+        />
         {tribe.description && (
           <p className="text-gray-600 mb-2">{tribe.description}</p>
         )}
@@ -160,16 +146,14 @@ const TribeDetailPage = () => {
                 <span>{squad.timezone}</span>
               </div>
               
-              {/* Core vs Subcon info */}
-              <div className="grid grid-cols-2 gap-2 text-xs mb-4">
-                <div className="p-1 bg-emerald-50 rounded text-center">
-                  <span className="block text-emerald-600 font-medium">Core:</span>
-                  <span className="text-emerald-700">{squad.core_count} ({squad.core_capacity.toFixed(1)})</span>
-                </div>
-                <div className="p-1 bg-amber-50 rounded text-center">
-                  <span className="block text-amber-600 font-medium">Subcon:</span>
-                  <span className="text-amber-700">{squad.subcon_count} ({squad.subcon_capacity.toFixed(1)})</span>
-                </div>
+              {/* Team Composition Bar */}
+              <div className="mb-4">
+                <TeamCompositionBar 
+                  core_count={squad.core_count} 
+                  subcon_count={squad.subcon_count}
+                  core_capacity={squad.core_capacity} 
+                  subcon_capacity={squad.subcon_capacity}
+                />
               </div>
               {squad.description && (
                 <p className="text-gray-600 mb-4 line-clamp-2">{squad.description}</p>

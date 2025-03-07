@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, ChevronRight, Clock } from 'lucide-react';
+import TeamCompositionBar from '../components/TeamCompositionBar';
 import api from '../api';
 
 const SquadsPage = () => {
@@ -124,16 +125,14 @@ const SquadsPage = () => {
                   <span>{squad.timezone}</span>
                 </div>
                 
-                {/* Core vs Subcon info */}
-                <div className="grid grid-cols-2 gap-2 text-xs mb-4">
-                  <div className="p-1 bg-emerald-50 rounded text-center">
-                    <span className="block text-emerald-600 font-medium">Core:</span>
-                    <span className="text-emerald-700">{squad.core_count} ({squad.core_capacity.toFixed(1)})</span>
-                  </div>
-                  <div className="p-1 bg-amber-50 rounded text-center">
-                    <span className="block text-amber-600 font-medium">Subcon:</span>
-                    <span className="text-amber-700">{squad.subcon_count} ({squad.subcon_capacity.toFixed(1)})</span>
-                  </div>
+                {/* Team Composition Bar */}
+                <div className="mb-4">
+                  <TeamCompositionBar 
+                    core_count={squad.core_count} 
+                    subcon_count={squad.subcon_count}
+                    core_capacity={squad.core_capacity} 
+                    subcon_capacity={squad.subcon_capacity}
+                  />
                 </div>
                 {squad.description && (
                   <p className="text-gray-600 mb-4 line-clamp-2">{squad.description}</p>

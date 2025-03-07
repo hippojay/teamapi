@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Users, ChevronRight } from 'lucide-react';
+import TeamCompositionBar from '../components/TeamCompositionBar';
 import api from '../api';
 
 const AreaDetailPage = () => {
@@ -79,6 +80,16 @@ const AreaDetailPage = () => {
             {area.total_capacity.toFixed(1)} FTE
           </span>
         </div>
+        
+        {/* Team Composition Bar */}
+        {area.core_count !== undefined && (
+          <TeamCompositionBar 
+            core_count={area.core_count || 0} 
+            subcon_count={area.subcon_count || 0}
+            core_capacity={area.core_capacity || 0} 
+            subcon_capacity={area.subcon_capacity || 0}
+          />
+        )}
         {area.description && (
           <p className="text-gray-600 mb-2">{area.description}</p>
         )}
@@ -91,7 +102,7 @@ const AreaDetailPage = () => {
           tribes.map(tribe => (
             <div key={tribe.id} className="bg-white p-6 rounded-lg shadow-sm border">
               <h3 className="text-lg font-semibold mb-3">{tribe.name}</h3>
-              <div className="flex items-center space-x-2 text-gray-600 mb-4">
+              <div className="flex items-center space-x-2 text-gray-600 mb-2">
                 <Users className="h-4 w-4" />
                 <span>{tribe.member_count > 0 ? tribe.member_count : 'No'} member{tribe.member_count !== 1 ? 's' : ''}</span>
                 <span className="mx-1">•</span>
@@ -99,6 +110,18 @@ const AreaDetailPage = () => {
                   {tribe.total_capacity.toFixed(1)} FTE
                 </span>
               </div>
+              
+              {/* Team Composition Bar */}
+              {tribe.core_count !== undefined && (
+                <div className="mb-4">
+                  <TeamCompositionBar 
+                    core_count={tribe.core_count || 0} 
+                    subcon_count={tribe.subcon_count || 0}
+                    core_capacity={tribe.core_capacity || 0} 
+                    subcon_capacity={tribe.subcon_capacity || 0}
+                  />
+                </div>
+              )}
               {tribe.description && (
                 <p className="text-gray-600 mb-4 line-clamp-2">{tribe.description}</p>
               )}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, ChevronRight } from 'lucide-react';
+import TeamCompositionBar from '../components/TeamCompositionBar';
 import api from '../api';
 
 const AreasPage = () => {
@@ -72,6 +73,18 @@ const AreasPage = () => {
                     {area.total_capacity.toFixed(1)} FTE
                   </span>
                 </div>
+                
+                {/* Team Composition Bar */}
+                {area.core_count !== undefined && (
+                  <div className="mt-3 mb-3">
+                    <TeamCompositionBar 
+                      core_count={area.core_count || 0} 
+                      subcon_count={area.subcon_count || 0}
+                      core_capacity={area.core_capacity || 0} 
+                      subcon_capacity={area.subcon_capacity || 0}
+                    />
+                  </div>
+                )}
               </div>
               {area.description && (
                 <p className="text-gray-600 mb-4">{area.description}</p>
