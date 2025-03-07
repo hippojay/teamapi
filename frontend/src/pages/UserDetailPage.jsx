@@ -259,7 +259,10 @@ const UserDetailPage = () => {
               <div>
                 <h4 className="text-sm font-medium text-gray-500 mb-2">Line Manager</h4>
                 {supervisor ? (
-                  <div className="flex items-center p-3 border rounded-lg">
+                  <Link 
+                    to={`/users/${supervisor.id}`}
+                    className="flex items-center p-3 border rounded-lg hover:bg-gray-50"
+                  >
                     {supervisor.image_url ? (
                       <img
                         src={supervisor.image_url}
@@ -272,10 +275,10 @@ const UserDetailPage = () => {
                       </div>
                     )}
                     <div>
-                      <div className="font-medium">{supervisor.name}</div>
+                      <div className="font-medium text-blue-600">{supervisor.name}</div>
                       <div className="text-sm text-gray-600">{supervisor.role}</div>
                     </div>
-                  </div>
+                  </Link>
                 ) : (
                   <div className="text-gray-500">No supervisor assigned</div>
                 )}
