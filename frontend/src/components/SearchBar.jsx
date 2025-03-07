@@ -127,7 +127,7 @@ const SearchBar = () => {
         <input
           type="text"
           placeholder="Search teams, services, or people..."
-          className="pl-10 pr-10 py-2 border rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="pl-10 pr-10 py-2 border rounded-lg w-96 focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={searchTerm}
           onChange={handleSearchChange}
           onFocus={() => searchTerm.length >= 3 && setIsOpen(true)}

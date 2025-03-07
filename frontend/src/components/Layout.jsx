@@ -53,16 +53,26 @@ const Layout = ({ children }) => {
 
   return (
     <div className="flex min-h-screen bg-gray-50 overflow-hidden">
-      {/* Sidebar - Fixed */}
-      <div className="fixed h-full w-64 bg-white border-r shadow-sm flex flex-col z-20 overflow-y-auto">
-        {/* Logo/App Name */}
-        <div className="p-6 border-b">
+      {/* Top Header Bar - Fixed Full Width */}
+      <div className="fixed top-0 left-0 right-0 bg-white border-b shadow-sm p-4 flex items-center z-30">
+        <div className="w-1/3 flex items-center">
           <Link to="/" className="text-xl font-bold text-gray-800 no-underline flex items-center">
             <CustomGrid className="h-6 w-6 mr-2 text-blue-600" />
             Who What Where
           </Link>
         </div>
         
+        <div className="w-1/3 flex justify-center">
+          <SearchBar />
+        </div>
+        
+        <div className="w-1/3 flex justify-end">  
+          {/* Space for future elements like notifications or help */}
+        </div>
+      </div>
+
+      {/* Sidebar - Fixed */}
+      <div className="fixed h-full w-64 bg-white border-r shadow-sm flex flex-col z-20 overflow-y-auto pt-16">
         {/* Navigation */}
         <nav className="flex-1 pt-6">
           <ul className="space-y-1">
@@ -217,29 +227,10 @@ const Layout = ({ children }) => {
         )}
       </div>
       
-      {/* Main Content - Adjusted with left margin for sidebar */}
-      <div className="flex-1 flex flex-col ml-64">
-        {/* Header - Fixed */}
-        <header className="fixed top-0 right-0 left-64 bg-white border-b shadow-sm p-4 flex justify-between items-center z-20">
-          <div className="w-2/5">
-            <h1 className="text-xl font-bold text-gray-800">
-              {/* Dynamic Page Title */}
-              {currentPath === '/' ? 'Home' : 
-               currentPath.startsWith('/areas') ? 'Areas' :
-               currentPath.startsWith('/tribes') ? 'Tribes' :
-               currentPath.startsWith('/squads') ? 'Squads' :
-               currentPath.startsWith('/services') ? 'Services' :
-               currentPath.startsWith('/users') ? 'Team Members' : 'Who What Where'}
-            </h1>
-          </div>
-          
-          <div className="w-3/5 flex justify-end">
-            <SearchBar />
-          </div>
-        </header>
-        
-        {/* Content - Adjusted with top margin for header */}
-        <main className="flex-1 p-6 mt-16 overflow-auto">
+      {/* Main Content - Adjusted with left margin for sidebar and top margin for header */}
+      <div className="flex-1 flex flex-col ml-64 mt-16">
+        {/* Content - No extra margin needed on top now */}
+        <main className="flex-1 p-6 overflow-auto">
           {children}
         </main>
         

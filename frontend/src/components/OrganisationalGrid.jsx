@@ -78,7 +78,7 @@ const OrganisationalGrid = () => {
                 onClick={() => handleBoxClick('/services/3', 'Sales Aggregation')} 
                 className="h-16 w-28 rounded-lg bg-white border-2 border-gray-800 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors duration-200"
               >
-                <span className="text-sm justify-center font-medium text-gray-800">Sales Aggregation</span>
+                <span className="text-sm text-center font-medium text-gray-800">Sales Aggregation</span>
               </div>
               
               <div 
