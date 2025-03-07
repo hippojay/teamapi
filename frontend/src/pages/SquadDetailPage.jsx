@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Users, Database, GitBranch, Bell, Clock, ChevronRight, Globe, Server, Smartphone, Code, Plus, Edit, Trash2 } from 'lucide-react';
+import { Users, Database, GitBranch, Bell, Clock, ChevronRight, Globe, Server, Smartphone, Code, Plus, Edit, Trash2, X } from 'lucide-react';
 import DescriptionEditor from '../components/DescriptionEditor';
 import ServiceEditor from '../components/ServiceEditor';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +21,14 @@ const SquadDetailPage = () => {
   const { isAuthenticated } = useAuth();
   const [editingService, setEditingService] = useState(null);
   const [isAddingService, setIsAddingService] = useState(false);
+  const [filteredServices, setFilteredServices] = useState([]);
+  // Initialize filters from sessionStorage or default to empty
+  const [searchTerm, setSearchTerm] = useState(() => {
+    return sessionStorage.getItem('squadDetailServiceSearchTerm') || '';
+  });
+  const [serviceTypeFilter, setServiceTypeFilter] = useState(() => {
+    return sessionStorage.getItem('squadDetailServiceTypeFilter') || '';
+  });
   
   // Helper function to get color based on capacity
   const getCapacityColor = (capacity) => {
@@ -36,6 +44,49 @@ const SquadDetailPage = () => {
   };
 
 
+
+  // Filter services based on search term and service type
+  useEffect(() => {
+    if (services.length > 0) {
+      let result = [...services];
+      
+      // Apply service type filter
+      if (serviceTypeFilter) {
+        result = result.filter(service => 
+          service.service_type && service.service_type.toUpperCase() === serviceTypeFilter.toUpperCase()
+        );
+      }
+      
+      // Apply search filter (minimum 3 characters)
+      if (searchTerm && searchTerm.length >= 3) {
+        result = result.filter(service => 
+          service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+      }
+      
+      setFilteredServices(result);
+    } else {
+      setFilteredServices([]);
+    }
+  }, [services, searchTerm, serviceTypeFilter]);
+  
+  // Save filter values to sessionStorage when they change
+  useEffect(() => {
+    sessionStorage.setItem('squadDetailServiceSearchTerm', searchTerm);
+  }, [searchTerm]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('squadDetailServiceTypeFilter', serviceTypeFilter);
+  }, [serviceTypeFilter]);
+  
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchTerm('');
+    setServiceTypeFilter('');
+    sessionStorage.removeItem('squadDetailServiceSearchTerm');
+    sessionStorage.removeItem('squadDetailServiceTypeFilter');
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,17 +143,18 @@ const SquadDetailPage = () => {
   }
 
   const getServiceIcon = (serviceType) => {
-    switch (serviceType && serviceType.toLowerCase()) {
-      case 'api':
+    const type = serviceType && serviceType.toUpperCase();
+    switch (type) {
+      case 'API':
         return <Code className="h-4 w-4 text-blue-600" />;
-      case 'repo':
-      case 'repository':
+      case 'REPO':
+      case 'REPOSITORY':
         return <GitBranch className="h-4 w-4 text-purple-600" />;
-      case 'platform':
+      case 'PLATFORM':
         return <Server className="h-4 w-4 text-green-600" />;
-      case 'webpage':
+      case 'WEBPAGE':
         return <Globe className="h-4 w-4 text-orange-600" />;
-      case 'app_module':
+      case 'APP_MODULE':
         return <Smartphone className="h-4 w-4 text-red-600" />;
       default:
         return <Database className="h-4 w-4 text-gray-600" />;
@@ -187,7 +239,7 @@ const SquadDetailPage = () => {
           <div>
             <span className="font-medium text-gray-800">{service.name}</span>
             <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600">
-            {(service.service_type || 'API').toLowerCase()}
+              {service.service_type || 'API'}
             </span>
           </div>
         </div>
@@ -336,10 +388,73 @@ const SquadDetailPage = () => {
 
           {/* Services */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <Database className="h-5 w-5 mr-2" />
-              Owned Services
+            <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center">
+            <Database className="h-5 w-5 mr-2" />
+            Owned Services
             </h3>
+          
+          {/* Service filters */}
+          <div className="flex flex-col md:flex-row gap-2 mb-4">
+            <div className="flex-grow">
+              <div className="flex items-center border rounded-md focus-within:ring-1 focus-within:ring-blue-500 overflow-hidden">
+                <input
+                  type="text"
+                  placeholder="Search services..."
+                  className="w-full px-3 py-2 border-none focus:outline-none"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button 
+                    className="px-2 text-gray-400 hover:text-gray-600"
+                    onClick={() => setSearchTerm('')}
+                    title="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              {searchTerm && searchTerm.length < 3 && (
+                <p className="text-xs text-gray-500 mt-1">Enter at least 3 characters to search</p>
+              )}
+            </div>
+            <div className="md:w-1/3">
+              <select
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={serviceTypeFilter}
+                onChange={(e) => setServiceTypeFilter(e.target.value)}
+                aria-label="Filter by service type"
+              >
+                <option value="">All Service Types</option>
+                <option value="API">API</option>
+                <option value="REPO">Repository</option>
+                <option value="PLATFORM">Platform</option>
+                <option value="WEBPAGE">Web Page</option>
+                <option value="APP_MODULE">App Module</option>
+              </select>
+            </div>
+          </div>
+          
+          {/* Filter status and reset */}
+          {(searchTerm || serviceTypeFilter) && (
+            <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
+              <div>
+                <span>Showing {filteredServices.length} of {services.length} services</span>
+                {serviceTypeFilter && (
+                  <span className="ml-2">• Type: <strong>{serviceTypeFilter}</strong></span>
+                )}
+                {searchTerm && searchTerm.length >= 3 && (
+                  <span className="ml-2">• Search: <strong>"{searchTerm}"</strong></span>
+                )}
+              </div>
+              <button
+                onClick={resetFilters}
+                className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+              >
+                Reset Filters
+              </button>
+            </div>
+          )}
             
             {/* Adding new service form */}
             {isAddingService && (
@@ -354,8 +469,26 @@ const SquadDetailPage = () => {
             )}
             
             <div className="space-y-2">
-              {services.length > 0 ? (
-                services.map(service => renderServiceItem(service))
+              {loading ? (
+                <div className="text-gray-500 text-center py-4 animate-pulse">Loading services...</div>
+              ) : services.length > 0 ? (
+                filteredServices.length > 0 ? (
+                  filteredServices.map(service => renderServiceItem(service))
+                ) : (
+                  <div className="text-gray-500 text-center py-4">
+                    No services found matching your filters
+                    {(searchTerm || serviceTypeFilter) && (
+                      <div className="mt-2">
+                        <button 
+                          className="text-blue-500 hover:underline"
+                          onClick={resetFilters}
+                        >
+                          Clear all filters
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
               ) : (
                 <div className="text-gray-500 text-center py-4">No services found</div>
               )}
