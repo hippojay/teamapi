@@ -64,6 +64,20 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 def read_root():
     return {"message": "Team API Portal Backend"}
 
+# Squad team type endpoints
+@app.put("/squads/{squad_id}/team-type")
+def update_squad_team_type(
+    squad_id: int,
+    team_type: str,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update a squad's team type classification"""
+    squad = user_crud.update_squad_team_type(db, squad_id, team_type, current_user.id)
+    if not squad:
+        raise HTTPException(status_code=404, detail="Squad not found")
+    return {"message": f"Team type updated to {team_type}", "team_type": team_type}
+
 # Description editing endpoints
 @app.get("/descriptions/{entity_type}/{entity_id}")
 def get_description(entity_type: str, entity_id: int, db: Session = Depends(get_db)):

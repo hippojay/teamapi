@@ -107,3 +107,35 @@ def get_description_edit_history(
         models.DescriptionEdit.entity_type == entity_type,
         models.DescriptionEdit.entity_id == entity_id
     ).order_by(models.DescriptionEdit.edited_at.desc()).all()
+
+def update_squad_team_type(db: Session, squad_id: int, team_type: str, user_id: int):
+    """Update a squad's team_type and log the change"""
+    # First check if squad exists
+    squad = db.query(models.Squad).filter(models.Squad.id == squad_id).first()
+    if not squad:
+        return None
+        
+    # Validate team_type
+    try:
+        team_type_enum = models.TeamType[team_type.upper()]
+    except (KeyError, AttributeError):
+        # Default to STREAM_ALIGNED if invalid
+        team_type_enum = models.TeamType.STREAM_ALIGNED
+    
+    # Update the team_type
+    squad.team_type = team_type_enum
+    
+    # Create an edit record
+    edit = models.DescriptionEdit(
+        entity_type="squad_team_type",
+        entity_id=squad_id,
+        description=f"Updated team type to {team_type}",
+        edited_by=user_id
+    )
+    
+    db.add(edit)
+    db.commit()
+    db.refresh(squad)
+    db.refresh(edit)
+    
+    return squad

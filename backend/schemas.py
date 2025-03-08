@@ -21,6 +21,12 @@ class DependencyType(str, Enum):
     REQUIRED = "required"
     OPTIONAL = "optional"
 
+class TeamType(str, Enum):
+    STREAM_ALIGNED = "stream_aligned"
+    PLATFORM = "platform"
+    ENABLING = "enabling"
+    COMPLICATED_SUBSYSTEM = "complicated_subsystem"
+
 # Base models
 class TeamMemberBase(BaseModel):
     name: str
@@ -143,6 +149,7 @@ class SquadBase(BaseModel):
     description: Optional[str] = None
     status: str
     timezone: str
+    team_type: TeamType = TeamType.STREAM_ALIGNED
     member_count: int
     core_count: int = 0
     subcon_count: int = 0

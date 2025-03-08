@@ -25,6 +25,12 @@ class DependencyType(enum.Enum):
     REQUIRED = "required"
     OPTIONAL = "optional"
 
+class TeamType(enum.Enum):
+    STREAM_ALIGNED = "stream_aligned"
+    PLATFORM = "platform"
+    ENABLING = "enabling"
+    COMPLICATED_SUBSYSTEM = "complicated_subsystem"
+
 
 class User(Base):
     __tablename__ = "users"
@@ -94,6 +100,7 @@ class Squad(Base):
     description = Column(Text, nullable=True)
     status = Column(String, default="Active")
     timezone = Column(String, default="UTC")
+    team_type = Column(Enum(TeamType), default=TeamType.STREAM_ALIGNED)
     member_count = Column(Integer, default=0)
     core_count = Column(Integer, default=0)  # Count of regular employees
     subcon_count = Column(Integer, default=0)  # Count of contractors

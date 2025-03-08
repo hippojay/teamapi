@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Users, Database, GitBranch, Bell, Clock, ChevronRight, Globe, Server, Smartphone, Code, Plus, Edit, Trash2, X } from 'lucide-react';
+import { Users, Database, GitBranch, Bell, Clock, ChevronRight, Globe, Server, Smartphone, Code, Plus, Edit, Trash2, X, Tag } from 'lucide-react';
+import TeamTypeEditor from '../components/TeamTypeEditor';
+import TeamTypeLabel from '../components/TeamTypeLabel';
 import DescriptionEditor from '../components/DescriptionEditor';
 import ServiceEditor from '../components/ServiceEditor';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +19,8 @@ const SquadDetailPage = () => {
   const [tribe, setTribe] = useState(null);
   const [area, setArea] = useState(null);
   const [showTeamCompositionModal, setShowTeamCompositionModal] = useState(false);
+  const [updatingTeamType, setUpdatingTeamType] = useState(false);
+  const [editingTeamType, setEditingTeamType] = useState(false);
   const modalRef = useRef(null);
   const { isAuthenticated } = useAuth();
   const [editingService, setEditingService] = useState(null);
@@ -200,6 +204,25 @@ const SquadDetailPage = () => {
     setIsAddingService(false);
   };
 
+  // Handler for updating team type
+  const handleTeamTypeUpdate = async (newTeamType) => {
+    setUpdatingTeamType(true);
+    try {
+      await api.updateSquadTeamType(squad.id, newTeamType);
+      // Update the squad in our local state
+      setSquad(prev => ({
+        ...prev,
+        team_type: newTeamType
+      }));
+      // Show success indicator temporarily
+      setTimeout(() => setUpdatingTeamType(false), 1500);
+    } catch (err) {
+      console.error('Error updating team type:', err);
+      alert('Failed to update team type. Please try again.');
+      setUpdatingTeamType(false);
+    }
+  };
+
   const handleDeleteService = async (serviceId) => {
     if (!window.confirm('Are you sure you want to delete this service?')) {
       return;
@@ -314,18 +337,66 @@ const SquadDetailPage = () => {
         {/* Squad Info */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">{squad.name}</h2>
-              <span className={`px-3 py-1 rounded-full text-sm ${
-                squad.status === 'Active' 
-                  ? 'bg-green-100 text-green-800' 
-                  : squad.status === 'Forming'
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-gray-100 text-gray-800'
-              }`}>
-                {squad.status}
-              </span>
+            <div className="flex flex-col mb-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-800">{squad.name}</h2>
+                <span className={`px-3 py-1 rounded-full text-sm ${
+                  squad.status === 'Active' 
+                    ? 'bg-green-100 text-green-800' 
+                    : squad.status === 'Forming'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {squad.status}
+                </span>
+              </div>
+              
+              <div className="flex items-center mt-2">
+                <TeamTypeLabel 
+                  teamType={squad.team_type || "stream_aligned"} 
+                  size="md"
+                />
+                {isAuthenticated && (
+                  <button 
+                    onClick={() => setEditingTeamType(true)}
+                    className="ml-2 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+              
+              {/* Edit Team Type Dialog */}
+              {isAuthenticated && editingTeamType && (
+                <div className="mt-3 p-3 border rounded-md bg-gray-50">
+                  <div className={updatingTeamType ? "opacity-50 pointer-events-none" : ""}>
+                    <TeamTypeEditor 
+                      teamType={squad.team_type || "stream_aligned"} 
+                      onUpdate={(newType) => {
+                        handleTeamTypeUpdate(newType);
+                        setEditingTeamType(false);
+                      }}
+                      readOnly={false}
+                    />
+                  </div>
+                  {updatingTeamType ? (
+                    <div className="text-center text-sm text-blue-600 mt-2">
+                      Updating team type...
+                    </div>
+                  ) : (
+                    <div className="flex justify-end mt-2">
+                      <button 
+                        onClick={() => setEditingTeamType(false)}
+                        className="px-2 py-1 text-sm text-gray-600 hover:text-gray-800 border rounded"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+            
             <div className="flex items-center space-x-2 text-gray-600 mb-4">
               <Users className="h-5 w-5" />
               <span>{squad.member_count > 0 ? squad.member_count : 'No'} member{squad.member_count !== 1 ? 's' : ''}</span>

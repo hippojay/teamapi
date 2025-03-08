@@ -230,6 +230,21 @@ const api = {
     return response.json();
   },
   
+  // Squad Team Type
+  updateSquadTeamType: async (squadId, teamType) => {
+    const response = await fetch(`${API_URL}/squads/${squadId}/team-type?team_type=${teamType}`, {
+      method: 'PUT',
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update team type');
+    }
+    
+    return response.json();
+  },
+  
   // On-Call Roster
   getOnCall: async (squadId) => {
     try {

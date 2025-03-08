@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, ChevronRight, Clock } from 'lucide-react';
 import TeamCompositionBar from '../components/TeamCompositionBar';
+import TeamTypeLabel from '../components/TeamTypeLabel';
 import api from '../api';
 
 const SquadsPage = () => {
   const [squads, setSquads] = useState([]);
+  const [filteredSquads, setFilteredSquads] = useState([]);
   const [tribes, setTribes] = useState({});
   const [areas, setAreas] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [teamTypeFilter, setTeamTypeFilter] = useState('all');
 
   // Helper function to get color based on capacity
   const getCapacityColor = (capacity) => {
@@ -24,12 +27,27 @@ const SquadsPage = () => {
     }
   };
 
+  // Filter squads by team type whenever squads or teamTypeFilter changes
+  useEffect(() => {
+    if (!squads.length) return;
+    
+    if (teamTypeFilter === 'all') {
+      setFilteredSquads(squads);
+    } else {
+      const filtered = squads.filter(squad => {
+        return (squad.team_type || 'stream_aligned').toLowerCase() === teamTypeFilter.toLowerCase();
+      });
+      setFilteredSquads(filtered);
+    }
+  }, [squads, teamTypeFilter]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch all squads
         const squadsData = await api.getSquads();
         setSquads(squadsData);
+        setFilteredSquads(squadsData);
         
         // Fetch all tribes for mapping
         const tribesData = await api.getTribes();
@@ -75,11 +93,48 @@ const SquadsPage = () => {
         <span className="font-medium text-gray-800">Squads</span>
       </div>
 
-      <h1 className="text-2xl font-bold mb-6">Squads</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Squads</h1>
+        
+        <div className="flex items-center space-x-2">
+          <label htmlFor="team-type-filter" className="text-sm font-medium text-gray-700">Filter by team type:</label>
+          <select
+            id="team-type-filter"
+            className="py-1 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            value={teamTypeFilter}
+            onChange={(e) => setTeamTypeFilter(e.target.value)}
+          >
+            <option value="all">All teams</option>
+            <option value="stream_aligned">Stream-aligned</option>
+            <option value="platform">Platform</option>
+            <option value="enabling">Enabling</option>
+            <option value="complicated_subsystem">Complicated Subsystem</option>
+          </select>
+        </div>
+      </div>
+      
+      {teamTypeFilter !== 'all' && (
+        <div className="mb-4 flex items-center bg-blue-50 p-2 rounded-md">
+          <div className="flex-grow">
+            <p className="text-sm text-blue-800">
+              Showing only <strong>{teamTypeFilter === 'stream_aligned' ? 'Stream-aligned' : 
+                teamTypeFilter === 'platform' ? 'Platform' : 
+                teamTypeFilter === 'enabling' ? 'Enabling' : 'Complicated Subsystem'}</strong> teams
+              ({filteredSquads.length} of {squads.length})
+            </p>
+          </div>
+          <button 
+            onClick={() => setTeamTypeFilter('all')} 
+            className="text-xs text-blue-800 hover:text-blue-900 underline px-2"
+          >
+            Clear filter
+          </button>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {squads.length > 0 ? (
-          squads.map(squad => {
+        {filteredSquads.length > 0 ? (
+          filteredSquads.map(squad => {
             const tribe = tribes[squad.tribe_id];
             const area = tribe ? areas[tribe.area_id] : null;
             
@@ -96,6 +151,12 @@ const SquadsPage = () => {
                   }`}>
                     {squad.status}
                   </span>
+                </div>
+                <div className="mb-2">
+                  <TeamTypeLabel 
+                    teamType={squad.team_type || "stream_aligned"} 
+                    size="sm"
+                  />
                 </div>
                 {tribe && (
                   <div className="mb-2 text-sm">
@@ -147,7 +208,20 @@ const SquadsPage = () => {
             );
           })
         ) : (
-          <div className="col-span-3 text-center py-10 text-gray-500">No squads found</div>
+          <div className="col-span-3 text-center py-10 text-gray-500">
+            {squads.length > 0 && teamTypeFilter !== 'all' ?
+              <>
+                <p>No squads found matching the selected team type.</p>
+                <button 
+                  onClick={() => setTeamTypeFilter('all')} 
+                  className="mt-2 text-blue-600 hover:text-blue-800 underline"
+                >
+                  Show all squads
+                </button>
+              </> :
+              'No squads found'
+            }
+          </div>
         )}
       </div>
     </div>

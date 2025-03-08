@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Users, ChevronRight, Clock } from 'lucide-react';
 import TeamCompositionBar from '../components/TeamCompositionBar';
+import TeamTypeLabel from '../components/TeamTypeLabel';
 import DescriptionEditor from '../components/DescriptionEditor';
 import api from '../api';
 
@@ -142,6 +143,12 @@ const TribeDetailPage = () => {
                 }`}>
                   {squad.status}
                 </span>
+              </div>
+              <div className="mb-2">
+                <TeamTypeLabel 
+                  teamType={squad.team_type || "stream_aligned"} 
+                  size="sm"
+                />
               </div>
               <div className="flex items-center space-x-2 text-gray-600 mb-3">
                 <Users className="h-4 w-4" />
