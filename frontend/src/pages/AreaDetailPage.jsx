@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Users, ChevronRight } from 'lucide-react';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import DescriptionEditor from '../components/DescriptionEditor';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api';
 
 const AreaDetailPage = () => {
@@ -11,17 +12,30 @@ const AreaDetailPage = () => {
   const [tribes, setTribes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { darkMode } = useTheme();
   
   // Helper function to get color based on capacity
   const getCapacityColor = (capacity) => {
-    if (capacity > 1.0) {
-      return "text-red-600"; // Over capacity (red)
-    } else if (capacity >= 0.8) {
-      return "text-green-600"; // Good capacity (green)
-    } else if (capacity >= 0.5) {
-      return "text-yellow-600"; // Medium capacity (yellow/amber)
+    if (darkMode) {
+      if (capacity > 1.0) {
+        return "text-red-400"; // Over capacity (red)
+      } else if (capacity >= 0.8) {
+        return "text-green-400"; // Good capacity (green)
+      } else if (capacity >= 0.5) {
+        return "text-yellow-400"; // Medium capacity (yellow/amber)
+      } else {
+        return "text-gray-400"; // Low capacity (default gray)
+      }
     } else {
-      return "text-gray-600"; // Low capacity (default gray)
+      if (capacity > 1.0) {
+        return "text-red-600"; // Over capacity (red)
+      } else if (capacity >= 0.8) {
+        return "text-green-600"; // Good capacity (green)
+      } else if (capacity >= 0.5) {
+        return "text-yellow-600"; // Medium capacity (yellow/amber)
+      } else {
+        return "text-gray-600"; // Low capacity (default gray)
+      }
     }
   };
 
@@ -48,31 +62,31 @@ const AreaDetailPage = () => {
   }, [id]);
 
   if (loading) {
-    return <div className="text-center py-10">Loading...</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Loading...</div>;
   }
 
   if (error) {
-    return <div className="text-center py-10 text-red-600">{error}</div>;
+    return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
   if (!area) {
-    return <div className="text-center py-10">Area not found</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Area not found</div>;
   }
 
   return (
     <div>
       {/* Breadcrumbs */}
-      <div className="flex items-center text-sm text-gray-600 mb-6">
-        <Link to="/" className="hover:text-blue-500">Home</Link>
+      <div className={`flex items-center text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-6`}>
+        <Link to="/" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Home</Link>
         <ChevronRight className="h-4 w-4 mx-2" />
-        <Link to="/areas" className="hover:text-blue-500">Areas</Link>
+        <Link to="/areas" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Areas</Link>
         <ChevronRight className="h-4 w-4 mx-2" />
-        <span className="font-medium text-gray-800">{area.name}</span>
+        <span className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{area.name}</span>
       </div>
 
       {/* Area Header */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border mb-6">
-        <h1 className="text-2xl font-bold mb-3">{area.name}</h1>
+      <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border mb-6`}>
+        <h1 className={`text-2xl font-bold mb-3 ${darkMode ? 'text-dark-primary' : ''}`}>{area.name}</h1>
         
         {/* Team Composition Bar */}
         {area.core_count !== undefined && (
@@ -85,7 +99,7 @@ const AreaDetailPage = () => {
             />
           </div>
         )}
-        <div className="text-gray-600 mb-2">
+        <div className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>
           <DescriptionEditor
             entityType="area"
             entityId={area.id}
@@ -99,12 +113,12 @@ const AreaDetailPage = () => {
       </div>
 
       {/* Tribes in this Area */}
-      <h2 className="text-xl font-semibold mb-4">Tribes</h2>
+      <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-dark-primary' : ''}`}>Tribes</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {tribes.length > 0 ? (
           tribes.map(tribe => (
-            <div key={tribe.id} className="bg-white p-6 rounded-lg shadow-sm border">
-              <h3 className="text-lg font-semibold mb-3">{tribe.name}</h3>
+            <div key={tribe.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+              <h3 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-dark-primary' : ''}`}>{tribe.name}</h3>
               
               {/* Team Composition Bar */}
               {tribe.core_count !== undefined && (
@@ -118,7 +132,7 @@ const AreaDetailPage = () => {
                 </div>
               )}
               {tribe.description && (
-                <p className="text-gray-600 mb-4 line-clamp-2">{tribe.description}</p>
+                <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 line-clamp-2`}>{tribe.description}</p>
               )}
               <Link 
                 to={`/tribes/${tribe.id}`}
@@ -129,7 +143,7 @@ const AreaDetailPage = () => {
             </div>
           ))
         ) : (
-          <div className="col-span-2 text-center py-6 text-gray-500">
+          <div className={`col-span-2 text-center py-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             No tribes found in this area
           </div>
         )}
