@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Users, ChevronRight, Clock } from 'lucide-react';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import TeamTypeLabel from '../components/TeamTypeLabel';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api';
 
 const SquadsPage = () => {
@@ -13,17 +14,30 @@ const SquadsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [teamTypeFilter, setTeamTypeFilter] = useState('all');
+  const { darkMode } = useTheme();
 
   // Helper function to get color based on capacity
   const getCapacityColor = (capacity) => {
-    if (capacity > 1.0) {
-      return "text-red-600"; // Over capacity (red)
-    } else if (capacity >= 0.8) {
-      return "text-green-600"; // Good capacity (green)
-    } else if (capacity >= 0.5) {
-      return "text-yellow-600"; // Medium capacity (yellow/amber)
+    if (darkMode) {
+      if (capacity > 1.0) {
+        return "text-red-400"; // Over capacity (red)
+      } else if (capacity >= 0.8) {
+        return "text-green-400"; // Good capacity (green)
+      } else if (capacity >= 0.5) {
+        return "text-yellow-400"; // Medium capacity (yellow/amber)
+      } else {
+        return "text-gray-400"; // Low capacity (default gray)
+      }
     } else {
-      return "text-gray-600"; // Low capacity (default gray)
+      if (capacity > 1.0) {
+        return "text-red-600"; // Over capacity (red)
+      } else if (capacity >= 0.8) {
+        return "text-green-600"; // Good capacity (green)
+      } else if (capacity >= 0.5) {
+        return "text-yellow-600"; // Medium capacity (yellow/amber)
+      } else {
+        return "text-gray-600"; // Low capacity (default gray)
+      }
     }
   };
 
@@ -77,30 +91,34 @@ const SquadsPage = () => {
   }, []);
 
   if (loading) {
-    return <div className="text-center py-10">Loading...</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Loading...</div>;
   }
 
   if (error) {
-    return <div className="text-center py-10 text-red-600">{error}</div>;
+    return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
   return (
     <div>
       {/* Breadcrumbs */}
-      <div className="flex items-center text-sm text-gray-600 mb-6">
-        <Link to="/" className="hover:text-blue-500">Home</Link>
+      <div className={`flex items-center text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-6`}>
+        <Link to="/" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Home</Link>
         <ChevronRight className="h-4 w-4 mx-2" />
-        <span className="font-medium text-gray-800">Squads</span>
+        <span className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>Squads</span>
       </div>
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Squads</h1>
+        <h1 className={`text-2xl font-bold ${darkMode ? 'text-dark-primary' : ''}`}>Squads</h1>
         
         <div className="flex items-center space-x-2">
-          <label htmlFor="team-type-filter" className="text-sm font-medium text-gray-700">Filter by team type:</label>
+          <label htmlFor="team-type-filter" className={`text-sm font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-700'}`}>Filter by team type:</label>
           <select
             id="team-type-filter"
-            className="py-1 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className={`py-1 px-3 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+              darkMode 
+                ? 'bg-dark-tertiary border-dark-border text-dark-primary' 
+                : 'bg-white border-gray-300 text-gray-700'
+            }`}
             value={teamTypeFilter}
             onChange={(e) => setTeamTypeFilter(e.target.value)}
           >
@@ -114,9 +132,9 @@ const SquadsPage = () => {
       </div>
       
       {teamTypeFilter !== 'all' && (
-        <div className="mb-4 flex items-center bg-blue-50 p-2 rounded-md">
+        <div className={`mb-4 flex items-center ${darkMode ? 'bg-dark-blue-highlight' : 'bg-blue-50'} p-2 rounded-md`}>
           <div className="flex-grow">
-            <p className="text-sm text-blue-800">
+            <p className={`text-sm ${darkMode ? 'text-dark-blue' : 'text-blue-800'}`}>
               Showing only <strong>{teamTypeFilter === 'stream_aligned' ? 'Stream-aligned' : 
                 teamTypeFilter === 'platform' ? 'Platform' : 
                 teamTypeFilter === 'enabling' ? 'Enabling' : 'Complicated Subsystem'}</strong> teams
@@ -125,7 +143,7 @@ const SquadsPage = () => {
           </div>
           <button 
             onClick={() => setTeamTypeFilter('all')} 
-            className="text-xs text-blue-800 hover:text-blue-900 underline px-2"
+            className={`text-xs ${darkMode ? 'text-dark-blue hover:text-blue-300' : 'text-blue-800 hover:text-blue-900'} underline px-2`}
           >
             Clear filter
           </button>
@@ -139,15 +157,15 @@ const SquadsPage = () => {
             const area = tribe ? areas[tribe.area_id] : null;
             
             return (
-              <div key={squad.id} className="bg-white p-6 rounded-lg shadow-sm border">
+              <div key={squad.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold text-gray-800">{squad.name}</h2>
+                  <h2 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{squad.name}</h2>
                   <span className={`px-2 py-1 rounded-full text-xs ${
                     squad.status === 'Active' 
-                      ? 'bg-green-100 text-green-800' 
+                      ? darkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'
                       : squad.status === 'Forming'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-800'
+                        ? darkMode ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'
+                        : darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'
                   }`}>
                     {squad.status}
                   </span>
@@ -159,15 +177,15 @@ const SquadsPage = () => {
                   />
                 </div>
                 {tribe && (
-                  <div className="mb-2 text-sm">
-                    <span className="text-gray-600">Tribe: </span>
-                    <Link to={`/tribes/${tribe.id}`} className="text-blue-600 hover:underline">
+                  <div className={`mb-2 text-sm ${darkMode ? 'text-dark-secondary' : ''}`}>
+                    <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>Tribe: </span>
+                    <Link to={`/tribes/${tribe.id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
                       {tribe.name}
                     </Link>
                     {area && (
                       <>
-                        <span className="text-gray-600"> in </span>
-                        <Link to={`/areas/${area.id}`} className="text-blue-600 hover:underline">
+                        <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}> in </span>
+                        <Link to={`/areas/${area.id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
                           {area.name}
                         </Link>
                       </>
@@ -185,7 +203,7 @@ const SquadsPage = () => {
                   />
                 </div>
                 {squad.description && (
-                  <p className="text-gray-600 mb-4 line-clamp-2">{squad.description}</p>
+                  <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 line-clamp-2`}>{squad.description}</p>
                 )}
                 <Link 
                   to={`/squads/${squad.id}`}
@@ -197,13 +215,13 @@ const SquadsPage = () => {
             );
           })
         ) : (
-          <div className="col-span-3 text-center py-10 text-gray-500">
+          <div className={`col-span-3 text-center py-10 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             {squads.length > 0 && teamTypeFilter !== 'all' ?
               <>
                 <p>No squads found matching the selected team type.</p>
                 <button 
                   onClick={() => setTeamTypeFilter('all')} 
-                  className="mt-2 text-blue-600 hover:text-blue-800 underline"
+                  className={`mt-2 ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'} underline`}
                 >
                   Show all squads
                 </button>

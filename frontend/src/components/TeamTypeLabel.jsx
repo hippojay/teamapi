@@ -1,5 +1,6 @@
 import React from 'react';
 import { Users, Layers, HelpCircle, Activity } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 /**
  * A reusable component that displays a team type as a pill-shaped label
@@ -20,28 +21,37 @@ const TeamTypeLabel = ({
 }) => {
   // Default to stream_aligned if teamType is not specified
   const type = teamType?.toLowerCase() || 'stream_aligned';
+  const { darkMode } = useTheme();
 
   // Configuration for each team type
   const typeConfig = {
     stream_aligned: {
       icon: <Users />,
       label: 'Stream-aligned',
-      color: 'bg-blue-100 text-blue-800 border-blue-200'
+      color: darkMode 
+        ? 'bg-dark-blue-highlight text-dark-blue border-dark-blue-border' 
+        : 'bg-blue-100 text-blue-800 border-blue-200'
     },
     platform: {
       icon: <Layers />,
       label: 'Platform',
-      color: 'bg-purple-100 text-purple-800 border-purple-200'
+      color: darkMode 
+        ? 'bg-dark-purple-highlight text-dark-purple border-dark-purple-border' 
+        : 'bg-purple-100 text-purple-800 border-purple-200'
     },
     enabling: {
       icon: <HelpCircle />,
       label: 'Enabling',
-      color: 'bg-green-100 text-green-800 border-green-200'
+      color: darkMode 
+        ? 'bg-dark-green-highlight text-dark-green border-dark-green-border' 
+        : 'bg-green-100 text-green-800 border-green-200'
     },
     complicated_subsystem: {
       icon: <Activity />,
       label: 'Complicated Subsystem',
-      color: 'bg-amber-100 text-amber-800 border-amber-200'
+      color: darkMode 
+        ? 'bg-dark-amber-highlight text-dark-amber border-dark-amber-border' 
+        : 'bg-amber-100 text-amber-800 border-amber-200'
     }
   };
 

@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { Info, Users } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, subcon_capacity }) => {
   const [showModal, setShowModal] = useState(false);
   const modalRef = useRef(null);
+  const { darkMode } = useTheme();
   
   // Calculate percentages for the bar
   const totalCapacity = core_capacity + subcon_capacity;
@@ -19,15 +21,15 @@ const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, su
     <>
       <div className="flex items-center text-sm">
         <span className="flex items-center">
-          <Users size={14} className="text-gray-600 mr-1" />
+          <Users size={14} className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mr-1`} />
           <span className="font-normal">{totalCount} members</span>
         </span>
-        <span className="mx-2 text-gray-400">•</span>
+        <span className={`mx-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>•</span>
         <span className="font-normal">{totalCapacity.toFixed(1)} FTE</span>
-        <span className="mx-2 text-gray-400">•</span>
+        <span className={`mx-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>•</span>
         <span className="flex items-center">
         <div className="relative group">
-          <div className="h-4 w-16 bg-gray-200 rounded-full overflow-hidden flex mx-1">
+          <div className={`h-4 w-16 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-full overflow-hidden flex mx-1`}>
             <div 
               className="h-full bg-emerald-500" 
               style={{ width: `${corePercentage}%` }}
@@ -65,13 +67,13 @@ const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, su
         >
           <div 
             ref={modalRef} 
-            className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full" 
+            className={`${darkMode ? 'bg-dark-card text-dark-primary' : 'bg-white text-gray-800'} p-6 rounded-lg shadow-lg max-w-md w-full`} 
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-lg">Team Composition Details</h3>
               <button 
-                className="text-gray-500 hover:text-gray-700" 
+                className={`${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
                 onClick={() => setShowModal(false)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -81,49 +83,49 @@ const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, su
             </div>
             
             <div className="space-y-4">
-              <div className="border-b pb-3">
-                <h4 className="font-medium text-gray-800 mb-2">Core Employees</h4>
+              <div className={`border-b ${darkMode ? 'border-dark-border' : 'border-gray-200'} pb-3`}>
+                <h4 className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-2`}>Core Employees</h4>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-sm text-gray-500">Members:</span>
-                    <p className="font-medium text-emerald-600">{core_count}</p>
+                    <span className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-500'}`}>Members:</span>
+                    <p className="font-medium text-emerald-500">{core_count}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Capacity:</span>
-                    <p className="font-medium text-emerald-600">{core_capacity.toFixed(1)} FTE</p>
+                    <span className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-500'}`}>Capacity:</span>
+                    <p className="font-medium text-emerald-500">{core_capacity.toFixed(1)} FTE</p>
                   </div>
                 </div>
               </div>
               
-              <div className="border-b pb-3">
-                <h4 className="font-medium text-gray-800 mb-2">Contractors</h4>
+              <div className={`border-b ${darkMode ? 'border-dark-border' : 'border-gray-200'} pb-3`}>
+                <h4 className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-2`}>Contractors</h4>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-sm text-gray-500">Members:</span>
-                    <p className="font-medium text-amber-600">{subcon_count}</p>
+                    <span className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-500'}`}>Members:</span>
+                    <p className="font-medium text-amber-500">{subcon_count}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Capacity:</span>
-                    <p className="font-medium text-amber-600">{subcon_capacity.toFixed(1)} FTE</p>
+                    <span className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-500'}`}>Capacity:</span>
+                    <p className="font-medium text-amber-500">{subcon_capacity.toFixed(1)} FTE</p>
                   </div>
                 </div>
               </div>
               
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Totals</h4>
+                <h4 className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-2`}>Totals</h4>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-sm text-gray-500">Members:</span>
-                    <p className="font-medium text-blue-600">{totalCount}</p>
+                    <span className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-500'}`}>Members:</span>
+                    <p className="font-medium text-blue-500">{totalCount}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Capacity:</span>
-                    <p className="font-medium text-blue-600">{totalCapacity.toFixed(1)} FTE</p>
+                    <span className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-500'}`}>Capacity:</span>
+                    <p className="font-medium text-blue-500">{totalCapacity.toFixed(1)} FTE</p>
                   </div>
                 </div>
                 <div className="mt-2">
-                  <span className="text-sm text-gray-500">Core/Subcon Ratio:</span>
-                  <p className="font-medium text-blue-600">
+                  <span className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-500'}`}>Core/Subcon Ratio:</span>
+                  <p className="font-medium text-blue-500">
                     {core_count > 0 
                       ? Math.round(coreCountPercentage)
                       : 0}% / {subcon_count > 0 
