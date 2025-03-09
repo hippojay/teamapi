@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Globe, GitBranch, Server, Smartphone, Code } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api';
 
 const ServicesPage = () => {
@@ -8,6 +9,7 @@ const ServicesPage = () => {
   const [squads, setSquads] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { darkMode } = useTheme();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,34 +58,34 @@ const ServicesPage = () => {
   const getStatusBadge = (status) => {
     switch (status.toLowerCase()) {
       case 'healthy':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Healthy</span>;
+        return <span className={`px-2 py-1 ${darkMode ? 'bg-green-900 text-green-200 border border-green-700 font-medium' : 'bg-green-100 text-green-800'} rounded-full text-xs`}>Healthy</span>;
       case 'degraded':
-        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Degraded</span>;
+        return <span className={`px-2 py-1 ${darkMode ? 'bg-yellow-900 text-yellow-200 border border-yellow-700 font-medium' : 'bg-yellow-100 text-yellow-800'} rounded-full text-xs`}>Degraded</span>;
       case 'down':
-        return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Down</span>;
+        return <span className={`px-2 py-1 ${darkMode ? 'bg-red-900 text-red-200 border border-red-700 font-medium' : 'bg-red-100 text-red-800'} rounded-full text-xs`}>Down</span>;
       default:
-        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{status}</span>;
+        return <span className={`px-2 py-1 ${darkMode ? 'bg-gray-800 text-gray-200 border border-gray-700 font-medium' : 'bg-gray-100 text-gray-800'} rounded-full text-xs`}>{status}</span>;
     }
   };
 
   if (loading) {
-    return <div className="text-center py-10">Loading...</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Loading...</div>;
   }
 
   if (error) {
-    return <div className="text-center py-10 text-red-600">{error}</div>;
+    return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
   return (
     <div>
       {/* Breadcrumbs */}
-      <div className="flex items-center text-sm text-gray-600 mb-6">
-        <Link to="/" className="hover:text-blue-500">Home</Link>
+      <div className={`flex items-center text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-6`}>
+        <Link to="/" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Home</Link>
         <ChevronRight className="h-4 w-4 mx-2" />
-        <span className="font-medium text-gray-800">Services</span>
+        <span className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>Services</span>
       </div>
 
-      <h1 className="text-2xl font-bold mb-6">Services</h1>
+      <h1 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-dark-primary' : ''}`}>Services</h1>
       
       <div className="space-y-4">
         {services.length > 0 ? (
@@ -91,9 +93,9 @@ const ServicesPage = () => {
             const squad = squads[service.squad_id];
             
             return (
-              <div key={service.id} className="bg-white p-6 rounded-lg shadow-sm border">
+              <div key={service.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                  <h2 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} flex items-center`}>
                     {getServiceIcon(service.service_type)}
                     {service.name}
                   </h2>
@@ -101,23 +103,23 @@ const ServicesPage = () => {
                 </div>
                 {squad && (
                   <div className="mb-3 text-sm">
-                    <span className="text-gray-600">Owned by: </span>
-                    <Link to={`/squads/${squad.id}`} className="text-blue-600 hover:underline">
+                    <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Owned by: </span>
+                    <Link to={`/squads/${squad.id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
                       {squad.name} Squad
                     </Link>
                   </div>
                 )}
                 {service.description && (
-                  <p className="text-gray-600 mb-4">{service.description}</p>
+                  <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4`}>{service.description}</p>
                 )}
-                <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
+                <div className={`flex items-center space-x-4 text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4`}>
                   <span>{service.uptime}% Uptime</span>
                   <span>•</span>
                   <span>v{service.version}</span>
                   {service.url && (
                   <>
                   <span>•</span>
-                  <a href={service.url} className="text-blue-500 hover:underline">
+                  <a href={service.url} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-500 hover:underline'}`}>
                   {(service.service_type === 'API') ? 'API Docs' : 'Link'}
                   </a>
                   </>
@@ -127,7 +129,7 @@ const ServicesPage = () => {
             );
           })
         ) : (
-          <div className="text-center py-10 text-gray-500">No services found</div>
+          <div className={`text-center py-10 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No services found</div>
         )}
       </div>
     </div>
