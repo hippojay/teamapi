@@ -4,6 +4,7 @@ import { Users, ChevronRight, Clock } from 'lucide-react';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import TeamTypeLabel from '../components/TeamTypeLabel';
 import DescriptionEditor from '../components/DescriptionEditor';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api';
 
 const TribeDetailPage = () => {
@@ -13,17 +14,30 @@ const TribeDetailPage = () => {
   const [area, setArea] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { darkMode } = useTheme();
   
   // Helper function to get color based on capacity
   const getCapacityColor = (capacity) => {
-    if (capacity > 1.0) {
-      return "text-red-600"; // Over capacity (red)
-    } else if (capacity >= 0.8) {
-      return "text-green-600"; // Good capacity (green)
-    } else if (capacity >= 0.5) {
-      return "text-yellow-600"; // Medium capacity (yellow/amber)
+    if (darkMode) {
+      if (capacity > 1.0) {
+        return "text-red-400"; // Over capacity (red)
+      } else if (capacity >= 0.8) {
+        return "text-green-400"; // Good capacity (green)
+      } else if (capacity >= 0.5) {
+        return "text-yellow-400"; // Medium capacity (yellow/amber)
+      } else {
+        return "text-gray-400"; // Low capacity (default gray)
+      }
     } else {
-      return "text-gray-600"; // Low capacity (default gray)
+      if (capacity > 1.0) {
+        return "text-red-600"; // Over capacity (red)
+      } else if (capacity >= 0.8) {
+        return "text-green-600"; // Good capacity (green)
+      } else if (capacity >= 0.5) {
+        return "text-yellow-600"; // Medium capacity (yellow/amber)
+      } else {
+        return "text-gray-600"; // Low capacity (default gray)
+      }
     }
   };
 
@@ -54,44 +68,44 @@ const TribeDetailPage = () => {
   }, [id]);
 
   if (loading) {
-    return <div className="text-center py-10">Loading...</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Loading...</div>;
   }
 
   if (error) {
-    return <div className="text-center py-10 text-red-600">{error}</div>;
+    return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
   if (!tribe) {
-    return <div className="text-center py-10">Tribe not found</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Tribe not found</div>;
   }
 
   return (
     <div>
       {/* Breadcrumbs */}
-      <div className="flex items-center text-sm text-gray-600 mb-6">
-        <Link to="/" className="hover:text-blue-500">Home</Link>
+      <div className={`flex items-center text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-6`}>
+        <Link to="/" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Home</Link>
         <ChevronRight className="h-4 w-4 mx-2" />
-        <Link to="/areas" className="hover:text-blue-500">Areas</Link>
+        <Link to="/areas" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Areas</Link>
         <ChevronRight className="h-4 w-4 mx-2" />
         {area && (
           <>
-            <Link to={`/areas/${area.id}`} className="hover:text-blue-500">{area.name}</Link>
+            <Link to={`/areas/${area.id}`} className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>{area.name}</Link>
             <ChevronRight className="h-4 w-4 mx-2" />
           </>
         )}
-        <Link to="/tribes" className="hover:text-blue-500">Tribes</Link>
+        <Link to="/tribes" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Tribes</Link>
         <ChevronRight className="h-4 w-4 mx-2" />
-        <span className="font-medium text-gray-800">{tribe.name}</span>
+        <span className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{tribe.name}</span>
       </div>
 
       {/* Tribe Header */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border mb-6">
+      <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border mb-6`}>
         <div className="flex items-center justify-between mb-3">
-          <h1 className="text-2xl font-bold">{tribe.name}</h1>
+          <h1 className={`text-2xl font-bold ${darkMode ? 'text-dark-primary' : ''}`}>{tribe.name}</h1>
           {area && (
             <Link 
               to={`/areas/${area.id}`}
-              className="text-blue-600 hover:underline text-sm"
+              className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'} text-sm`}
             >
               {area.name} Area
             </Link>
@@ -107,7 +121,7 @@ const TribeDetailPage = () => {
             subcon_capacity={tribe.subcon_capacity}
           />
         </div>
-        <div className="text-gray-600 mb-2">
+        <div className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>
           <DescriptionEditor
             entityType="tribe"
             entityId={tribe.id}
@@ -121,19 +135,19 @@ const TribeDetailPage = () => {
       </div>
 
       {/* Squads in this Tribe */}
-      <h2 className="text-xl font-semibold mb-4">Squads</h2>
+      <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-dark-primary' : ''}`}>Squads</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {squads.length > 0 ? (
           squads.map(squad => (
-            <div key={squad.id} className="bg-white p-6 rounded-lg shadow-sm border">
+            <div key={squad.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold">{squad.name}</h3>
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : ''}`}>{squad.name}</h3>
                 <span className={`px-2 py-1 rounded-full text-xs ${
                   squad.status === 'Active' 
-                    ? 'bg-green-100 text-green-800' 
+                    ? darkMode ? 'bg-green-900 text-green-200 border border-green-700 font-medium' : 'bg-green-100 text-green-800'
                     : squad.status === 'Forming'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
+                      ? darkMode ? 'bg-blue-900 text-blue-200 border border-blue-700 font-medium' : 'bg-blue-100 text-blue-800'
+                      : darkMode ? 'bg-gray-800 text-gray-200 border border-gray-700 font-medium' : 'bg-gray-100 text-gray-800'
                 }`}>
                   {squad.status}
                 </span>
@@ -155,7 +169,7 @@ const TribeDetailPage = () => {
                 />
               </div>
               {squad.description && (
-                <p className="text-gray-600 mb-4 line-clamp-2">{squad.description}</p>
+                <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 line-clamp-2`}>{squad.description}</p>
               )}
               <Link 
                 to={`/squads/${squad.id}`}
@@ -166,7 +180,7 @@ const TribeDetailPage = () => {
             </div>
           ))
         ) : (
-          <div className="col-span-3 text-center py-6 text-gray-500">
+          <div className={`col-span-3 text-center py-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             No squads found in this tribe
           </div>
         )}
