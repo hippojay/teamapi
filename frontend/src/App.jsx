@@ -17,43 +17,46 @@ import UsersPage from './pages/UsersPage';
 import DependencyMapPage from './pages/DependencyMapPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Layout>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          
-          {/* Areas */}
-          <Route path="/areas" element={<AreasPage />} />
-          <Route path="/areas/:id" element={<AreaDetailPage />} />
-          
-          {/* Tribes */}
-          <Route path="/tribes" element={<TribesPage />} />
-          <Route path="/tribes/:id" element={<TribeDetailPage />} />
-          
-          {/* Squads */}
-          <Route path="/squads" element={<SquadsPage />} />
-          <Route path="/squads/:id" element={<SquadDetailPage />} />
-          
-          {/* Services */}
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/services/:id" element={<ServiceDetailPage />} />
-          
-          {/* Users */}
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="/users/:id" element={<UserDetailPage />} />
-          
-          {/* Dependencies */}
-          <Route path="/dependencies" element={<DependencyMapPage />} />
-          
-          {/* 404 */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-        </Layout>
-      </Router>
+      <ThemeProvider>
+        <Router>
+          <Layout>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            
+            {/* Areas */}
+            <Route path="/areas" element={<AreasPage />} />
+            <Route path="/areas/:id" element={<AreaDetailPage />} />
+            
+            {/* Tribes */}
+            <Route path="/tribes" element={<TribesPage />} />
+            <Route path="/tribes/:id" element={<TribeDetailPage />} />
+            
+            {/* Squads */}
+            <Route path="/squads" element={<SquadsPage />} />
+            <Route path="/squads/:id" element={<SquadDetailPage />} />
+            
+            {/* Services */}
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/services/:id" element={<ServiceDetailPage />} />
+            
+            {/* Users */}
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/users/:id" element={<UserDetailPage />} />
+            
+            {/* Dependencies */}
+            <Route path="/dependencies" element={<DependencyMapPage />} />
+            
+            {/* 404 */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+          </Layout>
+        </Router>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

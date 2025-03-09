@@ -1,13 +1,15 @@
 import React from 'react';
-import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronRight, ChevronLeft, ChevronLeftCircle, ChevronRightCircle } from 'lucide-react';
+import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronRight, ChevronLeft, ChevronLeftCircle, ChevronRightCircle, Sun, Moon } from 'lucide-react';
 import CustomGrid from './CustomGrid';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { createPortal } from 'react-dom';
 
 const Sidebar = ({ isCollapsed, toggleCollapse }) => {
   const [showUserMenu, setShowUserMenu] = React.useState(false);
   const { user, isAuthenticated, logout } = useAuth();
+  const { darkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
@@ -60,11 +62,11 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
     <div 
       className={`fixed h-full ${
         isCollapsed ? 'w-16' : 'w-64'
-      } bg-white border-r shadow-sm flex flex-col z-20 overflow-y-auto pt-16 transition-all duration-300 ease-in-out`}
+      } ${darkMode ? 'bg-dark-secondary border-dark-border' : 'bg-white border-gray-200'} border-r shadow-sm flex flex-col z-20 overflow-y-auto pt-16 transition-all duration-300 ease-in-out`}
     >
       {/* Collapse toggle button */}
       <button 
-        className={`absolute top-20 ${isCollapsed ? '-right-3' : '-right-3'} bg-white border rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors z-30`}
+        className={`absolute top-20 ${isCollapsed ? '-right-3' : '-right-3'} ${darkMode ? 'bg-dark-tertiary text-dark-primary hover:bg-gray-800' : 'bg-white text-gray-800 hover:bg-gray-100'} border ${darkMode ? 'border-dark-border' : 'border-gray-200'} rounded-full p-1 shadow-md transition-colors z-30`}
         onClick={toggleCollapse}
         aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
@@ -81,7 +83,11 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
             <li key={item.path}>
               <Link 
                 to={item.path} 
-                className={`flex items-center ${isCollapsed ? 'justify-center px-4' : 'px-6'} py-3 text-gray-600 hover:bg-gray-100 hover:text-blue-600 ${isActive(item.path) ? `bg-blue-50 text-blue-600 ${isCollapsed ? 'border-r-2' : 'border-r-4'} border-blue-600` : ''}`}
+                className={`flex items-center ${isCollapsed ? 'justify-center px-4' : 'px-6'} py-3 ${darkMode ? 'text-dark-primary hover:bg-gray-800' : 'text-gray-600 hover:bg-gray-100'} hover:text-blue-600 ${
+                  isActive(item.path) 
+                    ? `${darkMode ? 'bg-gray-800' : 'bg-blue-50'} text-blue-600 ${isCollapsed ? 'border-r-2' : 'border-r-4'} border-blue-600` 
+                    : ''
+                } transition-colors`}
                 title={isCollapsed ? item.label : ''}
               >
                 <item.icon className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'}`} />
@@ -92,14 +98,40 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
         </ul>
       </nav>
       
+      {/* Theme Toggle */}
+      <div className={`p-4 ${isCollapsed ? 'flex justify-center' : ''}`}>
+        <button 
+          onClick={toggleTheme}
+          className={`${isCollapsed ? 'w-10 h-10 flex justify-center items-center rounded-full' : 'w-full flex items-center justify-between px-4 py-2 rounded-md'} ${
+            darkMode 
+              ? 'bg-gray-800 text-yellow-300 hover:bg-gray-700' 
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          } transition-colors`}
+          title={isCollapsed ? (darkMode ? "Switch to Light Mode" : "Switch to Dark Mode") : ""}
+          aria-label="Toggle dark mode"
+        >
+          {darkMode ? (
+            <>
+              <Sun className="h-5 w-5" />
+              {!isCollapsed && <span className="ml-2">Light Mode</span>}
+            </>
+          ) : (
+            <>
+              <Moon className="h-5 w-5" />
+              {!isCollapsed && <span className="ml-2">Dark Mode</span>}
+            </>
+          )}
+        </button>
+      </div>
+      
       {/* Footer with Authentication Controls */}
-      <div className={`mt-auto p-4 border-t text-xs text-gray-500 ${isCollapsed ? 'text-center' : ''}`}>
+      <div className={`mt-auto p-4 border-t ${darkMode ? 'border-dark-border text-dark-secondary' : 'border-gray-200 text-gray-500'} text-xs ${isCollapsed ? 'text-center' : ''}`}>
         {!isAuthenticated ? (
           <button 
             onClick={() => window.showLoginModal()}
             className={`w-full flex items-center ${
               isCollapsed ? 'justify-center' : 'justify-center space-x-2'
-            } p-2 text-blue-600 hover:bg-blue-50 border shadow-sm rounded-md transition-colors mb-3`}
+            } p-2 text-blue-600 ${darkMode ? 'hover:bg-gray-800' : 'hover:bg-blue-50'} border ${darkMode ? 'border-dark-border' : 'border-gray-200'} shadow-sm rounded-md transition-colors mb-3`}
             title={isCollapsed ? "Log In" : ""}
           >
             <LogIn className="h-4 w-4" />
@@ -111,7 +143,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
               onClick={() => setShowUserMenu(!showUserMenu)}
               className={`w-full flex items-center ${
                 isCollapsed ? 'justify-center' : 'justify-between'
-              } p-2 text-gray-700 hover:bg-gray-100 border shadow-sm rounded-md transition-colors`}
+              } p-2 ${darkMode ? 'text-dark-primary hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'} border ${darkMode ? 'border-dark-border' : 'border-gray-200'} shadow-sm rounded-md transition-colors`}
               title={isCollapsed ? user?.username : ""}
             >
               <div className="flex items-center">
@@ -124,7 +156,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
             {showUserMenu && createPortal(
               <div 
                 ref={dropdownRef}
-                className="fixed bg-white rounded-md shadow-xl border overflow-hidden z-[9999]"
+                className={`fixed ${darkMode ? 'bg-dark-tertiary border-dark-border' : 'bg-white border-gray-200'} rounded-md shadow-xl border overflow-hidden z-[9999]`}
                 style={{
                   left: userMenuRef.current ? 
                     (isCollapsed ? 
@@ -151,7 +183,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
                       console.error("Logout error:", error);
                     }
                   }}
-                  className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 flex items-center"
+                  className={`w-full text-left px-4 py-3 text-red-600 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-red-50'} flex items-center`}
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   <span>Log out</span>

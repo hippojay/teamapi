@@ -4,6 +4,7 @@ import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, Chevron
 import CustomGrid from './CustomGrid';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import LoginModal from './LoginModal';
 import SearchBar from './SearchBar';
 import Sidebar from './Sidebar';
@@ -13,6 +14,7 @@ const Layout = ({ children }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
+  const { darkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
@@ -62,11 +64,11 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 overflow-hidden">
+    <div className={`flex min-h-screen ${darkMode ? 'bg-dark-primary text-dark-primary' : 'bg-gray-50 text-gray-800'} overflow-hidden transition-colors duration-200`}>
       {/* Top Header Bar - Fixed Full Width */}
-      <div className="fixed top-0 left-0 right-0 bg-white border-b shadow-sm p-4 flex items-center z-30">
+      <div className={`fixed top-0 left-0 right-0 ${darkMode ? 'bg-dark-secondary border-dark-border' : 'bg-white border-gray-200'} border-b shadow-sm p-4 flex items-center z-30 transition-colors duration-200`}>
         <div className="w-1/3 flex items-center">
-          <Link to="/" className="text-xl font-bold text-gray-800 no-underline flex items-center">
+          <Link to="/" className={`text-xl font-bold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} no-underline flex items-center transition-colors duration-200`}>
             <CustomGrid className="h-6 w-6 mr-2 text-blue-600" />
             Who What Where
           </Link>
@@ -81,7 +83,7 @@ const Layout = ({ children }) => {
         </div>
       </div>
 
-      {/* Use the new Sidebar component */}
+      {/* Use the new Sidebar component with dark mode support */}
       <Sidebar isCollapsed={isSidebarCollapsed} toggleCollapse={toggleSidebar} />
       
       {/* Login Modal */}
@@ -100,7 +102,7 @@ const Layout = ({ children }) => {
         </main>
         
         {/* Footer */}
-        <footer className="bg-white border-t p-4 text-center text-xs text-gray-500">
+        <footer className={`${darkMode ? 'bg-dark-secondary border-dark-border text-dark-secondary' : 'bg-white border-gray-200 text-gray-500'} border-t p-4 text-center text-xs transition-colors duration-200`}>
           <p>&copy; 2025 Who What Where - v1.0</p>
         </footer>
       </div>
