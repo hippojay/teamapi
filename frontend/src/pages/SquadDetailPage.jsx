@@ -443,9 +443,9 @@ const SquadDetailPage = () => {
           </div>
 
           {/* Services */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center">
-            <Database className="h-5 w-5 mr-2" />
+          <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-2 flex items-center`}>
+            <Database className={`h-5 w-5 mr-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
             Owned Services
             </h3>
           
