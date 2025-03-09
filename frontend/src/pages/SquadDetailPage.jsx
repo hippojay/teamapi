@@ -7,6 +7,7 @@ import TeamTypeLabel from '../components/TeamTypeLabel';
 import DescriptionEditor from '../components/DescriptionEditor';
 import ServiceEditor from '../components/ServiceEditor';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api';
 
 const SquadDetailPage = () => {
@@ -24,6 +25,7 @@ const SquadDetailPage = () => {
   const [editingTeamType, setEditingTeamType] = useState(false);
   const modalRef = useRef(null);
   const { isAuthenticated } = useAuth();
+  const { darkMode } = useTheme();
   const [editingService, setEditingService] = useState(null);
   const [isAddingService, setIsAddingService] = useState(false);
   const [filteredServices, setFilteredServices] = useState([]);
@@ -37,14 +39,26 @@ const SquadDetailPage = () => {
   
   // Helper function to get color based on capacity
   const getCapacityColor = (capacity) => {
-    if (capacity > 1.0) {
-      return "text-red-600"; // Over capacity (red)
-    } else if (capacity >= 0.8) {
-      return "text-green-600"; // Good capacity (green)
-    } else if (capacity >= 0.5) {
-      return "text-yellow-600"; // Medium capacity (yellow/amber)
+    if (darkMode) {
+      if (capacity > 1.0) {
+        return "text-red-400"; // Over capacity (red)
+      } else if (capacity >= 0.8) {
+        return "text-green-400"; // Good capacity (green)
+      } else if (capacity >= 0.5) {
+        return "text-yellow-400"; // Medium capacity (yellow/amber)
+      } else {
+        return "text-gray-400"; // Low capacity (default gray)
+      }
     } else {
-      return "text-gray-600"; // Low capacity (default gray)
+      if (capacity > 1.0) {
+        return "text-red-600"; // Over capacity (red)
+      } else if (capacity >= 0.8) {
+        return "text-green-600"; // Good capacity (green)
+      } else if (capacity >= 0.5) {
+        return "text-yellow-600"; // Medium capacity (yellow/amber)
+      } else {
+        return "text-gray-600"; // Low capacity (default gray)
+      }
     }
   };
 
@@ -134,7 +148,7 @@ const SquadDetailPage = () => {
 
   // Handle loading state
   if (loading) {
-    return <div className="text-center py-10">Loading...</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Loading...</div>;
   }
 
   // Handle error state
@@ -144,49 +158,49 @@ const SquadDetailPage = () => {
 
   // Handle not found
   if (!squad) {
-    return <div className="text-center py-10">Squad not found</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Squad not found</div>;
   }
 
   const getServiceIcon = (serviceType) => {
     const type = serviceType && serviceType.toUpperCase();
     switch (type) {
       case 'API':
-        return <Code className="h-4 w-4 text-blue-600" />;
+        return <Code className="h-4 w-4 text-blue-500" />;
       case 'REPO':
       case 'REPOSITORY':
-        return <GitBranch className="h-4 w-4 text-purple-600" />;
+        return <GitBranch className="h-4 w-4 text-purple-500" />;
       case 'PLATFORM':
-        return <Server className="h-4 w-4 text-green-600" />;
+        return <Server className="h-4 w-4 text-green-500" />;
       case 'WEBPAGE':
-        return <Globe className="h-4 w-4 text-orange-600" />;
+        return <Globe className="h-4 w-4 text-orange-500" />;
       case 'APP_MODULE':
-        return <Smartphone className="h-4 w-4 text-red-600" />;
+        return <Smartphone className="h-4 w-4 text-red-500" />;
       default:
-        return <Database className="h-4 w-4 text-gray-600" />;
+        return <Database className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />;
     }
   };
 
   const getStatusBadge = (status) => {
     switch (status.toLowerCase()) {
       case 'healthy':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Healthy</span>;
+        return <span className={`px-2 py-1 ${darkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'} rounded-full text-xs`}>Healthy</span>;
       case 'degraded':
-        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Degraded</span>;
+        return <span className={`px-2 py-1 ${darkMode ? 'bg-yellow-900 text-yellow-300' : 'bg-yellow-100 text-yellow-800'} rounded-full text-xs`}>Degraded</span>;
       case 'down':
-        return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Down</span>;
+        return <span className={`px-2 py-1 ${darkMode ? 'bg-red-900 text-red-300' : 'bg-red-100 text-red-800'} rounded-full text-xs`}>Down</span>;
       default:
-        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{status}</span>;
+        return <span className={`px-2 py-1 ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'} rounded-full text-xs`}>{status}</span>;
     }
   };
 
   const getDependencyBadge = (type) => {
     switch (type.toLowerCase()) {
       case 'required':
-        return <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Required</span>;
+        return <span className={`px-2 py-1 ${darkMode ? 'bg-dark-blue-highlight text-dark-blue' : 'bg-blue-100 text-blue-800'} rounded-full text-xs`}>Required</span>;
       case 'optional':
-        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">Optional</span>;
+        return <span className={`px-2 py-1 ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'} rounded-full text-xs`}>Optional</span>;
       default:
-        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{type}</span>;
+        return <span className={`px-2 py-1 ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'} rounded-full text-xs`}>{type}</span>;
     }
   };
 
@@ -255,20 +269,20 @@ const SquadDetailPage = () => {
     
     return (
       <div key={service.id} 
-          className="flex items-center justify-between px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors">
+          className={`flex items-center justify-between px-3 py-2 border ${darkMode ? 'border-dark-border hover:bg-gray-800' : 'border-gray-200 hover:bg-gray-50'} rounded-md transition-colors`}>
         <div className="flex items-center">
           <div className="mr-2">
             {getServiceIcon(service.service_type)}
           </div>
           <div>
-            <span className="font-medium text-gray-800">{service.name}</span>
-            <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600">
+            <span className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{service.name}</span>
+            <span className={`ml-2 text-xs px-2 py-0.5 ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'} rounded-full`}>
               {service.service_type || 'API'}
             </span>
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-xs text-gray-500">v{service.version}</span>
+          <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>v{service.version}</span>
           {getStatusBadge(service.status)}
           
           {isAuthenticated && (
@@ -279,7 +293,7 @@ const SquadDetailPage = () => {
                   e.stopPropagation();
                   setEditingService(service.id);
                 }}
-                className="p-1 text-gray-400 hover:text-blue-500"
+                className={`p-1 ${darkMode ? 'text-gray-500 hover:text-blue-400' : 'text-gray-400 hover:text-blue-500'}`}
                 title="Edit"
               >
                 <Edit className="h-4 w-4" />
@@ -291,7 +305,7 @@ const SquadDetailPage = () => {
                   e.stopPropagation();
                   handleDeleteService(service.id);
                 }}
-                className="p-1 text-gray-400 hover:text-red-500"
+                className={`p-1 ${darkMode ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
                 title="Delete"
               >
                 <Trash2 className="h-4 w-4" />
@@ -301,7 +315,7 @@ const SquadDetailPage = () => {
           
           <Link 
             to={`/services/${service.id}`}
-            className="p-1 text-gray-400 hover:text-blue-500"
+            className={`p-1 ${darkMode ? 'text-gray-500 hover:text-blue-400' : 'text-gray-400 hover:text-blue-500'}`}
           >
             <ChevronRight className="h-4 w-4" />
           </Link>
@@ -313,40 +327,40 @@ const SquadDetailPage = () => {
   return (
     <div>
       {/* Breadcrumbs */}
-      <div className="flex items-center text-sm text-gray-600 mb-6">
-        <Link to="/" className="hover:text-blue-500">Home</Link>
+      <div className={`flex items-center text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-6`}>
+        <Link to="/" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Home</Link>
         <ChevronRight className="h-4 w-4 mx-2" />
-        <Link to="/areas" className="hover:text-blue-500">Areas</Link>
+        <Link to="/areas" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Areas</Link>
         <ChevronRight className="h-4 w-4 mx-2" />
         {area && (
           <>
-            <Link to={`/areas/${area.id}`} className="hover:text-blue-500">{area.name}</Link>
+            <Link to={`/areas/${area.id}`} className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>{area.name}</Link>
             <ChevronRight className="h-4 w-4 mx-2" />
           </>
         )}
         {tribe && (
           <>
-            <Link to={`/tribes/${tribe.id}`} className="hover:text-blue-500">{tribe.name}</Link>
+            <Link to={`/tribes/${tribe.id}`} className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>{tribe.name}</Link>
             <ChevronRight className="h-4 w-4 mx-2" />
           </>
         )}
-        <span className="font-medium text-gray-800">{squad.name}</span>
+        <span className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{squad.name}</span>
       </div>
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Squad Info */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
             <div className="flex flex-col mb-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-800">{squad.name}</h2>
+                <h2 className={`text-xl font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{squad.name}</h2>
                 <span className={`px-3 py-1 rounded-full text-sm ${
                   squad.status === 'Active' 
-                    ? 'bg-green-100 text-green-800' 
+                    ? darkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'
                     : squad.status === 'Forming'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
+                      ? darkMode ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'
+                      : darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'
                 }`}>
                   {squad.status}
                 </span>
@@ -360,7 +374,7 @@ const SquadDetailPage = () => {
                 {isAuthenticated && (
                   <button 
                     onClick={() => setEditingTeamType(true)}
-                    className="ml-2 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                    className={`ml-2 text-xs ${darkMode ? 'text-blue-400 hover:text-blue-300 hover:underline' : 'text-blue-600 hover:text-blue-800 hover:underline'}`}
                   >
                     Edit
                   </button>
@@ -369,7 +383,7 @@ const SquadDetailPage = () => {
               
               {/* Edit Team Type Dialog */}
               {isAuthenticated && editingTeamType && (
-                <div className="mt-3 p-3 border rounded-md bg-gray-50">
+                <div className={`mt-3 p-3 border rounded-md ${darkMode ? 'bg-dark-tertiary border-dark-border' : 'bg-gray-50 border-gray-200'}`}>
                   <div className={updatingTeamType ? "opacity-50 pointer-events-none" : ""}>
                     <TeamTypeEditor 
                       teamType={squad.team_type || "stream_aligned"} 
@@ -381,14 +395,14 @@ const SquadDetailPage = () => {
                     />
                   </div>
                   {updatingTeamType ? (
-                    <div className="text-center text-sm text-blue-600 mt-2">
+                    <div className={`text-center text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} mt-2`}>
                       Updating team type...
                     </div>
                   ) : (
                     <div className="flex justify-end mt-2">
                       <button 
                         onClick={() => setEditingTeamType(false)}
-                        className="px-2 py-1 text-sm text-gray-600 hover:text-gray-800 border rounded"
+                        className={`px-2 py-1 text-sm ${darkMode ? 'text-gray-400 hover:text-gray-200 border-dark-border' : 'text-gray-600 hover:text-gray-800 border-gray-200'} border rounded`}
                       >
                         Cancel
                       </button>
@@ -407,7 +421,7 @@ const SquadDetailPage = () => {
                 subcon_capacity={squad.subcon_capacity}
               />
             </div>
-            <div className="text-gray-600 mb-4">
+            <div className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>
               <DescriptionEditor
                 entityType="squad"
                 entityId={squad.id}
@@ -418,11 +432,11 @@ const SquadDetailPage = () => {
                 }}
               />
             </div>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 mt-4">
               <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
                 Contact Squad
               </button>
-              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+              <button className={`px-4 py-2 border rounded-lg ${darkMode ? 'border-dark-border hover:bg-dark-tertiary text-dark-primary' : 'border-gray-300 hover:bg-gray-50 text-gray-700'}`}>
                 View Documentation
               </button>
             </div>
@@ -438,17 +452,17 @@ const SquadDetailPage = () => {
           {/* Service filters */}
           <div className="flex flex-col md:flex-row gap-2 mb-4">
             <div className="flex-grow">
-              <div className="flex items-center border rounded-md focus-within:ring-1 focus-within:ring-blue-500 overflow-hidden">
+              <div className={`flex items-center border rounded-md focus-within:ring-1 focus-within:ring-blue-500 overflow-hidden ${darkMode ? 'border-dark-border' : 'border-gray-200'}`}>
                 <input
                   type="text"
                   placeholder="Search services..."
-                  className="w-full px-3 py-2 border-none focus:outline-none"
+                  className={`w-full px-3 py-2 border-none focus:outline-none ${darkMode ? 'bg-dark-tertiary text-dark-primary placeholder-gray-500' : 'bg-white text-gray-900'}`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 {searchTerm && (
                   <button 
-                    className="px-2 text-gray-400 hover:text-gray-600"
+                    className={`px-2 ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                     onClick={() => setSearchTerm('')}
                     title="Clear search"
                   >
@@ -457,12 +471,16 @@ const SquadDetailPage = () => {
                 )}
               </div>
               {searchTerm && searchTerm.length < 3 && (
-                <p className="text-xs text-gray-500 mt-1">Enter at least 3 characters to search</p>
+                <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'} mt-1`}>Enter at least 3 characters to search</p>
               )}
             </div>
             <div className="md:w-1/3">
               <select
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                  darkMode 
+                    ? 'bg-dark-tertiary border-dark-border text-dark-primary' 
+                    : 'bg-white border-gray-300 text-gray-900'
+                }`}
                 value={serviceTypeFilter}
                 onChange={(e) => setServiceTypeFilter(e.target.value)}
                 aria-label="Filter by service type"
@@ -479,7 +497,7 @@ const SquadDetailPage = () => {
           
           {/* Filter status and reset */}
           {(searchTerm || serviceTypeFilter) && (
-            <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
+            <div className={`flex justify-between items-center text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-3`}>
               <div>
                 <span>Showing {filteredServices.length} of {services.length} services</span>
                 {serviceTypeFilter && (
@@ -491,7 +509,7 @@ const SquadDetailPage = () => {
               </div>
               <button
                 onClick={resetFilters}
-                className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+                className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-500 hover:text-blue-700'} text-sm font-medium`}
               >
                 Reset Filters
               </button>
@@ -512,17 +530,17 @@ const SquadDetailPage = () => {
             
             <div className="space-y-2">
               {loading ? (
-                <div className="text-gray-500 text-center py-4 animate-pulse">Loading services...</div>
+                <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-center py-4 animate-pulse`}>Loading services...</div>
               ) : services.length > 0 ? (
                 filteredServices.length > 0 ? (
                   filteredServices.map(service => renderServiceItem(service))
                 ) : (
-                  <div className="text-gray-500 text-center py-4">
+                  <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-center py-4`}>
                     No services found matching your filters
                     {(searchTerm || serviceTypeFilter) && (
                       <div className="mt-2">
                         <button 
-                          className="text-blue-500 hover:underline"
+                          className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-500 hover:underline'}`}
                           onClick={resetFilters}
                         >
                           Clear all filters
@@ -532,13 +550,13 @@ const SquadDetailPage = () => {
                   </div>
                 )
               ) : (
-                <div className="text-gray-500 text-center py-4">No services found</div>
+                <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-center py-4`}>No services found</div>
               )}
             </div>
             {isAuthenticated && !isAddingService && (
-              <div className="mt-3 pt-3 border-t text-right">
+              <div className={`mt-3 pt-3 ${darkMode ? 'border-dark-border' : 'border-gray-200'} border-t text-right`}>
                 <button 
-                  className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 flex items-center ml-auto"
+                  className={`px-3 py-1.5 ${darkMode ? 'bg-dark-blue-highlight text-dark-blue hover:bg-blue-900' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'} rounded-md flex items-center ml-auto`}
                   onClick={() => setIsAddingService(true)}
                 >
                   <Plus className="h-4 w-4 mr-1" />
@@ -549,9 +567,9 @@ const SquadDetailPage = () => {
           </div>
 
           {/* Team Members */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <Users className="h-5 w-5 mr-2" />
+          <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-4 flex items-center`}>
+              <Users className={`h-5 w-5 mr-2 ${darkMode ? 'text-blue-400' : ''}`} />
               Team Members
             </h3>
             {squad.team_members && squad.team_members.length > 0 ? (
@@ -560,20 +578,30 @@ const SquadDetailPage = () => {
                   <Link 
                     key={member.id} 
                     to={`/users/${member.id}`}
-                    className="p-3 border rounded-lg flex items-center hover:bg-gray-50 cursor-pointer"
+                    className={`p-3 border rounded-lg flex items-center ${
+                      darkMode 
+                        ? 'border-dark-border hover:bg-gray-800' 
+                        : 'border-gray-200 hover:bg-gray-50'
+                    } cursor-pointer`}
                   >
-                    <div className="bg-blue-100 p-2 rounded-full mr-3">
-                      <Users className="h-4 w-4 text-blue-700" />
+                    <div className={`${darkMode ? 'bg-blue-900' : 'bg-blue-100'} p-2 rounded-full mr-3`}>
+                      <Users className={`h-4 w-4 ${darkMode ? 'text-blue-400' : 'text-blue-700'}`} />
                     </div>
                     <div className="flex-grow">
-                      <div className="font-medium">{member.name}</div>
-                      <div className="text-sm text-gray-600">{member.role}</div>
+                      <div className={`font-medium ${darkMode ? 'text-dark-primary' : ''}`}>{member.name}</div>
+                      <div className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>{member.role}</div>
                       <div className="text-xs mt-1 flex flex-wrap gap-1">
-                        <span className={`px-2 py-0.5 rounded-full ${member.employment_type === 'core' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                        <span className={`px-2 py-0.5 rounded-full ${
+                          member.employment_type === 'core'
+                            ? darkMode ? 'bg-green-900 text-green-300' : 'bg-emerald-100 text-emerald-700'
+                            : darkMode ? 'bg-amber-900 text-amber-300' : 'bg-amber-100 text-amber-700'
+                        }`}>
                           {member.employment_type === 'core' ? 'Core Employee' : 'Contractor'}
                         </span>
                         {member.employment_type === 'subcon' && member.vendor_name && (
-                          <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                          <span className={`px-2 py-0.5 rounded-full ${
+                            darkMode ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-700'
+                          }`}>
                             {member.vendor_name}
                           </span>
                         )}
@@ -586,7 +614,7 @@ const SquadDetailPage = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-gray-500 text-center py-4">No team members found</div>
+              <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-center py-4`}>No team members found</div>
             )}
           </div>
         </div>
@@ -594,80 +622,80 @@ const SquadDetailPage = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Dependencies */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <GitBranch className="h-5 w-5 mr-2" />
+          <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-4 flex items-center`}>
+              <GitBranch className={`h-5 w-5 mr-2 ${darkMode ? 'text-blue-400' : ''}`} />
               Dependencies
             </h3>
             {dependencies.length > 0 ? (
               <ul className="space-y-3">
                 {dependencies.map(dep => (
                   <li key={dep.id} className="flex items-center justify-between">
-                    <span className="text-gray-600">{dep.dependency_name}</span>
+                    <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>{dep.dependency_name}</span>
                     {getDependencyBadge(dep.dependency_type)}
                   </li>
                 ))}
               </ul>
             ) : (
-              <div className="text-gray-500 text-center">No dependencies found</div>
+              <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-center`}>No dependencies found</div>
             )}
           </div>
 
           {/* On-Call */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <Bell className="h-5 w-5 mr-2" />
+          <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-4 flex items-center`}>
+              <Bell className={`h-5 w-5 mr-2 ${darkMode ? 'text-blue-400' : ''}`} />
               On-Call
             </h3>
             {onCall ? (
               <div className="space-y-3">
                 <div>
-                  <div className="text-sm text-gray-500">Primary</div>
-                  <div className="text-gray-800">{onCall.primary_name}</div>
+                  <div className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-500'}`}>Primary</div>
+                  <div className={darkMode ? 'text-dark-primary' : 'text-gray-800'}>{onCall.primary_name}</div>
                   {onCall.primary_contact && (
-                    <div className="text-sm text-blue-600">{onCall.primary_contact}</div>
+                    <div className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{onCall.primary_contact}</div>
                   )}
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500">Secondary</div>
-                  <div className="text-gray-800">{onCall.secondary_name}</div>
+                  <div className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-500'}`}>Secondary</div>
+                  <div className={darkMode ? 'text-dark-primary' : 'text-gray-800'}>{onCall.secondary_name}</div>
                   {onCall.secondary_contact && (
-                    <div className="text-sm text-blue-600">{onCall.secondary_contact}</div>
+                    <div className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{onCall.secondary_contact}</div>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="text-gray-500 text-center">No on-call roster found</div>
+              <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-center`}>No on-call roster found</div>
             )}
           </div>
 
           {/* Additional Info */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Squad Details</h3>
+          <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-4`}>Squad Details</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Tribe:</span>
+                <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>Tribe:</span>
                 {tribe && (
-                  <Link to={`/tribes/${tribe.id}`} className="text-blue-600 hover:underline">
+                  <Link to={`/tribes/${tribe.id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
                     {tribe.name}
                   </Link>
                 )}
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Area:</span>
+                <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>Area:</span>
                 {area && (
-                  <Link to={`/areas/${area.id}`} className="text-blue-600 hover:underline">
+                  <Link to={`/areas/${area.id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
                     {area.name}
                   </Link>
                 )}
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Status:</span>
-                <span>{squad.status}</span>
+                <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>Status:</span>
+                <span className={darkMode ? 'text-dark-primary' : ''}>{squad.status}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Timezone:</span>
-                <span>{squad.timezone}</span>
+                <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>Timezone:</span>
+                <span className={darkMode ? 'text-dark-primary' : ''}>{squad.timezone}</span>
               </div>
             </div>
           </div>
