@@ -147,18 +147,16 @@ const Layout = ({ children }) => {
         
         {/* Footer with Authentication Controls */}
         <div className="mt-auto p-4 border-t text-xs text-gray-500">
-          <p className="mb-3">Who What Where - v1.0</p>
-          
           {!isAuthenticated ? (
             <button 
               onClick={() => setShowLoginModal(true)}
-              className="w-full flex items-center justify-center space-x-2 p-2 text-blue-600 hover:bg-blue-50 border shadow-sm rounded-md transition-colors"
+              className="w-full flex items-center justify-center space-x-2 p-2 text-blue-600 hover:bg-blue-50 border shadow-sm rounded-md transition-colors mb-3"
             >
               <LogIn className="h-4 w-4" />
               <span>Log In</span>
             </button>
           ) : (
-            <div className="relative" ref={userMenuRef}>
+            <div className="relative mb-3" ref={userMenuRef}>
               <button 
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 className="w-full flex items-center justify-between p-2 text-gray-700 hover:bg-gray-100 border shadow-sm rounded-md transition-colors"
@@ -216,6 +214,8 @@ const Layout = ({ children }) => {
               )}
             </div>
           )}
+          
+          <p className="text-center">Who What Where - v1.0</p>
         </div>
         
         {/* Login Modal */}
@@ -235,8 +235,8 @@ const Layout = ({ children }) => {
         </main>
         
         {/* Footer */}
-        <footer className="bg-white border-t p-4 text-center text-gray-600">
-          <p>&copy; 2025 Who What Where - Team API Portal</p>
+        <footer className="bg-white border-t p-4 text-center text-xs text-gray-500">
+          <p>&copy; 2025 Who What Where - v1.0</p>
         </footer>
       </div>
     </div>
