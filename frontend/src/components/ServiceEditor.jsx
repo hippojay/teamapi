@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Check, Code, GitBranch, Server, Globe, Smartphone } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api';
 
 const ServiceEditor = ({ 
@@ -9,6 +10,7 @@ const ServiceEditor = ({
   onCancel,
   isCreating = false 
 }) => {
+  const { darkMode } = useTheme();
   const initialState = service ? {
     name: service.name || '',
     description: service.description || '',
@@ -99,15 +101,15 @@ const ServiceEditor = ({
   };
 
   return (
-    <div className="bg-white p-4 rounded-md border shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 flex items-center">
+    <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-4 rounded-md border shadow-sm`}>
+      <h3 className={`text-lg font-semibold mb-4 flex items-center ${darkMode ? 'text-dark-primary' : ''}`}>
         {renderServiceTypeIcon()}
         {isCreating ? 'Add New Service' : 'Edit Service'}
       </h3>
       
       <form onSubmit={handleSubmit}>
         {error && (
-          <div className="mb-4 p-2 bg-red-50 text-red-700 border border-red-200 rounded-md text-sm">
+          <div className={`mb-4 p-2 ${darkMode ? 'bg-red-900 text-red-200 border-red-800' : 'bg-red-50 text-red-700 border-red-200'} border rounded-md text-sm`}>
             {error}
           </div>
         )}
@@ -115,7 +117,7 @@ const ServiceEditor = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Name field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={`block text-sm font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-700'} mb-1`}>
               Service Name*
             </label>
             <input
@@ -123,14 +125,18 @@ const ServiceEditor = ({
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                darkMode 
+                  ? 'bg-dark-tertiary border-dark-border text-dark-primary' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
               required
             />
           </div>
           
           {/* Version field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={`block text-sm font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-700'} mb-1`}>
               Version
             </label>
             <input
@@ -138,21 +144,29 @@ const ServiceEditor = ({
               name="version"
               value={formData.version}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                darkMode 
+                  ? 'bg-dark-tertiary border-dark-border text-dark-primary' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
               placeholder="1.0.0"
             />
           </div>
         </div>
         
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className={`block text-sm font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-700'} mb-1`}>
             Description
           </label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+              darkMode 
+                ? 'bg-dark-tertiary border-dark-border text-dark-primary placeholder-gray-500' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
             rows="2"
             placeholder="Add a brief description of this service"
           />
@@ -161,14 +175,18 @@ const ServiceEditor = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Service Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={`block text-sm font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-700'} mb-1`}>
               Service Type
             </label>
             <select
               name="service_type"
               value={formData.service_type}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                darkMode 
+                  ? 'bg-dark-tertiary border-dark-border text-dark-primary' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
             >
               <option value="API">API</option>
               <option value="REPO">Code Repository</option>
@@ -180,14 +198,18 @@ const ServiceEditor = ({
           
           {/* Status field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={`block text-sm font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-700'} mb-1`}>
               Status
             </label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                darkMode 
+                  ? 'bg-dark-tertiary border-dark-border text-dark-primary' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
             >
               <option value="HEALTHY">Healthy</option>
               <option value="DEGRADED">Degraded</option>
@@ -197,7 +219,7 @@ const ServiceEditor = ({
         </div>
         
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className={`block text-sm font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-700'} mb-1`}>
             URL
           </label>
           <input
@@ -205,7 +227,11 @@ const ServiceEditor = ({
             name="url"
             value={formData.url || ''}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+              darkMode 
+                ? 'bg-dark-tertiary border-dark-border text-dark-primary placeholder-gray-500' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
             placeholder={
               formData.service_type === 'API' ? 'https://example.com/api/docs' :
               formData.service_type === 'REPO' ? 'https://github.com/org/repo' :
@@ -216,11 +242,15 @@ const ServiceEditor = ({
           />
         </div>
         
-        <div className="flex justify-end space-x-2 pt-2 border-t">
+        <div className={`flex justify-end space-x-2 pt-2 ${darkMode ? 'border-dark-border' : 'border-gray-200'} border-t`}>
           <button
             type="button"
             onClick={onCancel}
-            className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 flex items-center"
+            className={`px-3 py-1.5 border rounded-md flex items-center ${
+              darkMode 
+                ? 'border-dark-border text-dark-primary hover:bg-dark-tertiary' 
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
             disabled={saving}
           >
             <X className="h-4 w-4 mr-1" />
@@ -228,7 +258,7 @@ const ServiceEditor = ({
           </button>
           <button
             type="submit"
-            className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
+            className={`px-3 py-1.5 bg-blue-600 text-white rounded-md ${saving ? '' : 'hover:bg-blue-700'} flex items-center`}
             disabled={saving}
           >
             <Check className="h-4 w-4 mr-1" />

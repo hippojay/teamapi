@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil, X, Save, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api';
 import ReactMarkdown from 'react-markdown';
 
@@ -10,6 +11,7 @@ const DescriptionEditor = ({ entityType, entityId, initialDescription, onDescrip
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const { isAuthenticated } = useAuth();
+  const { darkMode } = useTheme();
   
   // Update local state when initialDescription prop changes
   useEffect(() => {
@@ -44,9 +46,9 @@ const DescriptionEditor = ({ entityType, entityId, initialDescription, onDescrip
   
   if (isEditing) {
     return (
-      <div className="bg-white p-4 rounded-lg border shadow-sm">
+      <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-4 rounded-lg border shadow-sm`}>
         {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md flex items-center">
+          <div className={`mb-4 p-3 ${darkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-700'} rounded-md flex items-center`}>
             <AlertCircle className="h-4 w-4 mr-2" />
             {error}
           </div>
@@ -55,14 +57,22 @@ const DescriptionEditor = ({ entityType, entityId, initialDescription, onDescrip
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[150px]"
+          className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[150px] ${
+            darkMode 
+              ? 'bg-dark-tertiary border-dark-border text-dark-primary' 
+              : 'bg-white border-gray-300 text-gray-800'
+          }`}
           placeholder="Enter description (markdown supported)"
         />
         
         <div className="mt-3 flex justify-end space-x-2">
           <button
             onClick={handleCancel}
-            className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-100 flex items-center"
+            className={`px-3 py-2 border rounded-md flex items-center ${
+              darkMode 
+                ? 'border-dark-border text-dark-primary hover:bg-dark-tertiary' 
+                : 'border-gray-300 text-gray-800 hover:bg-gray-100'
+            }`}
           >
             <X className="h-4 w-4 mr-1" />
             Discard
@@ -83,18 +93,22 @@ const DescriptionEditor = ({ entityType, entityId, initialDescription, onDescrip
   
   return (
     <div className="relative">
-      <div className="prose max-w-none">
+      <div className={`prose max-w-none ${darkMode ? 'prose-invert' : ''}`}>
         {description ? (
           <ReactMarkdown>{description}</ReactMarkdown>
         ) : (
-          <p className="text-gray-500 italic">No description available.</p>
+          <p className={`${darkMode ? 'text-gray-500' : 'text-gray-500'} italic`}>No description available.</p>
         )}
       </div>
       
       {isAuthenticated && (
         <button
           onClick={() => setIsEditing(true)}
-          className="absolute top-0 right-0 p-1 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md"
+          className={`absolute top-0 right-0 p-1 rounded-md ${
+            darkMode 
+              ? 'text-gray-500 hover:text-blue-400 hover:bg-gray-800' 
+              : 'text-gray-500 hover:text-blue-600 hover:bg-gray-100'
+          }`}
           title="Edit description"
         >
           <Pencil className="h-4 w-4" />
