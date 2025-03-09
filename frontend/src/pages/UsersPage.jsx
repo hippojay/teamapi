@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Search, Filter } from 'lucide-react';
 import api from '../api';
+import { useTheme } from '../context/ThemeContext';
 
 const UsersPage = () => {
+  const { darkMode } = useTheme();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,33 +79,33 @@ const UsersPage = () => {
     if (!capacity && capacity !== 0) {
       return "bg-gray-100 text-gray-800"; // Handle undefined/NaN cases
     } else if (capacity > 1.0) {
-      return "bg-red-100 text-red-800"; // Over capacity (red)
+      return darkMode ? "bg-red-900 text-red-200 border border-red-700" : "bg-red-100 text-red-800"; // Over capacity (red)
     } else if (capacity >= 0.8) {
-      return "bg-green-100 text-green-800"; // Good capacity (green)
+      return darkMode ? "bg-green-900 text-green-200 border border-green-700" : "bg-green-100 text-green-800"; // Good capacity (green)
     } else if (capacity >= 0.5) {
-      return "bg-yellow-100 text-yellow-800"; // Medium capacity (yellow)
+      return darkMode ? "bg-yellow-900 text-yellow-200 border border-yellow-700" : "bg-yellow-100 text-yellow-800"; // Medium capacity (yellow)
     } else {
-      return "bg-gray-100 text-gray-800"; // Low capacity (gray)
+      return darkMode ? "bg-gray-800 text-gray-200 border border-gray-700" : "bg-gray-100 text-gray-800"; // Low capacity (gray)
     }
   };
 
   if (loading) {
-    return <div className="text-center py-10">Loading users...</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Loading users...</div>;
   }
 
   if (error) {
-    return <div className="text-center py-10 text-red-600">{error}</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{error}</div>;
   }
 
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Team Members</h1>
-        <p className="text-gray-600">View and filter all team members across the organisation.</p>
+        <h1 className={`text-2xl font-bold ${darkMode ? 'text-dark-primary' : 'text-gray-900'} mb-4`}>Team Members</h1>
+        <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>View and filter all team members across the organisation.</p>
       </div>
       
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border mb-6">
+      <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white'} p-4 rounded-lg shadow-sm border mb-6`}>
         <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
           {/* Search */}
           <div className="relative flex-grow mb-4 md:mb-0">
@@ -113,7 +115,7 @@ const UsersPage = () => {
             <input
               type="text"
               placeholder="Search users by name, role, region, or location..."
-              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-dark-tertiary border-dark-border text-dark-primary' : ''}`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -125,7 +127,7 @@ const UsersPage = () => {
               <Filter className="h-5 w-5 text-gray-400" />
             </div>
             <select
-              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+              className={`pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${darkMode ? 'bg-dark-tertiary border-dark-border text-dark-primary' : 'bg-white'}`}
               value={filterBySquad}
               onChange={(e) => setFilterBySquad(e.target.value)}
             >
@@ -144,7 +146,7 @@ const UsersPage = () => {
               <User className="h-5 w-5 text-gray-400" />
             </div>
             <select
-              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+              className={`pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${darkMode ? 'bg-dark-tertiary border-dark-border text-dark-primary' : 'bg-white'}`}
               value={filterByType}
               onChange={(e) => setFilterByType(e.target.value)}
             >
@@ -163,7 +165,7 @@ const UsersPage = () => {
             <Link
               key={user.id}
               to={`/users/${user.id}`}
-              className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-300"
+              className={`${darkMode ? 'bg-dark-card border-dark-border hover:bg-dark-highlight' : 'bg-white hover:shadow-md'} p-6 rounded-lg shadow-sm border transition-shadow duration-300`}
             >
               <div className="flex items-center">
                 {user.image_url ? (
@@ -178,19 +180,19 @@ const UsersPage = () => {
                   </div>
                 )}
                 <div className="flex-grow">
-                  <h3 className="text-lg font-medium text-gray-900">{user.name}</h3>
-                  <p className="text-gray-600">{user.role}</p>
-                  <div className="text-gray-500 text-sm">
+                  <h3 className={`text-lg font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-900'}`}>{user.name}</h3>
+                  <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>{user.role}</p>
+                  <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-sm`}>
                     {user.geography && <span>{user.geography}</span>}
                     {user.geography && user.location && <span> • </span>}
                     {user.location && <span>{user.location}</span>}
                   </div>
                   <div className="mt-1 flex flex-wrap gap-1">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${user.employment_type === 'core' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${user.employment_type === 'core' ? darkMode ? 'bg-emerald-900 text-emerald-200 border border-emerald-700' : 'bg-emerald-100 text-emerald-700' : darkMode ? 'bg-amber-900 text-amber-200 border border-amber-700' : 'bg-amber-100 text-amber-700'}`}>
                       {user.employment_type === 'core' ? 'Core Employee' : 'Contractor'}
                     </span>
                     {user.employment_type === 'subcon' && user.vendor_name && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-blue-900 text-blue-200 border border-blue-700' : 'bg-blue-100 text-blue-700'}`}>
                         {user.vendor_name}
                       </span>
                     )}
@@ -202,7 +204,7 @@ const UsersPage = () => {
                   {user.capacity !== null && user.capacity !== undefined ? `${(user.capacity * 100).toFixed(0)}%` : '0%'} Capacity
                 </span>
                 {user.squad_id && (
-                  <span className="text-sm text-blue-600 font-medium">
+                  <span className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} font-medium`}>
                     {squads.find(s => s.id === user.squad_id)?.name || 'Unknown Squad'}
                   </span>
                 )}
@@ -211,10 +213,10 @@ const UsersPage = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-white rounded-lg shadow-sm border">
-          <User className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-          <p className="text-gray-600">
+        <div className={`text-center py-16 ${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white'} rounded-lg shadow-sm border`}>
+          <User className={`h-12 w-12 mx-auto ${darkMode ? 'text-gray-600' : 'text-gray-400'} mb-4`} />
+          <h3 className={`text-lg font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-900'} mb-2`}>No users found</h3>
+          <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>
             Try adjusting your search or filter criteria
           </p>
         </div>
