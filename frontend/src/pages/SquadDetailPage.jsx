@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Users, Database, GitBranch, Bell, Clock, ChevronRight, Globe, Server, Smartphone, Code, Plus, Edit, Trash2, X, Tag } from 'lucide-react';
+import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import TeamTypeEditor from '../components/TeamTypeEditor';
 import TeamTypeLabel from '../components/TeamTypeLabel';
 import DescriptionEditor from '../components/DescriptionEditor';
@@ -18,7 +19,7 @@ const SquadDetailPage = () => {
   const [error, setError] = useState(null);
   const [tribe, setTribe] = useState(null);
   const [area, setArea] = useState(null);
-  const [showTeamCompositionModal, setShowTeamCompositionModal] = useState(false);
+
   const [updatingTeamType, setUpdatingTeamType] = useState(false);
   const [editingTeamType, setEditingTeamType] = useState(false);
   const modalRef = useRef(null);
@@ -396,45 +397,15 @@ const SquadDetailPage = () => {
                 </div>
               )}
             </div>
-            
-            <div className="flex items-center space-x-2 text-gray-600 mb-4">
-              <Users className="h-5 w-5" />
-              <span>{squad.member_count > 0 ? squad.member_count : 'No'} member{squad.member_count !== 1 ? 's' : ''}</span>
-              <span className="mx-2">•</span>
-              <span className={`font-medium ${getCapacityColor(squad.total_capacity)}`}>
-                {squad.total_capacity.toFixed(1)} FTE
-              </span>
-              <span className="mx-2">•</span>
-              <Clock className="h-5 w-5" />
-              <span>{squad.timezone}</span>
-            </div>
-            
-            {/* Core vs Subcon stats - Bar Chart */}
-            <div className="flex flex-col mb-4 p-3 bg-gray-50 rounded-lg cursor-pointer" onClick={() => setShowTeamCompositionModal(true)}>
-              <div className="font-medium text-gray-700 mb-2">Team Composition:</div>
-              <div className="h-8 w-full bg-gray-200 rounded-md overflow-hidden flex">
-                {/* Core employees (green) */}
-                <div 
-                  className="h-full bg-emerald-500" 
-                  style={{ 
-                    width: `${squad.core_capacity > 0 ? (squad.core_capacity / (squad.core_capacity + squad.subcon_capacity) * 100) : 0}%` 
-                  }}
-                  title={`Core: ${squad.core_count} members (${squad.core_capacity.toFixed(1)} FTE)`}
-                ></div>
-                {/* Contractors (red) */}
-                <div 
-                  className="h-full bg-red-500" 
-                  style={{ 
-                    width: `${squad.subcon_capacity > 0 ? (squad.subcon_capacity / (squad.core_capacity + squad.subcon_capacity) * 100) : 0}%` 
-                  }}
-                  title={`Contractors: ${squad.subcon_count} members (${squad.subcon_capacity.toFixed(1)} FTE)`}
-                ></div>
-              </div>
-              <div className="flex justify-between mt-1 text-xs text-gray-600">
-                <div>Core ({Math.round(squad.core_capacity > 0 ? (squad.core_capacity / (squad.core_capacity + squad.subcon_capacity) * 100) : 0)}%)</div>
-                <div>Click for details</div>
-                <div>Contractors ({Math.round(squad.subcon_capacity > 0 ? (squad.subcon_capacity / (squad.core_capacity + squad.subcon_capacity) * 100) : 0)}%)</div>
-              </div>
+                        
+            {/* Team Composition Bar */}
+            <div className="mb-4">
+              <CompactTeamCompositionBar
+                core_count={squad.core_count}
+                subcon_count={squad.subcon_count}
+                core_capacity={squad.core_capacity}
+                subcon_capacity={squad.subcon_capacity}
+              />
             </div>
             <div className="text-gray-600 mb-4">
               <DescriptionEditor
@@ -703,91 +674,7 @@ const SquadDetailPage = () => {
         </div>
       </div>
 
-      {/* Team Composition Modal */}
-      {showTeamCompositionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowTeamCompositionModal(false)}>
-          <div 
-            ref={modalRef} 
-            className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full" 
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-lg">Team Composition Details</h3>
-              <button 
-                className="text-gray-500 hover:text-gray-700" 
-                onClick={() => setShowTeamCompositionModal(false)}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="border-b pb-3">
-                <h4 className="font-medium text-gray-800 mb-2">Core Employees</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-sm text-gray-500">Members:</span>
-                    <p className="font-medium text-emerald-600">{squad.core_count}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-500">Capacity:</span>
-                    <p className="font-medium text-emerald-600">{squad.core_capacity.toFixed(1)} FTE</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="border-b pb-3">
-                <h4 className="font-medium text-gray-800 mb-2">Contractors</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-sm text-gray-500">Members:</span>
-                    <p className="font-medium text-amber-600">{squad.subcon_count}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-500">Capacity:</span>
-                    <p className="font-medium text-amber-600">{squad.subcon_capacity.toFixed(1)} FTE</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium text-gray-800 mb-2">Totals</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-sm text-gray-500">Members:</span>
-                    <p className="font-medium text-blue-600">{squad.core_count + squad.subcon_count}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-500">Capacity:</span>
-                    <p className="font-medium text-blue-600">{(squad.core_capacity + squad.subcon_capacity).toFixed(1)} FTE</p>
-                  </div>
-                </div>
-                <div className="mt-2">
-                  <span className="text-sm text-gray-500">Core/Subcon Ratio:</span>
-                  <p className="font-medium text-blue-600">
-                    {squad.core_count > 0 
-                      ? (squad.core_count / (squad.core_count + squad.subcon_count) * 100).toFixed(0) 
-                      : 0}% / {squad.subcon_count > 0 
-                      ? (squad.subcon_count / (squad.core_count + squad.subcon_count) * 100).toFixed(0) 
-                      : 0}%
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-6 text-right">
-              <button 
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                onClick={() => setShowTeamCompositionModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };
