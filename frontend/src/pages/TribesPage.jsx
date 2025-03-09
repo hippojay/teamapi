@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, ChevronRight } from 'lucide-react';
-import TeamCompositionBar from '../components/TeamCompositionBar';
+import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import api from '../api';
 
 const TribesPage = () => {
@@ -74,16 +74,6 @@ const TribesPage = () => {
             <div key={tribe.id} className="bg-white p-6 rounded-lg shadow-sm border">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold text-gray-800">{tribe.name}</h2>
-                <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm text-gray-600">
-                    {tribe.member_count > 0 ? tribe.member_count : 'No'} member{tribe.member_count !== 1 ? 's' : ''}
-                  </span>
-                  <span className="mx-1 text-gray-400">•</span>
-                  <span className={`text-sm font-medium ${getCapacityColor(tribe.total_capacity)}`}>
-                    {tribe.total_capacity.toFixed(1)} FTE
-                  </span>
-                </div>
               </div>
               {areas[tribe.area_id] && (
                 <div className="mb-2 text-sm">
@@ -97,7 +87,7 @@ const TribesPage = () => {
               {/* Team Composition Bar */}
               {tribe.core_count !== undefined && (
                 <div className="mb-3">
-                  <TeamCompositionBar 
+                  <CompactTeamCompositionBar 
                     core_count={tribe.core_count || 0} 
                     subcon_count={tribe.subcon_count || 0}
                     core_capacity={tribe.core_capacity || 0} 

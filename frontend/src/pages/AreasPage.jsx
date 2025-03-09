@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, ChevronRight } from 'lucide-react';
-import TeamCompositionBar from '../components/TeamCompositionBar';
+import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import api from '../api';
 
 const AreasPage = () => {
@@ -63,21 +63,11 @@ const AreasPage = () => {
             <div key={area.id} className="bg-white p-6 rounded-lg shadow-sm border">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xl font-semibold text-gray-800">{area.name}</h2>
-                <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm text-gray-600">
-                    {area.member_count > 0 ? area.member_count : 'No'} member{area.member_count !== 1 ? 's' : ''}
-                  </span>
-                  <span className="mx-1 text-gray-400">•</span>
-                  <span className={`text-sm font-medium ${getCapacityColor(area.total_capacity)}`}>
-                    {area.total_capacity.toFixed(1)} FTE
-                  </span>
-                </div>
-                
+
                 {/* Team Composition Bar */}
                 {area.core_count !== undefined && (
                   <div className="mt-3 mb-3">
-                    <TeamCompositionBar 
+                    <CompactTeamCompositionBar 
                       core_count={area.core_count || 0} 
                       subcon_count={area.subcon_count || 0}
                       core_capacity={area.core_capacity || 0} 

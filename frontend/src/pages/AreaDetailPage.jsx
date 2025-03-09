@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Users, ChevronRight } from 'lucide-react';
-import TeamCompositionBar from '../components/TeamCompositionBar';
+import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import DescriptionEditor from '../components/DescriptionEditor';
 import api from '../api';
 
@@ -73,23 +73,17 @@ const AreaDetailPage = () => {
       {/* Area Header */}
       <div className="bg-white p-6 rounded-lg shadow-sm border mb-6">
         <h1 className="text-2xl font-bold mb-3">{area.name}</h1>
-        <div className="flex items-center space-x-2 text-gray-600 mb-3">
-          <Users className="h-5 w-5" />
-          <span>{area.member_count > 0 ? area.member_count : 'No'} member{area.member_count !== 1 ? 's' : ''}</span>
-          <span className="mx-1">•</span>
-          <span className={`font-medium ${getCapacityColor(area.total_capacity)}`}>
-            {area.total_capacity.toFixed(1)} FTE
-          </span>
-        </div>
         
         {/* Team Composition Bar */}
         {area.core_count !== undefined && (
-          <TeamCompositionBar 
-            core_count={area.core_count || 0} 
-            subcon_count={area.subcon_count || 0}
-            core_capacity={area.core_capacity || 0} 
-            subcon_capacity={area.subcon_capacity || 0}
-          />
+          <div className="mb-4">
+            <CompactTeamCompositionBar 
+              core_count={area.core_count || 0} 
+              subcon_count={area.subcon_count || 0}
+              core_capacity={area.core_capacity || 0} 
+              subcon_capacity={area.subcon_capacity || 0}
+            />
+          </div>
         )}
         <div className="text-gray-600 mb-2">
           <DescriptionEditor
@@ -111,19 +105,11 @@ const AreaDetailPage = () => {
           tribes.map(tribe => (
             <div key={tribe.id} className="bg-white p-6 rounded-lg shadow-sm border">
               <h3 className="text-lg font-semibold mb-3">{tribe.name}</h3>
-              <div className="flex items-center space-x-2 text-gray-600 mb-2">
-                <Users className="h-4 w-4" />
-                <span>{tribe.member_count > 0 ? tribe.member_count : 'No'} member{tribe.member_count !== 1 ? 's' : ''}</span>
-                <span className="mx-1">•</span>
-                <span className={`font-medium ${getCapacityColor(tribe.total_capacity)}`}>
-                  {tribe.total_capacity.toFixed(1)} FTE
-                </span>
-              </div>
               
               {/* Team Composition Bar */}
               {tribe.core_count !== undefined && (
                 <div className="mb-4">
-                  <TeamCompositionBar 
+                  <CompactTeamCompositionBar 
                     core_count={tribe.core_count || 0} 
                     subcon_count={tribe.subcon_count || 0}
                     core_capacity={tribe.core_capacity || 0} 

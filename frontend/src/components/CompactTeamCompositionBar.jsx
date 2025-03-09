@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Info } from 'lucide-react';
+import { Info, Users } from 'lucide-react';
 
 const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, subcon_capacity }) => {
   const [showModal, setShowModal] = useState(false);
@@ -18,9 +18,12 @@ const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, su
   return (
     <>
       <div className="flex items-center text-sm">
-        <span className="font-medium">{totalCount} members</span>
+        <span className="flex items-center">
+          <Users size={14} className="text-gray-600 mr-1" />
+          <span className="font-normal">{totalCount} members</span>
+        </span>
         <span className="mx-2 text-gray-400">•</span>
-        <span className="font-medium">{totalCapacity.toFixed(1)} FTE</span>
+        <span className="font-normal">{totalCapacity.toFixed(1)} FTE</span>
         <span className="mx-2 text-gray-400">•</span>
         <span className="flex items-center">
         <div className="relative group">

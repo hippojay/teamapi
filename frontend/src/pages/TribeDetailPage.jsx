@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Users, ChevronRight, Clock } from 'lucide-react';
-import TeamCompositionBar from '../components/TeamCompositionBar';
+import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import TeamTypeLabel from '../components/TeamTypeLabel';
 import DescriptionEditor from '../components/DescriptionEditor';
 import api from '../api';
@@ -97,22 +97,16 @@ const TribeDetailPage = () => {
             </Link>
           )}
         </div>
-        <div className="flex items-center space-x-2 text-gray-600 mb-3">
-          <Users className="h-5 w-5" />
-          <span>{tribe.member_count > 0 ? tribe.member_count : 'No'} member{tribe.member_count !== 1 ? 's' : ''}</span>
-          <span className="mx-1">•</span>
-          <span className={`font-medium ${getCapacityColor(tribe.total_capacity)}`}>
-            {tribe.total_capacity.toFixed(1)} FTE
-          </span>
-        </div>
         
         {/* Team Composition Bar */}
-        <TeamCompositionBar 
-          core_count={tribe.core_count} 
-          subcon_count={tribe.subcon_count}
-          core_capacity={tribe.core_capacity} 
-          subcon_capacity={tribe.subcon_capacity}
-        />
+        <div className="mb-4">
+          <CompactTeamCompositionBar 
+            core_count={tribe.core_count} 
+            subcon_count={tribe.subcon_count}
+            core_capacity={tribe.core_capacity} 
+            subcon_capacity={tribe.subcon_capacity}
+          />
+        </div>
         <div className="text-gray-600 mb-2">
           <DescriptionEditor
             entityType="tribe"
@@ -150,21 +144,10 @@ const TribeDetailPage = () => {
                   size="sm"
                 />
               </div>
-              <div className="flex items-center space-x-2 text-gray-600 mb-3">
-                <Users className="h-4 w-4" />
-                <span>{squad.member_count > 0 ? squad.member_count : 'No'} member{squad.member_count !== 1 ? 's' : ''}</span>
-                <span className="mx-1">•</span>
-                <span className={`font-medium ${getCapacityColor(squad.total_capacity)}`}>
-                  {squad.total_capacity.toFixed(1)} FTE
-                </span>
-                <span className="mx-1">•</span>
-                <Clock className="h-4 w-4" />
-                <span>{squad.timezone}</span>
-              </div>
               
               {/* Team Composition Bar */}
               <div className="mb-4">
-                <TeamCompositionBar 
+                <CompactTeamCompositionBar 
                   core_count={squad.core_count} 
                   subcon_count={squad.subcon_count}
                   core_capacity={squad.core_capacity} 
