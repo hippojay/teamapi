@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../context/ThemeContext';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { User, Briefcase, Users, ChevronRight } from 'lucide-react';
 import api from '../api';
 
 const UserDetailPage = () => {
+  const { darkMode } = useTheme();
   const { id } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -16,15 +18,15 @@ const UserDetailPage = () => {
   // Helper function to get color based on capacity
   const getCapacityColor = (capacity) => {
     if (!capacity && capacity !== 0) {
-      return "text-gray-600"; // Handle undefined/NaN cases
+      return darkMode ? "text-gray-400" : "text-gray-600"; // Handle undefined/NaN cases
     } else if (capacity > 1.0) {
-      return "text-red-600"; // Over capacity (red)
+      return darkMode ? "text-red-400" : "text-red-600"; // Over capacity (red)
     } else if (capacity >= 0.8) {
-      return "text-green-600"; // Good capacity (green)
+      return darkMode ? "text-green-400" : "text-green-600"; // Good capacity (green)
     } else if (capacity >= 0.5) {
-      return "text-yellow-600"; // Medium capacity (yellow/amber)
+      return darkMode ? "text-yellow-400" : "text-yellow-600"; // Medium capacity (yellow/amber)
     } else {
-      return "text-gray-600"; // Low capacity (default gray)
+      return darkMode ? "text-gray-400" : "text-gray-600"; // Low capacity (default gray)
     }
   };
 
@@ -80,17 +82,17 @@ const UserDetailPage = () => {
 
   // Handle loading state
   if (loading) {
-    return <div className="text-center py-10">Loading...</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Loading...</div>;
   }
 
   // Handle error state
   if (error) {
-    return <div className="text-center py-10 text-red-600">{error}</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{error}</div>;
   }
 
   // Handle not found
   if (!user) {
-    return <div className="text-center py-10">User not found</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>User not found</div>;
   }
 
   // Get total capacity and check if overcapacity
@@ -109,23 +111,23 @@ const UserDetailPage = () => {
   return (
     <div>
       {/* Breadcrumbs */}
-      <div className="flex items-center text-sm text-gray-600 mb-6">
-        <Link to="/" className="hover:text-blue-500">Home</Link>
+      <div className={`flex items-center text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-6`}>
+        <Link to="/" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Home</Link>
         <ChevronRight className="h-4 w-4 mx-2" />
         {squad && (
           <>
-            <Link to={`/squads/${squad.id}`} className="hover:text-blue-500">{squad.name}</Link>
+            <Link to={`/squads/${squad.id}`} className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>{squad.name}</Link>
             <ChevronRight className="h-4 w-4 mx-2" />
           </>
         )}
-        <span className="font-medium text-gray-800">{user.name}</span>
+        <span className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{user.name}</span>
       </div>
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Info */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
             <div className="flex mb-6">
               {/* User Avatar/Initials */}
               <div className="mr-6">
@@ -144,16 +146,16 @@ const UserDetailPage = () => {
               
               {/* User Details */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-800">{user.name}</h2>
-                <div className="text-gray-600 mt-1">{user.role}</div>
-                <div className="text-gray-500 mt-1">{user.email}</div>
+                <h2 className={`text-2xl font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{user.name}</h2>
+                <div className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mt-1`}>{user.role}</div>
+                <div className={`${darkMode ? 'text-dark-secondary' : 'text-gray-500'} mt-1`}>{user.email}</div>
                 {user.geography && (
-                  <div className="text-gray-500 mt-1">
+                  <div className={`${darkMode ? 'text-dark-secondary' : 'text-gray-500'} mt-1`}>
                     <span className="font-medium">Region:</span> {user.geography}
                   </div>
                 )}
                 {user.location && (
-                  <div className="text-gray-500 mt-1">
+                  <div className={`${darkMode ? 'text-dark-secondary' : 'text-gray-500'} mt-1`}>
                     <span className="font-medium">Location:</span> {user.location}
                   </div>
                 )}
@@ -161,7 +163,7 @@ const UserDetailPage = () => {
                   {(totalCapacity * 100).toFixed(0)}% Allocation
                 </div>
                 {isOverCapacity && (
-                  <div className="mt-2 px-3 py-1 bg-red-100 border border-red-300 rounded-md text-red-700 text-sm flex items-center">
+                  <div className={`mt-2 px-3 py-1 ${darkMode ? 'bg-red-900 border-red-700 text-red-300' : 'bg-red-100 border-red-300 text-red-700'} border rounded-md text-sm flex items-center`}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
@@ -169,11 +171,13 @@ const UserDetailPage = () => {
                   </div>
                 )}
                 <div className="mt-2 flex flex-wrap gap-1">
-                  <span className={`px-2 py-1 rounded-full text-xs ${user.employment_type === 'core' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                  <span className={`px-2 py-1 rounded-full text-xs ${user.employment_type === 'core' 
+                    ? darkMode ? 'bg-green-900 text-green-300 border border-green-700' : 'bg-emerald-100 text-emerald-700' 
+                    : darkMode ? 'bg-amber-900 text-amber-300 border border-amber-700' : 'bg-amber-100 text-amber-700'}`}>
                     {user.employment_type === 'core' ? 'Core Employee' : 'Contractor'}
                   </span>
                   {user.employment_type === 'subcon' && user.vendor_name && (
-                    <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
+                    <span className={`px-2 py-1 rounded-full text-xs ${darkMode ? 'bg-blue-900 text-blue-300 border border-blue-700' : 'bg-blue-100 text-blue-700'}`}>
                       {user.vendor_name}
                     </span>
                   )}
@@ -188,27 +192,27 @@ const UserDetailPage = () => {
               >
                 Contact
               </a>
-              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+              <button className={`px-4 py-2 border rounded-lg ${darkMode ? 'border-dark-border hover:bg-dark-tertiary text-dark-primary' : 'border-gray-300 hover:bg-gray-50'}`}>
                 Schedule Meeting
               </button>
             </div>
           </div>
 
           {/* Squad Membership */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <Users className="h-5 w-5 mr-2" />
+          <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-4 flex items-center`}>
+              <Users className={`h-5 w-5 mr-2 ${darkMode ? 'text-blue-400' : ''}`} />
               Squad Membership
             </h3>
             
             {user.squads && user.squads.length > 0 ? (
               <div className="space-y-4">
                 {user.squads.map(squadMembership => (
-                  <div key={squadMembership.squad_id} className="p-4 border rounded-lg">
+                  <div key={squadMembership.squad_id} className={`p-4 border rounded-lg ${darkMode ? 'border-gray-700 bg-gray-900 hover:bg-gray-800' : 'border-gray-200 hover:bg-gray-50'}`}>
                     <div className="flex items-center justify-between mb-2">
                       <Link 
                         to={`/squads/${squadMembership.squad_id}`}
-                        className="font-medium text-blue-600 hover:underline"
+                        className={`font-medium ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}
                       >
                         {squadMembership.squad_name}
                       </Link>
@@ -216,18 +220,18 @@ const UserDetailPage = () => {
                         {((squadMembership.capacity || 0) * 100).toFixed(0)}% Allocation
                       </span>
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>
                       {squadMembership.role || user.role}
                     </div>
                   </div>
                 ))}
               </div>
             ) : squad ? (
-              <div className="p-4 border rounded-lg">
+              <div className={`p-4 border rounded-lg ${darkMode ? 'border-gray-700 bg-gray-900 hover:bg-gray-800' : 'border-gray-200 hover:bg-gray-50'}`}>
                 <div className="flex items-center justify-between mb-2">
                   <Link 
                     to={`/squads/${squad.id}`}
-                    className="font-medium text-blue-600 hover:underline"
+                    className={`font-medium ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}
                   >
                     {squad.name}
                   </Link>
@@ -235,12 +239,12 @@ const UserDetailPage = () => {
                     {(totalCapacity * 100).toFixed(0)}% Allocation
                   </span>
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>
                   {user.role}
                 </div>
               </div>
             ) : (
-              <div className="text-gray-500 text-center py-4">No squad memberships found</div>
+              <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-center py-4`}>No squad memberships found</div>
             )}
           </div>
         </div>
@@ -248,20 +252,20 @@ const UserDetailPage = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Supervisor */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <Briefcase className="h-5 w-5 mr-2" />
+          <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-4 flex items-center`}>
+              <Briefcase className={`h-5 w-5 mr-2 ${darkMode ? 'text-blue-400' : ''}`} />
               Organisational Information
             </h3>
             
             <div className="space-y-4">
               {/* Supervisor */}
               <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">Line Manager</h4>
+                <h4 className={`text-sm font-medium ${darkMode ? 'text-dark-secondary' : 'text-gray-500'} mb-2`}>Line Manager</h4>
                 {supervisor ? (
                   <Link 
                     to={`/users/${supervisor.id}`}
-                    className="flex items-center p-3 border rounded-lg hover:bg-gray-50"
+                    className={`flex items-center p-3 border rounded-lg ${darkMode ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-200 hover:bg-gray-50'}`}
                   >
                     {supervisor.image_url ? (
                       <img
@@ -275,26 +279,26 @@ const UserDetailPage = () => {
                       </div>
                     )}
                     <div>
-                      <div className="font-medium text-blue-600">{supervisor.name}</div>
-                      <div className="text-sm text-gray-600">{supervisor.role}</div>
+                      <div className={`font-medium ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{supervisor.name}</div>
+                      <div className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>{supervisor.role}</div>
                     </div>
                   </Link>
                 ) : (
-                  <div className="text-gray-500">No supervisor assigned</div>
+                  <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No supervisor assigned</div>
                 )}
               </div>
               
               {/* Tribe */}
               <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">Tribe</h4>
+                <h4 className={`text-sm font-medium ${darkMode ? 'text-dark-secondary' : 'text-gray-500'} mb-2`}>Tribe</h4>
                 {tribe ? (
                   <Link 
                     to={`/tribes/${tribe.id}`}
-                    className="block p-3 border rounded-lg hover:bg-gray-50"
+                    className={`block p-3 border rounded-lg ${darkMode ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-200 hover:bg-gray-50'}`}
                   >
-                    <div className="font-medium text-blue-600">{tribe.name}</div>
+                    <div className={`font-medium ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{tribe.name}</div>
                     {tribe.description && (
-                      <div className="text-sm text-gray-600 mt-1">
+                      <div className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mt-1`}>
                         {tribe.description.length > 100 
                           ? tribe.description.substring(0, 100) + '...' 
                           : tribe.description}
@@ -302,61 +306,61 @@ const UserDetailPage = () => {
                     )}
                   </Link>
                 ) : (
-                  <div className="text-gray-500">No tribe information</div>
+                  <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No tribe information</div>
                 )}
               </div>
             </div>
           </div>
 
           {/* Additional Details */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Additional Information</h3>
+          <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-4`}>Additional Information</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Primary Capacity:</span>
+                <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Primary Capacity:</span>
                 <span className={`font-medium ${getCapacityColor(totalCapacity)}`}>
                   {(totalCapacity * 100).toFixed(0)}%
                 </span>
               </div>
               {user.squads && user.squads.length > 1 && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Total Allocation:</span>
+                  <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Total Allocation:</span>
                   <span className={`font-medium ${getCapacityColor(totalCapacity)}`}>
                     {(totalCapacity * 100).toFixed(0)}%
                     {isOverCapacity && (
-                      <span className="ml-2 text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full">Overcapacity</span>
+                      <span className={`ml-2 text-xs px-2 py-0.5 ${darkMode ? 'bg-red-900 text-red-300 border border-red-700' : 'bg-red-100 text-red-700'} rounded-full`}>Overcapacity</span>
                     )}
                   </span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-gray-600">Role:</span>
-                <span>{user.role}</span>
+                <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Role:</span>
+                <span className={`${darkMode ? 'text-dark-primary' : ''}`}>{user.role}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Region:</span>
-                <span>{user.geography || 'Not specified'}</span>
+                <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Region:</span>
+                <span className={`${darkMode ? 'text-dark-primary' : ''}`}>{user.geography || 'Not specified'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Location:</span>
-                <span>{user.location || 'Not specified'}</span>
+                <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Location:</span>
+                <span className={`${darkMode ? 'text-dark-primary' : ''}`}>{user.location || 'Not specified'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Email:</span>
-                <a href={`mailto:${user.email}`} className="text-blue-600 hover:underline">
+                <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Email:</span>
+                <a href={`mailto:${user.email}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
                   {user.email}
                 </a>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Employment Type:</span>
-                <span className={`font-medium ${user.employment_type === 'core' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Employment Type:</span>
+                <span className={`font-medium ${user.employment_type === 'core' ? darkMode ? 'text-green-400' : 'text-emerald-600' : darkMode ? 'text-amber-400' : 'text-amber-600'}`}>
                   {user.employment_type === 'core' ? 'Core Employee' : 'Contractor'}
                 </span>
               </div>
               {user.employment_type === 'subcon' && user.vendor_name && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Vendor:</span>
-                <span className="font-medium text-blue-600">{user.vendor_name}</span>
+                <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Vendor:</span>
+                <span className={`font-medium ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{user.vendor_name}</span>
               </div>
               )}
             </div>
