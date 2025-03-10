@@ -221,6 +221,15 @@ def get_description_history(
 @app.get("/areas", response_model=List[schemas.Area])
 def get_areas(db: Session = Depends(get_db)):
     areas = crud.get_areas(db)
+    
+    # Convert enum values to strings for all areas
+    for area in areas:
+        if area.label:
+            if hasattr(area.label, 'name'):
+                area.label_str = area.label.name
+        else:
+            area.label_str = None
+    
     return areas
 
 @app.get("/areas/{area_id}", response_model=schemas.AreaDetail)
@@ -248,6 +257,15 @@ def get_tribes(area_id: Optional[int] = None, db: Session = Depends(get_db)):
         tribes = crud.get_tribes_by_area(db, area_id)
     else:
         tribes = crud.get_tribes(db)
+        
+    # Convert enum values to strings for all tribes
+    for tribe in tribes:
+        if tribe.label:
+            if hasattr(tribe.label, 'name'):
+                tribe.label_str = tribe.label.name
+        else:
+            tribe.label_str = None
+            
     return tribes
 
 @app.get("/tribes/{tribe_id}", response_model=schemas.TribeDetail)

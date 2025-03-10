@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
+import LabelDisplay from '../components/LabelDisplay';
 import { useTheme } from '../context/ThemeContext';
 import { Breadcrumbs } from '../components/common';
 import api from '../api';
@@ -74,7 +75,14 @@ const AreasPage = () => {
           areas.map(area => (
             <div key={area.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className={`text-xl font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{area.name}</h2>
+                <div className="flex items-center">
+                  <h2 className={`text-xl font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{area.name}</h2>
+                  {(area.label || area.label_str) && (
+                    <div className="ml-2">
+                      <LabelDisplay label={area.label_str || area.label} />
+                    </div>
+                  )}
+                </div>
 
                 {/* Team Composition Bar */}
                 {area.core_count !== undefined && (

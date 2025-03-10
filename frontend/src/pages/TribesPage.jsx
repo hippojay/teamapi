@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
+import LabelDisplay from '../components/LabelDisplay';
 import { useTheme } from '../context/ThemeContext';
 import { Breadcrumbs } from '../components/common';
 import api from '../api';
@@ -85,7 +86,14 @@ const TribesPage = () => {
           tribes.map(tribe => (
             <div key={tribe.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{tribe.name}</h2>
+                <div className="flex items-center">
+                  <h2 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{tribe.name}</h2>
+                  {(tribe.label || tribe.label_str) && (
+                    <div className="ml-2">
+                      <LabelDisplay label={tribe.label_str || tribe.label} />
+                    </div>
+                  )}
+                </div>
               </div>
               {areas[tribe.area_id] && (
                 <div className="mb-2 text-sm">

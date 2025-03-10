@@ -255,6 +255,7 @@ class TribeBase(BaseModel):
 class Tribe(TribeBase):
     id: int
     area_id: int
+    label_str: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -276,6 +277,7 @@ class AreaBase(BaseModel):
 
 class Area(AreaBase):
     id: int
+    label_str: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
