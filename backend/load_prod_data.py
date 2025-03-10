@@ -268,28 +268,46 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         if 'Current Phasing' in row and not pd.isna(row['Current Phasing']):
             capacity = float(row['Current Phasing'])
         
-        # Determine employment type based on 'Regular / Temporary' field
-        employment_type = "core"  # Default
-        if 'Regular / Temporary' in row and not pd.isna(row['Regular / Temporary']):
-            if row['Regular / Temporary'].lower() == "regular":
-                employment_type = "core"
-            else:  # Anything else is considered a contractor ("Contingent", etc.)
-                employment_type = "subcon"
+        # Get name and check if this is a vacancy
+        name = row['Name']
+        is_vacancy = name == 'Vacancy'
+            
+        # Determine employment type and update counts only for non-vacancies
+        if not is_vacancy:
+            # Determine employment type based on 'Regular / Temporary' field
+            employment_type = "core"  # Default
+            if 'Regular / Temporary' in row and not pd.isna(row['Regular / Temporary']):
+                if row['Regular / Temporary'].lower() == "regular":
+                    employment_type = "core"
+                else:  # Anything else is considered a contractor ("Contingent", etc.)
+                    employment_type = "subcon"
 
-        # For contractors, check if there's a vendor name provided
-        vendor_name = None
-        if 'Vendor Name' in row and not pd.isna(row['Vendor Name']):
-            vendor_name = row['Vendor Name']
+            # For contractors, check if there's a vendor name provided
+            vendor_name = None
+            if 'Vendor Name' in row and not pd.isna(row['Vendor Name']):
+                vendor_name = row['Vendor Name']
+        else:
+            # For vacancies, don't update counts but set default values
+            employment_type = "core"  # Default for vacancies
+            vendor_name = None
                 
         # No random image URL generation for production data
         image_url = None
         
-        # Check if this member already exists (by email)
-        email = row['Business Email Address']
-        name = row['Name']
+        # Check if this is a vacancy already detected earlier
+        # is_vacancy was already set above
         
+        # For vacancies, generate a unique email based on the role and squad
+        if is_vacancy:
+            role_part = row['Position'].lower().replace(' ', '.') if not pd.isna(row['Position']) else "role"
+            squad_part = squad_name.lower().replace(' ', '.')
+            email = f"vacancy.{role_part}.{squad_part}@example.com"
+        else:
+            # Get email from the data for non-vacancies
+            email = row['Business Email Address']
+            
         # Check if member exists in database already
-        if email in members_by_email:
+        if email in members_by_email and not is_vacancy:
             # Member already exists
             member = members_by_email[email]
             
@@ -322,16 +340,18 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
                 )
                 print(f"Added existing member {member.name} to additional squad {squad_name} with capacity {capacity}")
                 
-                # Update counts
-                if employment_type == "core":
-                    squad_core_counts[squad_name] += 1
-                    squad_core_capacity[squad_name] += capacity
-                else:
-                    squad_subcon_counts[squad_name] += 1
-                    squad_subcon_capacity[squad_name] += capacity
-                    
-                squad_member_counts[squad_name] += 1
-                squad_capacity_totals[squad_name] += capacity
+                # Update counts only for non-vacancies
+                if not is_vacancy:
+                    # Update counts
+                    if employment_type == "core":
+                        squad_core_counts[squad_name] += 1
+                        squad_core_capacity[squad_name] += capacity
+                    else:
+                        squad_subcon_counts[squad_name] += 1
+                        squad_subcon_capacity[squad_name] += capacity
+                        
+                    squad_member_counts[squad_name] += 1
+                    squad_capacity_totals[squad_name] += capacity
         else:
             # Create new team member
             member = models.TeamMember(
@@ -343,7 +363,8 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
                 image_url=image_url,
                 employment_type=employment_type,
                 vendor_name=vendor_name if employment_type == "subcon" else None,
-                is_external=False  # Regular team member
+                is_external=False,  # Regular team member
+                is_vacancy=is_vacancy  # Set vacancy flag
             )
             db.add(member)
             db.flush()  # Flush to get the member ID
@@ -363,16 +384,17 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
             members_by_name[name] = member
             print(f"Created new member {member.name} in squad {squad_name} with capacity {capacity}")
             
-            # Update counts
-            if employment_type == "core":
-                squad_core_counts[squad_name] += 1
-                squad_core_capacity[squad_name] += capacity
-            else:
-                squad_subcon_counts[squad_name] += 1
-                squad_subcon_capacity[squad_name] += capacity
-                
-            squad_member_counts[squad_name] += 1
-            squad_capacity_totals[squad_name] += capacity
+            # Update counts only for non-vacancies
+            if not is_vacancy:
+                if employment_type == "core":
+                    squad_core_counts[squad_name] += 1
+                    squad_core_capacity[squad_name] += capacity
+                else:
+                    squad_subcon_counts[squad_name] += 1
+                    squad_subcon_capacity[squad_name] += capacity
+                    
+                squad_member_counts[squad_name] += 1
+                squad_capacity_totals[squad_name] += capacity
     
     # Make sure to commit team members before adding supervisors
     db.flush()
