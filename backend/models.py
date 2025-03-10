@@ -25,6 +25,11 @@ class DependencyType(enum.Enum):
     REQUIRED = "required"
     OPTIONAL = "optional"
 
+class InteractionMode(enum.Enum):
+    COLLABORATION = "collaboration"
+    X_AS_A_SERVICE = "x_as_a_service"
+    FACILITATING = "facilitating"
+
 class TeamType(enum.Enum):
     STREAM_ALIGNED = "stream_aligned"
     PLATFORM = "platform"
@@ -176,6 +181,8 @@ class Dependency(Base):
     dependency_squad_id = Column(Integer, ForeignKey("squads.id"))
     dependency_name = Column(String)
     dependency_type = Column(Enum(DependencyType), default=DependencyType.REQUIRED)
+    interaction_mode = Column(Enum(InteractionMode), default=InteractionMode.X_AS_A_SERVICE)
+    interaction_frequency = Column(String, nullable=True)  # "Regular", "As needed", "Scheduled"
     
     # Relationships
     dependent_squad = relationship("Squad", 

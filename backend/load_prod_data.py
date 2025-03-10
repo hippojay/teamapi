@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from database import SessionLocal, engine, Base
 import models
-from models import ServiceStatus, DependencyType, ServiceType
+from models import ServiceStatus, DependencyType, ServiceType, InteractionMode
 
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)

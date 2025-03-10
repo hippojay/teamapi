@@ -230,6 +230,52 @@ const api = {
     return response.json();
   },
   
+  createDependency: async (dependencyData) => {
+    const { dependent_squad_id, dependency_squad_id, ...dependencyDetails } = dependencyData;
+    
+    const response = await fetch(`${API_URL}/dependencies?dependent_id=${dependent_squad_id}&dependency_id=${dependency_squad_id}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(dependencyDetails)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to create dependency');
+    }
+    
+    return response.json();
+  },
+  
+  updateDependency: async (dependencyId, dependencyData) => {
+    const response = await fetch(`${API_URL}/dependencies/${dependencyId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(dependencyData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update dependency');
+    }
+    
+    return response.json();
+  },
+  
+  deleteDependency: async (dependencyId) => {
+    const response = await fetch(`${API_URL}/dependencies/${dependencyId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to delete dependency');
+    }
+    
+    return true;
+  },
+  
   // Squad Team Type
   updateSquadTeamType: async (squadId, teamType) => {
     const response = await fetch(`${API_URL}/squads/${squadId}/team-type?team_type=${teamType}`, {

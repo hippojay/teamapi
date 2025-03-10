@@ -255,6 +255,46 @@ def get_all_dependencies(db: Session = Depends(get_db)):
     dependencies = crud.get_all_dependencies(db)
     return dependencies
 
+@app.post("/dependencies", response_model=schemas.Dependency, status_code=201)
+def create_dependency(
+    dependency: schemas.DependencyBase, 
+    dependent_id: int,
+    dependency_id: int,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Verify both squads exist
+    dependent_squad = crud.get_squad(db, dependent_id)
+    dependency_squad = crud.get_squad(db, dependency_id)
+    
+    if not dependent_squad or not dependency_squad:
+        raise HTTPException(status_code=404, detail="One or both squads not found")
+        
+    return crud.create_dependency(db, dependent_id, dependency_id, dependency)
+
+@app.put("/dependencies/{dependency_id}", response_model=schemas.Dependency)
+def update_dependency(
+    dependency_id: int, 
+    dependency_update: schemas.DependencyBase,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    updated_dependency = crud.update_dependency(db, dependency_id, dependency_update)
+    if not updated_dependency:
+        raise HTTPException(status_code=404, detail="Dependency not found")
+    return updated_dependency
+
+@app.delete("/dependencies/{dependency_id}", status_code=204)
+def delete_dependency(
+    dependency_id: int,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    success = crud.delete_dependency(db, dependency_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Dependency not found")
+    return None
+
 # On-call roster
 @app.get("/on-call/{squad_id}", response_model=schemas.OnCallRoster)
 def get_on_call(squad_id: int, db: Session = Depends(get_db)):

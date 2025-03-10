@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text, inspect
 from database import SessionLocal, engine, Base
 import models
-from models import ServiceStatus, DependencyType
+from models import ServiceStatus, DependencyType, InteractionMode
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -355,7 +355,9 @@ def load_data_from_excel(file_path: str, db: Session):
                     dependent_squad_id=squad.id,
                     dependency_squad_id=dependency_squad.id,
                     dependency_name=dependency_squad.name,
-                    dependency_type=random.choice(list(DependencyType))
+                    dependency_type=random.choice(list(DependencyType)),
+                    interaction_mode=random.choice(list(InteractionMode)),
+                    interaction_frequency=random.choice(["Regular", "As needed", "Scheduled", None])
                 )
                 db.add(dependency)
     

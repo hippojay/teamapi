@@ -21,6 +21,11 @@ class DependencyType(str, Enum):
     REQUIRED = "required"
     OPTIONAL = "optional"
 
+class InteractionMode(str, Enum):
+    COLLABORATION = "collaboration"
+    X_AS_A_SERVICE = "x_as_a_service"
+    FACILITATING = "facilitating"
+
 class TeamType(str, Enum):
     STREAM_ALIGNED = "stream_aligned"
     PLATFORM = "platform"
@@ -123,6 +128,8 @@ class ServiceUpdate(BaseModel):
 class DependencyBase(BaseModel):
     dependency_name: str
     dependency_type: DependencyType
+    interaction_mode: InteractionMode = InteractionMode.X_AS_A_SERVICE
+    interaction_frequency: Optional[str] = None
 
 class Dependency(DependencyBase):
     id: int

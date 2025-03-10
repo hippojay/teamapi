@@ -14,6 +14,7 @@ const DependencyMap = () => {
   
   // Filter options
   const [selectedDependencyType, setSelectedDependencyType] = useState('all');
+  const [selectedInteractionMode, setSelectedInteractionMode] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   
   useEffect(() => {
@@ -41,10 +42,19 @@ const DependencyMap = () => {
   useEffect(() => {
     if (loading || squads.length === 0 || dependencies.length === 0) return;
     
-    // Filter dependencies based on selected type
+    // Filter dependencies based on selected type and interaction mode
     const filteredDependencies = dependencies.filter(dep => {
-      if (selectedDependencyType === 'all') return true;
-      return dep.dependency_type.toLowerCase() === selectedDependencyType;
+      // Filter by dependency type
+      if (selectedDependencyType !== 'all' && dep.dependency_type.toLowerCase() !== selectedDependencyType) {
+        return false;
+      }
+      
+      // Filter by interaction mode
+      if (selectedInteractionMode !== 'all' && dep.interaction_mode !== selectedInteractionMode) {
+        return false;
+      }
+      
+      return true;
     });
     
     // Filter squads based on search term
@@ -84,7 +94,8 @@ const DependencyMap = () => {
       .map(dep => ({
         source: dep.dependent_squad_id,
         target: dep.dependency_squad_id,
-        type: dep.dependency_type
+        type: dep.dependency_type,
+        interaction: dep.interaction_mode
       }));
     
     // Clear previous visualisation
@@ -109,9 +120,10 @@ const DependencyMap = () => {
       .attr('viewBox', [0, 0, width, height])
       .attr('style', 'max-width: 100%; height: auto;');
     
-    // Define arrow marker for links
+    // Define arrow marker for links - combine dependency type and interaction mode
     svg.append('defs').selectAll('marker')
-      .data(['required', 'optional'])
+      .data(['required-collaboration', 'required-x_as_a_service', 'required-facilitating', 
+             'optional-collaboration', 'optional-x_as_a_service', 'optional-facilitating'])
       .enter().append('marker')
       .attr('id', d => `arrow-${d}`)
       .attr('viewBox', '0 -5 10 10')
@@ -121,18 +133,51 @@ const DependencyMap = () => {
       .attr('markerHeight', 6)
       .attr('orient', 'auto')
       .append('path')
-      .attr('fill', d => d === 'required' ? '#E53E3E' : '#3182CE')
+      .attr('fill', d => {
+        // Get base color from dependency type
+        const baseColor = d.startsWith('required') ? '#E53E3E' : '#3182CE';
+        
+        // Modify shade based on interaction mode
+        if (d.includes('collaboration')) {
+          return d3.color(baseColor).darker(0.5);
+        } else if (d.includes('facilitating')) {
+          return d3.color(baseColor).brighter(0.5);
+        }
+        return baseColor; // x_as_a_service - default color
+      })
       .attr('d', 'M0,-5L10,0L0,5');
     
-    // Create links
+    // Create links with combined styles for type and interaction mode
     const link = svg.append('g')
       .selectAll('line')
       .data(links)
       .enter().append('line')
-      .attr('stroke', d => d.type === 'required' ? '#E53E3E' : '#3182CE')
+      .attr('stroke', d => {
+        // Base color from dependency type
+        const baseColor = d.type === 'required' ? '#E53E3E' : '#3182CE';
+        
+        // Modify shade based on interaction mode
+        if (d.interaction === 'collaboration') {
+          return d3.color(baseColor).darker(0.5);
+        } else if (d.interaction === 'facilitating') {
+          return d3.color(baseColor).brighter(0.5);
+        }
+        return baseColor; // x_as_a_service - default color
+      })
       .attr('stroke-width', d => d.type === 'required' ? 2 : 1.5)
-      .attr('stroke-dasharray', d => d.type === 'optional' ? '5,5' : null)
-      .attr('marker-end', d => `url(#arrow-${d.type})`);
+      .attr('stroke-dasharray', d => {
+        // Base pattern for optional dependencies
+        let pattern = d.type === 'optional' ? '5,5' : null;
+        
+        // Modify pattern based on interaction mode
+        if (d.interaction === 'collaboration') {
+          return pattern ? '8,4' : '3,3';
+        } else if (d.interaction === 'facilitating') {
+          return pattern ? '3,3,6,3' : '6,3';
+        }
+        return pattern; // x_as_a_service - default pattern
+      })
+      .attr('marker-end', d => `url(#arrow-${d.type}-${d.interaction})`);
     
     // Create color scale for nodes based on tribe
     const color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -221,7 +266,7 @@ const DependencyMap = () => {
     
     // Stop simulation when component unmounts
     return () => simulation.stop();
-  }, [loading, squads, dependencies, selectedDependencyType, searchTerm]);
+  }, [loading, squads, dependencies, selectedDependencyType, selectedInteractionMode, searchTerm]);
   
   if (loading) {
     return <div className="flex justify-center items-center h-96">Loading dependency map...</div>;
@@ -234,6 +279,16 @@ const DependencyMap = () => {
   if (dependencies.length === 0) {
     return <div className="p-4 bg-yellow-100 rounded-lg">No dependencies found in the system.</div>;
   }
+  
+  // Get interaction mode label
+  const getInteractionModeLabel = (mode) => {
+    switch (mode) {
+      case 'collaboration': return 'Collaboration';
+      case 'x_as_a_service': return 'X-as-a-Service';
+      case 'facilitating': return 'Facilitating';
+      default: return mode;
+    }
+  };
   
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -250,6 +305,20 @@ const DependencyMap = () => {
             <option value="all">All Dependencies</option>
             <option value="required">Required Dependencies</option>
             <option value="optional">Optional Dependencies</option>
+          </select>
+        </div>
+        
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Interaction Mode</label>
+          <select 
+            className="w-full border border-gray-300 rounded-md p-2"
+            value={selectedInteractionMode}
+            onChange={(e) => setSelectedInteractionMode(e.target.value)}
+          >
+            <option value="all">All Interactions</option>
+            <option value="collaboration">Collaboration</option>
+            <option value="x_as_a_service">X-as-a-Service</option>
+            <option value="facilitating">Facilitating</option>
           </select>
         </div>
         
@@ -275,14 +344,37 @@ const DependencyMap = () => {
         </div>
       </div>
       
-      <div className="mt-4 flex flex-wrap gap-4">
-        <div className="flex items-center">
-          <div className="h-3 w-6 bg-red-600 mr-2"></div>
-          <span className="text-sm">Required Dependency</span>
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h3 className="text-sm font-semibold mb-2">Dependency Types:</h3>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center">
+              <div className="h-3 w-6 bg-red-600 mr-2"></div>
+              <span className="text-sm">Required Dependency</span>
+            </div>
+            <div className="flex items-center">
+              <div className="h-3 w-6 bg-blue-600 mr-2 border-dashed border-t-2 border-white"></div>
+              <span className="text-sm">Optional Dependency</span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center">
-          <div className="h-3 w-6 bg-blue-600 mr-2 border-dashed border-t-2 border-white"></div>
-          <span className="text-sm">Optional Dependency</span>
+        
+        <div>
+          <h3 className="text-sm font-semibold mb-2">Interaction Modes:</h3>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center">
+              <div className="h-3 w-6 bg-blue-700 mr-2"></div>
+              <span className="text-sm">X-as-a-Service (Default)</span>
+            </div>
+            <div className="flex items-center">
+              <div className="h-3 w-6 bg-purple-700 mr-2 border-dotted border-t-2 border-white"></div>
+              <span className="text-sm">Collaboration</span>
+            </div>
+            <div className="flex items-center">
+              <div className="h-3 w-6 bg-green-600 mr-2 border-dashed border-t-2 border-dotted border-white"></div>
+              <span className="text-sm">Facilitating</span>
+            </div>
+          </div>
         </div>
       </div>
       

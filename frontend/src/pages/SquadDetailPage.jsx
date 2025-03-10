@@ -72,6 +72,16 @@ const SquadDetailPage = () => {
     setSquad(updatedSquad);
   };
 
+  // Refresh dependencies after changes
+  const handleDependenciesChange = async () => {
+    try {
+      const dependenciesData = await api.getDependencies(id);
+      setDependencies(dependenciesData);
+    } catch (err) {
+      console.error('Error refreshing dependencies:', err);
+    }
+  };
+
   // Handle loading state
   if (loading) {
     return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Loading...</div>;
@@ -122,7 +132,11 @@ const SquadDetailPage = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Dependencies */}
-          <DependenciesList dependencies={dependencies} />
+          <DependenciesList 
+            dependencies={dependencies} 
+            squadId={parseInt(id)} 
+            onDependenciesChange={handleDependenciesChange} 
+          />
 
           {/* On-Call */}
           <OnCallInfo onCall={onCall} />

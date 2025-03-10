@@ -421,6 +421,58 @@ def get_dependencies(db: Session, squad_id: int) -> List[models.Dependency]:
 def get_all_dependencies(db: Session) -> List[models.Dependency]:
     return db.query(models.Dependency).all()
 
+def create_dependency(db: Session, dependent_id: int, dependency_id: int, dependency_data: schemas.DependencyBase) -> models.Dependency:
+    # Ensure we use the enum values from the models module
+    dependency_type_value = models.DependencyType[dependency_data.dependency_type.upper()] if isinstance(dependency_data.dependency_type, str) else dependency_data.dependency_type
+    interaction_mode_value = models.InteractionMode[dependency_data.interaction_mode.upper()] if isinstance(dependency_data.interaction_mode, str) else dependency_data.interaction_mode
+    
+    db_dependency = models.Dependency(
+        dependent_squad_id=dependent_id,
+        dependency_squad_id=dependency_id,
+        dependency_name=dependency_data.dependency_name,
+        dependency_type=dependency_type_value,
+        interaction_mode=interaction_mode_value,
+        interaction_frequency=dependency_data.interaction_frequency
+    )
+    db.add(db_dependency)
+    db.commit()
+    db.refresh(db_dependency)
+    return db_dependency
+
+def update_dependency(db: Session, dependency_id: int, dependency_data: schemas.DependencyBase) -> Optional[models.Dependency]:
+    # Get existing dependency
+    db_dependency = db.query(models.Dependency).filter(models.Dependency.id == dependency_id).first()
+    if not db_dependency:
+        return None
+        
+    # Update fields if provided
+    update_data = dependency_data.dict(exclude_unset=True)
+    
+    # Handle enum values explicitly
+    if 'dependency_type' in update_data and update_data['dependency_type'] is not None:
+        dependency_type = update_data['dependency_type']
+        update_data['dependency_type'] = models.DependencyType[dependency_type.upper()] if isinstance(dependency_type, str) else dependency_type
+        
+    if 'interaction_mode' in update_data and update_data['interaction_mode'] is not None:
+        interaction_mode = update_data['interaction_mode']
+        update_data['interaction_mode'] = models.InteractionMode[interaction_mode.upper()] if isinstance(interaction_mode, str) else interaction_mode
+    
+    for key, value in update_data.items():
+        setattr(db_dependency, key, value)
+    
+    db.commit()
+    db.refresh(db_dependency)
+    return db_dependency
+
+def delete_dependency(db: Session, dependency_id: int) -> bool:
+    db_dependency = db.query(models.Dependency).filter(models.Dependency.id == dependency_id).first()
+    if not db_dependency:
+        return False
+    
+    db.delete(db_dependency)
+    db.commit()
+    return True
+
 # On-call roster operations
 def get_on_call(db: Session, squad_id: int) -> Optional[models.OnCallRoster]:
     return db.query(models.OnCallRoster).filter(models.OnCallRoster.squad_id == squad_id).first()
