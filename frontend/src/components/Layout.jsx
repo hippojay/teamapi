@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import CustomGrid from './CustomGrid';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { Sun, Moon } from 'lucide-react';
 import LoginModal from './LoginModal';
 import SearchBar from './SearchBar';
 import Sidebar from './Sidebar';
@@ -11,11 +11,8 @@ const Layout = ({ children }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const auth = useAuth();
-  const { darkMode } = useTheme();
+  const { darkMode, toggleTheme } = useTheme();
 
-  const location = useLocation();
-  const currentPath = location.pathname;
   const userMenuRef = useRef(null);
 
   // Create a separate ref for the dropdown menu
@@ -70,8 +67,16 @@ const Layout = ({ children }) => {
           <SearchBar />
         </div>
         
-        <div className="w-1/3 flex justify-end">  
-          {/* Space for future elements like notifications or help */}
+        <div className="w-1/3 flex justify-end items-center">  
+          {/* Theme Toggle Button */}
+          <button 
+            onClick={toggleTheme}
+            className={`p-2 rounded-full ${darkMode ? 'bg-gray-800 text-yellow-300 hover:bg-gray-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} transition-colors mr-2`}
+            aria-label="Toggle dark mode"
+            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
         </div>
       </div>
 

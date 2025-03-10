@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronRight, ChevronLeftCircle, ChevronRightCircle, Sun, Moon } from 'lucide-react';
+import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronRight, ChevronLeftCircle, ChevronRightCircle } from 'lucide-react';
 import CustomGrid from './CustomGrid';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -9,7 +9,7 @@ import { createPortal } from 'react-dom';
 const Sidebar = ({ isCollapsed, toggleCollapse }) => {
   const [showUserMenu, setShowUserMenu] = React.useState(false);
   const { user, isAuthenticated, logout } = useAuth();
-  const { darkMode, toggleTheme } = useTheme();
+  const { darkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
@@ -62,7 +62,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
     <div 
       className={`fixed h-full ${
         isCollapsed ? 'w-16' : 'w-64'
-      } ${darkMode ? 'bg-dark-secondary border-dark-border' : 'bg-white border-gray-200'} border-r shadow-sm flex flex-col z-20 overflow-y-auto pt-16 transition-all duration-300 ease-in-out`}
+      } ${darkMode ? 'bg-dark-secondary border-dark-border' : 'bg-white border-gray-200'} border-r shadow-sm flex flex-col z-20 overflow-hidden pt-16 transition-all duration-300 ease-in-out`}
     >
       {/* Collapse toggle button */}
       <button 
@@ -77,7 +77,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
       </button>
 
       {/* Navigation */}
-      <nav className="flex-1 pt-6">
+      <nav className="flex-1 pt-6 overflow-y-auto overflow-x-hidden">
         <ul className="space-y-1">
           {navItems.map((item) => (
             <li key={item.path}>
@@ -98,31 +98,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
         </ul>
       </nav>
       
-      {/* Theme Toggle */}
-      <div className={`p-4 ${isCollapsed ? 'flex justify-center' : ''}`}>
-        <button 
-          onClick={toggleTheme}
-          className={`${isCollapsed ? 'w-10 h-10 flex justify-center items-center rounded-full' : 'w-full flex items-center justify-between px-4 py-2 rounded-md'} ${
-            darkMode 
-              ? 'bg-gray-800 text-yellow-300 hover:bg-gray-700' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          } transition-colors`}
-          title={isCollapsed ? (darkMode ? "Switch to Light Mode" : "Switch to Dark Mode") : ""}
-          aria-label="Toggle dark mode"
-        >
-          {darkMode ? (
-            <>
-              <Sun className="h-5 w-5" />
-              {!isCollapsed && <span className="ml-2">Light Mode</span>}
-            </>
-          ) : (
-            <>
-              <Moon className="h-5 w-5" />
-              {!isCollapsed && <span className="ml-2">Dark Mode</span>}
-            </>
-          )}
-        </button>
-      </div>
+
       
       {/* Footer with Authentication Controls */}
       <div className={`mt-auto p-4 border-t ${darkMode ? 'border-dark-border text-dark-secondary' : 'border-gray-200 text-gray-500'} text-xs ${isCollapsed ? 'text-center' : ''}`}>
