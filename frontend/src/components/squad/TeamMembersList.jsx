@@ -1,10 +1,46 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Users } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
 const TeamMembersList = ({ squad }) => {
   const { darkMode } = useTheme();
+  const [functionFilter, setFunctionFilter] = useState('all');
+  
+  // Get unique functions for the filter dropdown
+  const uniqueFunctions = useMemo(() => {
+    if (!squad.team_members) return [];
+    
+    const functionSet = new Set();
+    squad.team_members.forEach(member => {
+      if (member.function) {
+        functionSet.add(member.function);
+      }
+    });
+    
+    return Array.from(functionSet).sort();
+  }, [squad.team_members]);
+  
+  // Filter and sort members by function and employment type
+  const filteredMembers = useMemo(() => {
+    if (!squad.team_members) return [];
+    
+    // First filter by function if needed
+    let result = functionFilter === 'all' 
+      ? squad.team_members 
+      : squad.team_members.filter(member => member.function === functionFilter);
+    
+    // Then sort: Core first (alphabetically), then contractors (alphabetically)
+    return result.sort((a, b) => {
+      // Sort core vs contractors
+      if (a.employment_type === 'core' && b.employment_type !== 'core') return -1;
+      if (a.employment_type !== 'core' && b.employment_type === 'core') return 1;
+      
+      // Then sort alphabetically within same employment type
+      return a.name.localeCompare(b.name);
+    });
+  }, [squad.team_members, functionFilter]);
+  
   
   // Helper function to get color based on capacity
   const getCapacityColor = (capacity) => {
@@ -58,6 +94,11 @@ const TeamMembersList = ({ squad }) => {
           <div className={`font-medium ${darkMode ? 'text-dark-primary' : ''}`}>{member.name}</div>
           <div className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>{member.role}</div>
           <div className="text-xs mt-1 flex flex-wrap gap-1">
+            {member.function && (
+              <span className={`px-2 py-0.5 rounded-full ${darkMode ? 'bg-indigo-900 text-indigo-300' : 'bg-indigo-100 text-indigo-700'}`}>
+                {member.function}
+              </span>
+            )}
           {isVacancy ? (
             <span className={`px-2 py-0.5 rounded-full ${darkMode ? 'bg-yellow-900 text-yellow-300' : 'bg-yellow-100 text-yellow-700'}`}>
               Vacancy
@@ -97,14 +138,39 @@ const TeamMembersList = ({ squad }) => {
 
   return (
     <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
-      <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-4 flex items-center`}>
-        <Users className={`h-5 w-5 mr-2 ${darkMode ? 'text-blue-400' : ''}`} />
-        Team Members ({getActiveMembersCount()})
-      </h3>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
+        <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} flex items-center`}>
+          <Users className={`h-5 w-5 mr-2 ${darkMode ? 'text-blue-400' : ''}`} />
+          Team Members ({getActiveMembersCount()})
+        </h3>
+        
+        {/* Function filter */}
+        {uniqueFunctions.length > 0 && (
+          <div className="flex items-center">
+            <label htmlFor="function-filter" className={`text-sm mr-2 ${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>
+              Filter by Function:
+            </label>
+            <select
+              id="function-filter"
+              value={functionFilter}
+              onChange={(e) => setFunctionFilter(e.target.value)}
+              className={`text-sm rounded-md ${darkMode ? 
+                'bg-gray-800 border-gray-700 text-dark-primary focus:border-blue-600' : 
+                'bg-white border-gray-300 text-gray-700 focus:border-blue-500'} 
+                border focus:ring-0 focus:outline-none px-3 py-1.5`}
+            >
+              <option value="all">All Functions</option>
+              {uniqueFunctions.map(func => (
+                <option key={func} value={func}>{func}</option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
       
-      {squad.team_members && squad.team_members.length > 0 ? (
+      {filteredMembers && filteredMembers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {squad.team_members.map(member => renderMemberCard(member))}
+          {filteredMembers.map(member => renderMemberCard(member))}
         </div>
       ) : (
         <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-center py-4`}>No team members found</div>

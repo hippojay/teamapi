@@ -132,6 +132,7 @@ class TeamMember(Base):
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     role = Column(String)
+    function = Column(String, nullable=True)  # Function/capability (Engineering, Design, Product, etc.)
     supervisor_id = Column(Integer, ForeignKey("team_members.id"), nullable=True)
     location = Column(String, nullable=True)
     geography = Column(String, nullable=True)  # Work Geography (Europe, UK, AMEA)

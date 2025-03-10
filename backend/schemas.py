@@ -37,6 +37,7 @@ class TeamMemberBase(BaseModel):
     name: str
     email: str
     role: str
+    function: Optional[str] = None  # Function/capability (Engineering, Design, Product, etc.)
     location: Optional[str] = None
     geography: Optional[str] = None
     employment_type: Optional[str] = "core"  # 'core' or 'subcon'

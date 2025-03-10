@@ -13,7 +13,9 @@ const UsersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterBySquad, setFilterBySquad] = useState('');
   const [filterByType, setFilterByType] = useState('');
+  const [filterByFunction, setFilterByFunction] = useState('');
   const [squads, setSquads] = useState([]);
+  const [uniqueFunctions, setUniqueFunctions] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,6 +26,15 @@ const UsersPage = () => {
         const data = await api.getTeamMembers();
         setUsers(data);
         setFilteredUsers(data);
+        
+        // Extract unique functions
+        const functions = new Set();
+        data.forEach(user => {
+          if (user.function) {
+            functions.add(user.function);
+          }
+        });
+        setUniqueFunctions(Array.from(functions).sort());
         
         // Fetch all squads for filtering
         const squadsData = await api.getSquads();
@@ -40,7 +51,7 @@ const UsersPage = () => {
     fetchData();
   }, []);
   
-  // Filter users based on search term, squad filter, and employment type filter
+  // Filter users based on search term, squad filter, function filter, and employment type filter
   useEffect(() => {
     let result = users;
     
@@ -62,8 +73,15 @@ const UsersPage = () => {
       result = result.filter(user => user.employment_type === filterByType);
     }
     
+    if (filterByFunction) {
+      result = result.filter(user => user.function === filterByFunction);
+    }
+    
+    // Sort users alphabetically by name
+    result = result.sort((a, b) => a.name.localeCompare(b.name));
+    
     setFilteredUsers(result);
-  }, [searchTerm, filterBySquad, filterByType, users]);
+  }, [searchTerm, filterBySquad, filterByType, filterByFunction, users]);
   
   // Function to generate initials from name
   const getInitials = (name) => {
@@ -106,7 +124,7 @@ const UsersPage = () => {
       
       {/* Filters */}
       <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white'} p-4 rounded-lg shadow-sm border mb-6`}>
-        <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
+        <div className="flex flex-col md:flex-row md:items-center md:space-x-4 gap-4">
           {/* Search */}
           <div className="relative flex-grow mb-4 md:mb-0">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -140,8 +158,25 @@ const UsersPage = () => {
             </select>
           </div>
           
+          {/* Function Filter */}
+          <div className="relative md:w-1/5 mb-4 md:mb-0">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Filter className="h-5 w-5 text-gray-400" />
+            </div>
+            <select
+              className={`pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${darkMode ? 'bg-dark-tertiary border-dark-border text-dark-primary' : 'bg-white'}`}
+              value={filterByFunction}
+              onChange={(e) => setFilterByFunction(e.target.value)}
+            >
+              <option value="">All Functions</option>
+              {uniqueFunctions.map(func => (
+                <option key={func} value={func}>{func}</option>
+              ))}
+            </select>
+          </div>
+          
           {/* Employment Type Filter */}
-          <div className="relative md:w-1/4">
+          <div className="relative md:w-1/5">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <User className="h-5 w-5 text-gray-400" />
             </div>
@@ -194,6 +229,11 @@ const UsersPage = () => {
                     {user.employment_type === 'subcon' && user.vendor_name && (
                       <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-blue-900 text-blue-200 border border-blue-700' : 'bg-blue-100 text-blue-700'}`}>
                         {user.vendor_name}
+                      </span>
+                    )}
+                    {user.function && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${darkMode ? 'bg-indigo-900 text-indigo-200 border border-indigo-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                        {user.function}
                       </span>
                     )}
                   </div>

@@ -181,6 +181,11 @@ const UserDetailPage = () => {
                       {user.vendor_name}
                     </span>
                   )}
+                  {user.function && (
+                    <span className={`px-2 py-1 rounded-full text-xs ${darkMode ? 'bg-indigo-900 text-indigo-300 border border-indigo-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                      {user.function}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -337,6 +342,12 @@ const UserDetailPage = () => {
                 <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Role:</span>
                 <span className={`${darkMode ? 'text-dark-primary' : ''}`}>{user.role}</span>
               </div>
+              {user.function && (
+              <div className="flex justify-between">
+                <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Function:</span>
+                <span className={`font-medium ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>{user.function}</span>
+              </div>
+              )}
               <div className="flex justify-between">
                 <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Region:</span>
                 <span className={`${darkMode ? 'text-dark-primary' : ''}`}>{user.geography || 'Not specified'}</span>

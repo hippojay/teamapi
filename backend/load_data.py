@@ -86,7 +86,7 @@ def load_data_from_excel(file_path: str, db: Session):
     
     # Create Team Members
     members_data = df[['Squad', 'Name', 'Business Email Address', 'template', 'Current Months Allocation', 
-                       'Work Geography', 'Work City', 'Regular / Temporary', 'Supervisor Name', 'Vendor Name']].dropna(subset=['Squad', 'Name'])
+                       'Work Geography', 'Work City', 'Regular / Temporary', 'Supervisor Name', 'Vendor Name', 'Function']].dropna(subset=['Squad', 'Name'])
     
     # Initialize tracking dictionaries for counts and capacities
     squad_member_counts = {}
@@ -204,6 +204,7 @@ def load_data_from_excel(file_path: str, db: Session):
                 name=name,
                 email=email,
                 role=row['template'] if not pd.isna(row['template']) else "Team Member",
+                function=row['Function'] if 'Function' in row and not pd.isna(row['Function']) else None,
                 geography=row['Work Geography'] if 'Work Geography' in row and not pd.isna(row['Work Geography']) else None,
                 location=row['Work City'] if 'Work City' in row and not pd.isna(row['Work City']) else None,
                 image_url=image_url,
