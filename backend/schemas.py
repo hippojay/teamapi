@@ -31,6 +31,16 @@ class TeamType(str, Enum):
     PLATFORM = "platform"
     ENABLING = "enabling"
     COMPLICATED_SUBSYSTEM = "complicated_subsystem"
+    
+class AreaLabel(str, Enum):
+    CFU_ALIGNED = "cfu_aligned"
+    PLATFORM_GROUP = "platform_group"
+    DIGITAL = "digital"
+    
+class TribeLabel(str, Enum):
+    CFU_ALIGNED = "cfu_aligned"
+    PLATFORM_GROUP = "platform_group"
+    DIGITAL = "digital"
 
 # Base models
 class TeamMemberBase(BaseModel):
@@ -240,6 +250,7 @@ class TribeBase(BaseModel):
     total_capacity: float = 0.0
     core_capacity: float = 0.0
     subcon_capacity: float = 0.0
+    label: Optional[TribeLabel] = None
 
 class Tribe(TribeBase):
     id: int
@@ -249,6 +260,7 @@ class Tribe(TribeBase):
 
 class TribeDetail(Tribe):
     squads: List[Squad] = []
+    label_str: Optional[str] = None
 
 # Area models
 class AreaBase(BaseModel):
@@ -260,6 +272,7 @@ class AreaBase(BaseModel):
     total_capacity: float = 0.0
     core_capacity: float = 0.0
     subcon_capacity: float = 0.0
+    label: Optional[AreaLabel] = None
 
 class Area(AreaBase):
     id: int
@@ -268,6 +281,7 @@ class Area(AreaBase):
 
 class AreaDetail(Area):
     tribes: List[Tribe] = []
+    label_str: Optional[str] = None
 
 
 # User and Authentication schemas

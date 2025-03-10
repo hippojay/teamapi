@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import DescriptionEditor from '../components/DescriptionEditor';
+import AreaTribeLabel from '../components/AreaTribeLabel';
 import { useTheme } from '../context/ThemeContext';
 import { Breadcrumbs } from '../components/common';
 import api from '../api';
@@ -44,6 +45,7 @@ const AreaDetailPage = () => {
       try {
         // Fetch area details
         const areaData = await api.getArea(id);
+        console.log("Area data received:", areaData);
         setArea(areaData);
         
         // Fetch tribes in this area
@@ -84,6 +86,16 @@ const AreaDetailPage = () => {
       {/* Area Header */}
       <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border mb-6`}>
         <h1 className={`text-2xl font-bold mb-3 ${darkMode ? 'text-dark-primary' : ''}`}>{area.name}</h1>
+        
+        {/* Area Label */}
+        <AreaTribeLabel
+          entityType="area"
+          entityId={area.id}
+          label={area.label_str || area.label}
+          onLabelUpdated={(newLabel) => {
+            setArea({...area, label: newLabel, label_str: newLabel});
+          }}
+        />
         
         {/* Team Composition Bar */}
         {area.core_count !== undefined && (

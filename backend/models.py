@@ -63,6 +63,11 @@ class DescriptionEdit(Base):
     editor = relationship("User")
 
 
+class AreaLabel(enum.Enum):
+    CFU_ALIGNED = "cfu_aligned"
+    PLATFORM_GROUP = "platform_group"
+    DIGITAL = "digital"
+
 class Area(Base):
     __tablename__ = "areas"
 
@@ -75,9 +80,15 @@ class Area(Base):
     total_capacity = Column(Float, default=0.0)
     core_capacity = Column(Float, default=0.0)  # Capacity of regular employees
     subcon_capacity = Column(Float, default=0.0)  # Capacity of contractors
+    label = Column(Enum(AreaLabel), nullable=True)  # Area classification label
     
     # Relationships
     tribes = relationship("Tribe", back_populates="area", cascade="all, delete-orphan")
+
+class TribeLabel(enum.Enum):
+    CFU_ALIGNED = "cfu_aligned"
+    PLATFORM_GROUP = "platform_group"
+    DIGITAL = "digital"
 
 class Tribe(Base):
     __tablename__ = "tribes"
@@ -92,6 +103,7 @@ class Tribe(Base):
     total_capacity = Column(Float, default=0.0)
     core_capacity = Column(Float, default=0.0)  # Capacity of regular employees
     subcon_capacity = Column(Float, default=0.0)  # Capacity of contractors
+    label = Column(Enum(TribeLabel), nullable=True)  # Tribe classification label
     
     # Relationships
     area = relationship("Area", back_populates="tribes")

@@ -78,6 +78,70 @@ def update_squad_team_type(
         raise HTTPException(status_code=404, detail="Squad not found")
     return {"message": f"Team type updated to {team_type}", "team_type": team_type}
 
+# Area label endpoint
+@app.put("/areas/{area_id}/label")
+def update_area_label(
+    area_id: int,
+    label: Optional[str] = None,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update an area's classification label"""
+    area = crud.get_area(db, area_id)
+    if not area:
+        raise HTTPException(status_code=404, detail="Area not found")
+    
+    if label:
+        try:
+            # Convert string to enum value if provided
+            area.label = models.AreaLabel[label.upper()]
+        except KeyError:
+            valid_labels = [l.name for l in models.AreaLabel]
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid label. Valid options are: {', '.join(valid_labels)}"
+            )
+    else:
+        # If label is None or empty string, remove the current label
+        area.label = None
+        
+    db.commit()
+    db.refresh(area)
+    
+    return {"message": f"Area label updated to {label if label else 'None'}", "label": label}
+
+# Tribe label endpoint
+@app.put("/tribes/{tribe_id}/label")
+def update_tribe_label(
+    tribe_id: int,
+    label: Optional[str] = None,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update a tribe's classification label"""
+    tribe = crud.get_tribe(db, tribe_id)
+    if not tribe:
+        raise HTTPException(status_code=404, detail="Tribe not found")
+    
+    if label:
+        try:
+            # Convert string to enum value if provided
+            tribe.label = models.TribeLabel[label.upper()]
+        except KeyError:
+            valid_labels = [l.name for l in models.TribeLabel]
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid label. Valid options are: {', '.join(valid_labels)}"
+            )
+    else:
+        # If label is None or empty string, remove the current label
+        tribe.label = None
+        
+    db.commit()
+    db.refresh(tribe)
+    
+    return {"message": f"Tribe label updated to {label if label else 'None'}", "label": label}
+
 # Squad contact info and documentation links endpoint
 @app.put("/squads/{squad_id}/contact-info", response_model=schemas.Squad)
 def update_squad_contact_info(
@@ -164,6 +228,17 @@ def get_area(area_id: int, db: Session = Depends(get_db)):
     area = crud.get_area(db, area_id)
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
+    
+    # Manually convert area.label to string if it's an enum
+    if area.label:
+        print(f"Area label in database: {area.label} (type: {type(area.label)})")
+        # Store the label value for the schema
+        if hasattr(area.label, 'name'):
+            area.label_str = area.label.name
+    else:
+        area.label_str = None
+        print("No area label found in database")
+    
     return area
 
 # Tribes
@@ -180,6 +255,17 @@ def get_tribe(tribe_id: int, db: Session = Depends(get_db)):
     tribe = crud.get_tribe(db, tribe_id)
     if not tribe:
         raise HTTPException(status_code=404, detail="Tribe not found")
+        
+    # Manually convert tribe.label to string if it's an enum
+    if tribe.label:
+        print(f"Tribe label in database: {tribe.label} (type: {type(tribe.label)})")
+        # Store the label value for the schema
+        if hasattr(tribe.label, 'name'):
+            tribe.label_str = tribe.label.name
+    else:
+        tribe.label_str = None
+        print("No tribe label found in database")
+        
     return tribe
 
 # Squads

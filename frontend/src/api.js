@@ -290,6 +290,42 @@ const api = {
     
     return response.json();
   },
+  
+  updateAreaLabel: async (areaId, label) => {
+    const url = `${API_URL}/areas/${areaId}/label${
+      label ? `?label=${encodeURIComponent(label)}` : ''
+    }`;
+      
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update area label');
+    }
+    
+    return response.json();
+  },
+  
+  updateTribeLabel: async (tribeId, label) => {
+    const url = `${API_URL}/tribes/${tribeId}/label${
+      label ? `?label=${encodeURIComponent(label)}` : ''
+    }`;
+      
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update tribe label');
+    }
+    
+    return response.json();
+  },
 
   updateSquadContactInfo: async (squadId, contactInfo) => {
     const response = await fetch(`${API_URL}/squads/${squadId}/contact-info`, {

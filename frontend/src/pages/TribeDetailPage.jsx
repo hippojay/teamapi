@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import TeamTypeLabel from '../components/TeamTypeLabel';
 import DescriptionEditor from '../components/DescriptionEditor';
+import AreaTribeLabel from '../components/AreaTribeLabel';
 import { useTheme } from '../context/ThemeContext';
 import { Breadcrumbs } from '../components/common';
 import api from '../api';
@@ -102,6 +103,16 @@ const TribeDetailPage = () => {
             </Link>
           )}
         </div>
+        
+        {/* Tribe Label */}
+        <AreaTribeLabel
+          entityType="tribe"
+          entityId={tribe.id}
+          label={tribe.label_str || tribe.label}
+          onLabelUpdated={(newLabel) => {
+            setTribe({...tribe, label: newLabel, label_str: newLabel});
+          }}
+        />
         
         {/* Team Composition Bar */}
         <div className="mb-4">
