@@ -113,6 +113,13 @@ class Squad(Base):
     core_capacity = Column(Float, default=0.0)  # Capacity of regular employees
     subcon_capacity = Column(Float, default=0.0)  # Capacity of contractors
     tribe_id = Column(Integer, ForeignKey("tribes.id"))
+    # Communication channels
+    teams_channel = Column(String, nullable=True)  # Teams channel name
+    slack_channel = Column(String, nullable=True)  # Slack channel name
+    email_contact = Column(String, nullable=True)  # Contact email
+    # Documentation links
+    documentation_url = Column(String, nullable=True)  # Documentation URL
+    jira_board_url = Column(String, nullable=True)  # Jira board URL
     
     # Relationships
     tribe = relationship("Tribe", back_populates="squads")

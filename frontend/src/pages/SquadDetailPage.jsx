@@ -150,7 +150,11 @@ const SquadDetailPage = () => {
           <OnCallInfo onCall={onCall} />
 
           {/* Additional Info */}
-          <SquadDetailsInfo squad={squad} tribe={tribe} area={area} />
+          <SquadDetailsInfo 
+            squad={squad} 
+            tribe={tribe} 
+            area={area} 
+          />
         </div>
       </div>
     </div>

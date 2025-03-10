@@ -290,6 +290,21 @@ const api = {
     
     return response.json();
   },
+
+  updateSquadContactInfo: async (squadId, contactInfo) => {
+    const response = await fetch(`${API_URL}/squads/${squadId}/contact-info`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(contactInfo)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update contact information');
+    }
+    
+    return response.json();
+  },
   
   // On-Call Roster
   getOnCall: async (squadId) => {

@@ -78,6 +78,31 @@ def update_squad_team_type(
         raise HTTPException(status_code=404, detail="Squad not found")
     return {"message": f"Team type updated to {team_type}", "team_type": team_type}
 
+# Squad contact info and documentation links endpoint
+@app.put("/squads/{squad_id}/contact-info", response_model=schemas.Squad)
+def update_squad_contact_info(
+    squad_id: int,
+    contact_info: schemas.SquadBase,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update a squad's contact information and documentation links"""
+    squad = crud.get_squad(db, squad_id)
+    if not squad:
+        raise HTTPException(status_code=404, detail="Squad not found")
+    
+    # Update only contact and documentation fields
+    squad.teams_channel = contact_info.teams_channel
+    squad.slack_channel = contact_info.slack_channel
+    squad.email_contact = contact_info.email_contact
+    squad.documentation_url = contact_info.documentation_url
+    squad.jira_board_url = contact_info.jira_board_url
+    
+    db.commit()
+    db.refresh(squad)
+    
+    return squad
+
 # Description editing endpoints
 @app.get("/descriptions/{entity_type}/{entity_id}")
 def get_description(entity_type: str, entity_id: int, db: Session = Depends(get_db)):

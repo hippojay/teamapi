@@ -165,6 +165,13 @@ class SquadBase(BaseModel):
     total_capacity: float
     core_capacity: float = 0.0
     subcon_capacity: float = 0.0
+    # Communication channels
+    teams_channel: Optional[str] = None
+    slack_channel: Optional[str] = None
+    email_contact: Optional[str] = None
+    # Documentation links
+    documentation_url: Optional[str] = None
+    jira_board_url: Optional[str] = None
 
 class Squad(SquadBase):
     id: int
