@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Users, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import DescriptionEditor from '../components/DescriptionEditor';
 import { useTheme } from '../context/ThemeContext';

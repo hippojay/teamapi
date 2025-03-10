@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { User, Briefcase, Users, ChevronRight } from 'lucide-react';
+import { Briefcase, Users, ChevronRight } from 'lucide-react';
 import api from '../api';
 
 const UserDetailPage = () => {
   const { darkMode } = useTheme();
   const { id } = useParams();
-  const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

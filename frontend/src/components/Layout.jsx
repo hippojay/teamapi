@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronRight } from 'lucide-react';
 import CustomGrid from './CustomGrid';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -13,9 +11,9 @@ const Layout = ({ children }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
+  const auth = useAuth();
   const { darkMode } = useTheme();
-  const navigate = useNavigate();
+
   const location = useLocation();
   const currentPath = location.pathname;
   const userMenuRef = useRef(null);
@@ -47,13 +45,7 @@ const Layout = ({ children }) => {
     };
   }, [showUserMenu]);
 
-  // Function to check if a route is active
-  const isActive = (path) => {
-    if (path === '/') {
-      return currentPath === '/';
-    }
-    return currentPath.startsWith(path);
-  };
+
 
   // Make login modal function available globally for the sidebar
   window.showLoginModal = () => setShowLoginModal(true);

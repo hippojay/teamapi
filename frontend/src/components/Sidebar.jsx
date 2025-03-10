@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronRight, ChevronLeft, ChevronLeftCircle, ChevronRightCircle, Sun, Moon } from 'lucide-react';
+import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronRight, ChevronLeftCircle, ChevronRightCircle, Sun, Moon } from 'lucide-react';
 import CustomGrid from './CustomGrid';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';

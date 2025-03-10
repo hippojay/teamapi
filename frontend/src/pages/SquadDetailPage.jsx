@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Users, Database, GitBranch, Bell, Clock, ChevronRight, Globe, Server, Smartphone, Code, Plus, Edit, Trash2, X, Tag } from 'lucide-react';
+import { Users, Database, GitBranch, Bell, ChevronRight, Globe, Server, Smartphone, Code, Plus, Edit, Trash2, X } from 'lucide-react';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import TeamTypeEditor from '../components/TeamTypeEditor';
 import TeamTypeLabel from '../components/TeamTypeLabel';
@@ -23,7 +23,7 @@ const SquadDetailPage = () => {
 
   const [updatingTeamType, setUpdatingTeamType] = useState(false);
   const [editingTeamType, setEditingTeamType] = useState(false);
-  const modalRef = useRef(null);
+
   const { isAuthenticated } = useAuth();
   const { darkMode } = useTheme();
   const [editingService, setEditingService] = useState(null);
