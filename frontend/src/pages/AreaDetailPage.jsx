@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import DescriptionEditor from '../components/DescriptionEditor';
 import { useTheme } from '../context/ThemeContext';
+import { Breadcrumbs } from '../components/common';
 import api from '../api';
 
 const AreaDetailPage = () => {
@@ -76,13 +76,10 @@ const AreaDetailPage = () => {
   return (
     <div>
       {/* Breadcrumbs */}
-      <div className={`flex items-center text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-6`}>
-        <Link to="/" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Home</Link>
-        <ChevronRight className="h-4 w-4 mx-2" />
-        <Link to="/areas" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Areas</Link>
-        <ChevronRight className="h-4 w-4 mx-2" />
-        <span className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{area.name}</span>
-      </div>
+      <Breadcrumbs items={[
+        { label: 'Areas', path: '/areas' },
+        { label: area.name, isLast: true }
+      ]} />
 
       {/* Area Header */}
       <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border mb-6`}>

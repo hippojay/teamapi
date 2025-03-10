@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronRight, Activity, GitBranch, Code, Globe, Server, Smartphone } from 'lucide-react';
+import { Activity, GitBranch, Code, Globe, Server, Smartphone } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { Breadcrumbs } from '../components/common';
 import api from '../api';
 
 const ServiceDetailPage = () => {
@@ -94,13 +95,10 @@ const ServiceDetailPage = () => {
   return (
     <div>
       {/* Breadcrumbs */}
-      <div className={`flex items-center text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-6`}>
-        <Link to="/" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Home</Link>
-        <ChevronRight className="h-4 w-4 mx-2" />
-        <Link to="/services" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Services</Link>
-        <ChevronRight className="h-4 w-4 mx-2" />
-        <span className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{service.name}</span>
-      </div>
+      <Breadcrumbs items={[
+        { label: 'Services', path: '/services' },
+        { label: service.name, isLast: true }
+      ]} />
 
       {/* Service Header */}
       <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border mb-6`}>

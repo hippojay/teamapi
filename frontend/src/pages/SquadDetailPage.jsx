@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '../components/common';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -6,7 +7,6 @@ import api from '../api';
 
 // Import squad components
 import {
-  Breadcrumbs,
   SquadHeader,
   ServicesList,
   TeamMembersList,
@@ -90,7 +90,12 @@ const SquadDetailPage = () => {
   return (
     <div>
       {/* Breadcrumbs */}
-      <Breadcrumbs squad={squad} tribe={tribe} area={area} />
+      <Breadcrumbs items={[
+        { label: 'Areas', path: '/areas' },
+        area && { label: area.name, path: `/areas/${area.id}` },
+        tribe && { label: tribe.name, path: `/tribes/${tribe.id}` },
+        { label: squad.name, isLast: true }
+      ].filter(Boolean)} />
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import TeamTypeLabel from '../components/TeamTypeLabel';
 import DescriptionEditor from '../components/DescriptionEditor';
 import { useTheme } from '../context/ThemeContext';
+import { Breadcrumbs } from '../components/common';
 import api from '../api';
 
 const TribeDetailPage = () => {
@@ -82,21 +82,12 @@ const TribeDetailPage = () => {
   return (
     <div>
       {/* Breadcrumbs */}
-      <div className={`flex items-center text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-6`}>
-        <Link to="/" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Home</Link>
-        <ChevronRight className="h-4 w-4 mx-2" />
-        <Link to="/areas" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Areas</Link>
-        <ChevronRight className="h-4 w-4 mx-2" />
-        {area && (
-          <>
-            <Link to={`/areas/${area.id}`} className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>{area.name}</Link>
-            <ChevronRight className="h-4 w-4 mx-2" />
-          </>
-        )}
-        <Link to="/tribes" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Tribes</Link>
-        <ChevronRight className="h-4 w-4 mx-2" />
-        <span className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{tribe.name}</span>
-      </div>
+      <Breadcrumbs items={[
+        { label: 'Areas', path: '/areas' },
+        area && { label: area.name, path: `/areas/${area.id}` },
+        { label: 'Tribes', path: '/tribes' },
+        { label: tribe.name, isLast: true }
+      ].filter(Boolean)} />
 
       {/* Tribe Header */}
       <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border mb-6`}>

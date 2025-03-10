@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import { useTheme } from '../context/ThemeContext';
+import { Breadcrumbs } from '../components/common';
 import api from '../api';
 
 const AreasPage = () => {
@@ -63,11 +63,9 @@ const AreasPage = () => {
   return (
     <div>
       {/* Breadcrumbs */}
-      <div className={`flex items-center text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-6`}>
-        <Link to="/" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Home</Link>
-        <ChevronRight className="h-4 w-4 mx-2" />
-        <span className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>Areas</span>
-      </div>
+      <Breadcrumbs items={[
+        { label: 'Areas', isLast: true }
+      ]} />
 
       <h1 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-dark-primary' : ''}`}>Areas</h1>
       
