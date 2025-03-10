@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Info, Users } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
-const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, subcon_capacity }) => {
+const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, subcon_capacity, vacancy_count = 0 }) => {
   const [showModal, setShowModal] = useState(false);
   const modalRef = useRef(null);
   const { darkMode } = useTheme();
@@ -136,14 +136,27 @@ const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, su
               </div>
             </div>
             
-            <div className="mt-6 text-right">
-              <button 
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                onClick={() => setShowModal(false)}
-              >
-                Close
-              </button>
-            </div>
+            {vacancy_count > 0 && (
+            <div className={`border-t ${darkMode ? 'border-dark-border' : 'border-gray-200'} pt-3 mt-3`}>
+            <h4 className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-2`}>Vacancies</h4>
+            <div>
+                <span className={`text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-500'}`}>Open Positions:</span>
+              <p className="font-medium text-yellow-500">{vacancy_count}</p>
+              </div>
+                <p className={`text-xs italic mt-1 ${darkMode ? 'text-dark-secondary' : 'text-gray-500'}`}>
+                    Vacancies are not included in member counts or capacity calculations.
+                  </p>
+                </div>
+              )}
+              
+              <div className="mt-6 text-right">
+                <button 
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  onClick={() => setShowModal(false)}
+                >
+                  Close
+                </button>
+              </div>
           </div>
         </div>
       )}

@@ -42,6 +42,7 @@ class TeamMemberBase(BaseModel):
     employment_type: Optional[str] = "core"  # 'core' or 'subcon'
     vendor_name: Optional[str] = None  # Vendor name for contractors
     is_external: bool = False  # Flag for external supervisors
+    is_vacancy: bool = False  # Flag for vacancy positions
 
 class TeamMember(TeamMemberBase):
     id: int
@@ -173,6 +174,7 @@ class Squad(SquadBase):
 class TeamMemberWithCapacity(TeamMember):
     capacity: float = 1.0
     squad_role: Optional[str] = None
+    is_vacancy: bool = False
 
 class SquadDetail(Squad):
     team_members: List[TeamMemberWithCapacity] = []
@@ -210,6 +212,9 @@ class SquadDetail(Squad):
                     if member_metadata[member.id]['squad_role']:
                         member_dict['squad_role'] = member_metadata[member.id]['squad_role']
                         member_dict['role'] = member_metadata[member.id]['squad_role']
+                
+                # Preserve the is_vacancy flag
+                member_dict['is_vacancy'] = getattr(member, 'is_vacancy', False)
                 
                 enhanced_members.append(TeamMemberWithCapacity(**member_dict))
             

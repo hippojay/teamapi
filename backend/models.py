@@ -139,6 +139,7 @@ class TeamMember(Base):
     employment_type = Column(String, default="core", nullable=True)  # 'core' for regular employees, 'subcon' for contractors
     vendor_name = Column(String, nullable=True)  # Vendor name for contractors
     is_external = Column(Boolean, default=False)  # Flag for external supervisors not in the squad setup
+    is_vacancy = Column(Boolean, default=False)  # Flag for vacancy positions
     
     # Relationships
     # Many-to-many relationship through squad_members association table

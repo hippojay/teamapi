@@ -25,6 +25,7 @@ const SquadDetailPage = () => {
   const [error, setError] = useState(null);
   const [tribe, setTribe] = useState(null);
   const [area, setArea] = useState(null);
+  const [vacancyCount, setVacancyCount] = useState(0);
 
   const { darkMode } = useTheme();
 
@@ -36,6 +37,12 @@ const SquadDetailPage = () => {
         // Fetch squad details
         const squadData = await api.getSquad(id);
         setSquad(squadData);
+        
+        // Calculate vacancy count if team_members exist
+        if (squadData.team_members && squadData.team_members.length > 0) {
+          const vacancies = squadData.team_members.filter(member => member.is_vacancy).length;
+          setVacancyCount(vacancies);
+        }
         
         // Fetch tribe and area info for breadcrumbs
         const tribeData = await api.getTribe(squadData.tribe_id);
@@ -115,7 +122,8 @@ const SquadDetailPage = () => {
           <SquadHeader 
             squad={squad} 
             tribe={tribe} 
-            onSquadUpdate={handleSquadUpdate} 
+            onSquadUpdate={handleSquadUpdate}
+            vacancyCount={vacancyCount}
           />
 
           {/* Services */}

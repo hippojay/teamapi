@@ -86,7 +86,7 @@ def load_data_from_excel(file_path: str, db: Session):
     
     # Create Team Members
     members_data = df[['Squad', 'Name', 'Business Email Address', 'template', 'Current Months Allocation', 
-                       'Work Geography', 'Work City', 'Regular / Temporary', 'Supervisor Name', 'Vendor Name']].dropna(subset=['Squad', 'Name', 'Business Email Address'])
+                       'Work Geography', 'Work City', 'Regular / Temporary', 'Supervisor Name', 'Vendor Name']].dropna(subset=['Squad', 'Name'])
     
     # Initialize tracking dictionaries for counts and capacities
     squad_member_counts = {}
@@ -124,22 +124,31 @@ def load_data_from_excel(file_path: str, db: Session):
         if 'Current Months Allocation' in row and not pd.isna(row['Current Months Allocation']):
             capacity = float(row['Current Months Allocation'])
         
-        # Determine employment type based on 'Regular / Temporary' field
-        employment_type = "core"  # Default
-        if 'Regular / Temporary' in row and not pd.isna(row['Regular / Temporary']):
-            if row['Regular / Temporary'].lower() == "regular":
-                employment_type = "core"
-                squad_core_counts[squad_name] += 1
-                squad_core_capacity[squad_name] += capacity
-            else:  # Anything else is considered a contractor ("Contingent", etc.)
-                employment_type = "subcon"
-                squad_subcon_counts[squad_name] += 1
-                squad_subcon_capacity[squad_name] += capacity
-                
-                # For contractors, check if there's a vendor name provided
-                vendor_name = None
-                if 'Vendor Name' in row and not pd.isna(row['Vendor Name']):
-                    vendor_name = row['Vendor Name']
+        # Check if this is a vacancy
+        is_vacancy = row['Name'] == 'Vacancy'
+            
+        # If not a vacancy, update the counts
+        if not is_vacancy:
+            # Determine employment type based on 'Regular / Temporary' field
+            employment_type = "core"  # Default
+            if 'Regular / Temporary' in row and not pd.isna(row['Regular / Temporary']):
+                if row['Regular / Temporary'].lower() == "regular":
+                    employment_type = "core"
+                    squad_core_counts[squad_name] += 1
+                    squad_core_capacity[squad_name] += capacity
+                else:  # Anything else is considered a contractor ("Contingent", etc.)
+                    employment_type = "subcon"
+                    squad_subcon_counts[squad_name] += 1
+                    squad_subcon_capacity[squad_name] += capacity
+                    
+                    # For contractors, check if there's a vendor name provided
+                    vendor_name = None
+                    if 'Vendor Name' in row and not pd.isna(row['Vendor Name']):
+                        vendor_name = row['Vendor Name']
+        else:
+            # For vacancies, don't update counts or capacities
+            employment_type = "core"  # Default for vacancies
+            vendor_name = None
             
         # Create a user avatar URL for some users (randomly)
         image_url = None
@@ -152,11 +161,30 @@ def load_data_from_excel(file_path: str, db: Session):
         squad_member_counts[squad_name] += 1
         squad_capacity_totals[squad_name] += capacity
         
-        # Check if this member already exists (by email)
-        email = row['Business Email Address']
         name = row['Name']
         
-        if email in members_by_email:
+        # Handle vacancy or null email specially
+        is_vacancy = name == 'Vacancy'
+        has_email = not pd.isna(row['Business Email Address'])
+        
+        # For vacancies or team members with null email, generate a unique email
+        if is_vacancy or not has_email:
+            role_part = row['template'] if not pd.isna(row['template']) else "role"
+            role_part = role_part.lower().replace(' ', '.')
+            squad_part = squad_name.lower().replace(' ', '.')
+            if is_vacancy:
+                email = f"vacancy.{role_part}.{squad_part}@example.com"
+            else:
+                # For non-vacancies with missing email
+                name_part = name.lower().replace(' ', '.')
+                email = f"{name_part}.{squad_part}@example.com"
+        else:
+            # Normal case - use provided email
+            email = row['Business Email Address']
+        
+        # The is_vacancy flag is already set above and email is already handled
+            
+        if email in members_by_email and not is_vacancy:
             # Member already exists, add them to the squad through squad_members table
             member = members_by_email[email]
             
@@ -181,7 +209,8 @@ def load_data_from_excel(file_path: str, db: Session):
                 image_url=image_url,
                 employment_type=employment_type,
                 vendor_name=vendor_name if employment_type == "subcon" else None,
-                is_external=False  # Regular team member
+                is_external=False,  # Regular team member
+                is_vacancy=is_vacancy  # Set vacancy flag
             )
             db.add(member)
             db.flush()  # Flush to get the member ID

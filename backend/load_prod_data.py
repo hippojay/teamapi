@@ -227,7 +227,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
     
     # Create Team Members
     members_data = df[['Squad', 'Name', 'Business Email Address', 'Position', 'Current Phasing', 
-                       'Work Geography', 'Work City', 'Regular / Temporary', 'Supervisor Name','Vendor Name']].dropna(subset=['Squad', 'Name', 'Business Email Address'])
+                       'Work Geography', 'Work City', 'Regular / Temporary', 'Supervisor Name','Vendor Name']].dropna(subset=['Squad', 'Name'])
     
     # Initialize tracking dictionaries for counts and capacities
     squad_member_counts = {squad_name: 0 for squad_name in squad_objects}
@@ -268,10 +268,15 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         if 'Current Phasing' in row and not pd.isna(row['Current Phasing']):
             capacity = float(row['Current Phasing'])
         
-        # Get name and check if this is a vacancy
+        # Get name
         name = row['Name']
+        
+        # Check if this is a vacancy or has missing email
         is_vacancy = name == 'Vacancy'
+        has_email = not pd.isna(row['Business Email Address'])
             
+        print(f"Processing {name}")
+
         # Determine employment type and update counts only for non-vacancies
         if not is_vacancy:
             # Determine employment type based on 'Regular / Temporary' field
@@ -297,13 +302,18 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         # Check if this is a vacancy already detected earlier
         # is_vacancy was already set above
         
-        # For vacancies, generate a unique email based on the role and squad
-        if is_vacancy:
+        # Generate email for vacancies or members with missing email
+        if is_vacancy or not has_email:
             role_part = row['Position'].lower().replace(' ', '.') if not pd.isna(row['Position']) else "role"
             squad_part = squad_name.lower().replace(' ', '.')
-            email = f"vacancy.{role_part}.{squad_part}@example.com"
+            if is_vacancy:
+                email = f"vacancy.{role_part}.{squad_part}@example.com"
+            else:
+                # For non-vacancies with missing email
+                name_part = name.lower().replace(' ', '.')
+                email = f"{name_part}.{squad_part}@example.com"
         else:
-            # Get email from the data for non-vacancies
+            # Normal case - use provided email
             email = row['Business Email Address']
             
         # Check if member exists in database already
@@ -437,17 +447,35 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         if pd.isna(row['Supervisor Name']):
             continue
             
-        member_email = row['Business Email Address']
+        name = row['Name']
         supervisor_name = row['Supervisor Name']
         
-        if member_email in members_by_email and supervisor_name in supervisors_by_name:
-            member = members_by_email[member_email]
-            supervisor = supervisors_by_name[supervisor_name]
+        # Skip vacancies for supervisor relationships
+        if name == 'Vacancy':
+            continue
             
-            # Set the supervisor relationship if different
-            if member.supervisor_id != supervisor.id:
-                member.supervisor_id = supervisor.id
-                print(f"Set supervisor for {member.name}: {supervisor.name}")
+        # Handle members that might have auto-generated emails
+        has_email = not pd.isna(row['Business Email Address'])
+        if has_email:
+            member_email = row['Business Email Address']
+            if member_email in members_by_email and supervisor_name in supervisors_by_name:
+                member = members_by_email[member_email]
+                supervisor = supervisors_by_name[supervisor_name]
+                
+                # Set the supervisor relationship if different
+                if member.supervisor_id != supervisor.id:
+                    member.supervisor_id = supervisor.id
+                    print(f"Set supervisor for {member.name}: {supervisor.name}")
+        else:
+            # Try to find the member by name
+            if name in members_by_name and supervisor_name in supervisors_by_name:
+                member = members_by_name[name]
+                supervisor = supervisors_by_name[supervisor_name]
+                
+                # Set the supervisor relationship if different
+                if member.supervisor_id != supervisor.id:
+                    member.supervisor_id = supervisor.id
+                    print(f"Set supervisor for {member.name}: {supervisor.name}")
     
     # Update member counts and total capacity directly
     for squad_name, squad in squad_objects.items():

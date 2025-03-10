@@ -7,7 +7,7 @@ import DescriptionEditor from '../DescriptionEditor';
 import CompactTeamCompositionBar from '../CompactTeamCompositionBar';
 import api from '../../api';
 
-const SquadHeader = ({ squad, tribe, onSquadUpdate }) => {
+const SquadHeader = ({ squad, tribe, onSquadUpdate, vacancyCount = 0 }) => {
   const { darkMode } = useTheme();
   const { isAuthenticated } = useAuth();
   const [editingTeamType, setEditingTeamType] = useState(false);
@@ -103,6 +103,7 @@ const SquadHeader = ({ squad, tribe, onSquadUpdate }) => {
           subcon_count={squad.subcon_count}
           core_capacity={squad.core_capacity}
           subcon_capacity={squad.subcon_capacity}
+          vacancy_count={vacancyCount}
         />
       </div>
 
