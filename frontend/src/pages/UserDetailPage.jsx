@@ -295,7 +295,7 @@ const UserDetailPage = () => {
               
               {/* Tribe */}
               <div>
-                <h4 className={`text-sm font-medium ${darkMode ? 'text-dark-secondary' : 'text-gray-500'} mb-2`}>Tribe</h4>
+                <h4 className={`text-sm font-medium ${darkMode ? 'text-dark-secondary' : 'text-gray-500'} mb-2`}>Cluster</h4>
                 {tribe ? (
                   <Link 
                     to={`/tribes/${tribe.id}`}
@@ -311,7 +311,7 @@ const UserDetailPage = () => {
                     )}
                   </Link>
                 ) : (
-                  <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No tribe information</div>
+                  <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No cluster information</div>
                 )}
               </div>
             </div>

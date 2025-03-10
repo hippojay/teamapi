@@ -178,7 +178,7 @@ const SquadsPage = () => {
                 </div>
                 {tribe && (
                   <div className={`mb-2 text-sm ${darkMode ? 'text-dark-secondary' : ''}`}>
-                    <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>Tribe: </span>
+                    <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>Cluster: </span>
                     <Link to={`/tribes/${tribe.id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
                       {tribe.name}
                     </Link>

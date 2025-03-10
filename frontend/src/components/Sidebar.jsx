@@ -52,7 +52,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
   const navItems = [
     { path: '/', icon: HomeIcon, label: 'Home' },
     { path: '/areas', icon: (props) => <CustomGrid {...props} />, label: 'Areas' },
-    { path: '/tribes', icon: Layers, label: 'Tribes' },
+    { path: '/tribes', icon: Layers, label: 'Clusters' },
     { path: '/squads', icon: Users, label: 'Squads' },
     { path: '/services', icon: Database, label: 'Services' },
     { path: '/users', icon: User, label: 'Team Members' },

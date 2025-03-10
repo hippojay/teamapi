@@ -75,10 +75,10 @@ const TribesPage = () => {
     <div>
       {/* Breadcrumbs */}
       <Breadcrumbs items={[
-        { label: 'Tribes', isLast: true }
+        { label: 'Clusters', isLast: true }
       ]} />
 
-      <h1 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-dark-primary' : ''}`}>Tribes</h1>
+      <h1 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-dark-primary' : ''}`}>Clusters</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {tribes.length > 0 ? (
@@ -114,12 +114,12 @@ const TribesPage = () => {
                 to={`/tribes/${tribe.id}`}
                 className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
               >
-                View Tribe
+                View Cluster
               </Link>
             </div>
           ))
         ) : (
-          <div className={`col-span-2 text-center py-10 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No tribes found</div>
+          <div className={`col-span-2 text-center py-10 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No Clusters found</div>
         )}
       </div>
     </div>

@@ -10,7 +10,7 @@ const SquadDetailsInfo = ({ squad, tribe, area }) => {
       <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'} mb-4`}>Squad Details</h3>
       <div className="space-y-3">
         <div className="flex justify-between">
-          <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>Tribe:</span>
+          <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>Cluster:</span>
           {tribe && (
             <Link to={`/tribes/${tribe.id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
               {tribe.name}

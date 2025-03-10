@@ -144,7 +144,7 @@ const ServiceDetailPage = () => {
               <>
                 <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}> in </span>
                 <Link to={`/tribes/${tribe.id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
-                  {tribe.name} Tribe
+                  {tribe.name} Cluster
                 </Link>
               </>
             )}

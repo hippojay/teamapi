@@ -97,7 +97,7 @@ const HomePage = () => {
             </div>
             <div>
               <div className={`text-2xl font-bold ${darkMode ? 'text-dark-primary' : ''}`}>{stats.tribes}</div>
-              <div className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Tribes</div>
+              <div className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Clusters</div>
             </div>
           </div>
         </div>
@@ -211,7 +211,7 @@ const HomePage = () => {
             <li>
               <Link to="/tribes" className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'} flex items-center`}>
                 <Users className="h-4 w-4 mr-2" />
-                View All Tribes
+                View All Clusters
               </Link>
             </li>
             <li>

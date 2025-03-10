@@ -110,7 +110,7 @@ const AreaDetailPage = () => {
       </div>
 
       {/* Tribes in this Area */}
-      <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-dark-primary' : ''}`}>Tribes</h2>
+      <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-dark-primary' : ''}`}>Clusters</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {tribes.length > 0 ? (
           tribes.map(tribe => (
@@ -135,13 +135,13 @@ const AreaDetailPage = () => {
                 to={`/tribes/${tribe.id}`}
                 className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
               >
-                View Tribe
+                View Cluster
               </Link>
             </div>
           ))
         ) : (
           <div className={`col-span-2 text-center py-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            No tribes found in this area
+            No clusters found in this area
           </div>
         )}
       </div>

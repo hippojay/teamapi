@@ -85,7 +85,7 @@ const TribeDetailPage = () => {
       <Breadcrumbs items={[
         { label: 'Areas', path: '/areas' },
         area && { label: area.name, path: `/areas/${area.id}` },
-        { label: 'Tribes', path: '/tribes' },
+        { label: 'Cluster', path: '/tribes' },
         { label: tribe.name, isLast: true }
       ].filter(Boolean)} />
 
@@ -172,7 +172,7 @@ const TribeDetailPage = () => {
           ))
         ) : (
           <div className={`col-span-3 text-center py-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            No squads found in this tribe
+            No squads found in this cluster
           </div>
         )}
       </div>
