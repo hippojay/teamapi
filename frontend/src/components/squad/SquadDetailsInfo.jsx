@@ -18,7 +18,7 @@ const SquadDetailsInfo = ({ squad, tribe, area }) => {
           )}
         </div>
         <div className="flex justify-between">
-          <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>Area:</span>
+          <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>Tribe:</span>
           {area && (
             <Link to={`/areas/${area.id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
               {area.name}

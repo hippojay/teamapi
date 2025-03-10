@@ -10,7 +10,7 @@ const Breadcrumbs = ({ squad, tribe, area }) => {
     <div className={`flex items-center text-sm ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-6`}>
       <Link to="/" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Home</Link>
       <ChevronRight className="h-4 w-4 mx-2" />
-      <Link to="/areas" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Areas</Link>
+      <Link to="/areas" className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-500'}`}>Tribes</Link>
       <ChevronRight className="h-4 w-4 mx-2" />
       {area && (
         <>

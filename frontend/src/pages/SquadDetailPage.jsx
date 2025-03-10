@@ -108,7 +108,7 @@ const SquadDetailPage = () => {
     <div>
       {/* Breadcrumbs */}
       <Breadcrumbs items={[
-        { label: 'Areas', path: '/areas' },
+        { label: 'Tribes', path: '/areas' },
         area && { label: area.name, path: `/areas/${area.id}` },
         tribe && { label: tribe.name, path: `/tribes/${tribe.id}` },
         { label: squad.name, isLast: true }

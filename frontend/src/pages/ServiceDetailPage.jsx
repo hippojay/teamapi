@@ -152,7 +152,7 @@ const ServiceDetailPage = () => {
               <>
                 <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}> within </span>
                 <Link to={`/areas/${area.id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
-                  {area.name} Area
+                  {area.name} Tribe
                 </Link>
               </>
             )}

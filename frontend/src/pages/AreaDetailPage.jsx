@@ -52,8 +52,8 @@ const AreaDetailPage = () => {
         
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching area data:', err);
-        setError('Failed to load area data');
+        console.error('Error fetching Tribe data:', err);
+        setError('Failed to load Tribe data');
         setLoading(false);
       }
     };
@@ -70,14 +70,14 @@ const AreaDetailPage = () => {
   }
 
   if (!area) {
-    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Area not found</div>;
+    return <div className={`text-center py-10 ${darkMode ? 'text-dark-primary' : ''}`}>Tribe not found</div>;
   }
 
   return (
     <div>
       {/* Breadcrumbs */}
       <Breadcrumbs items={[
-        { label: 'Areas', path: '/areas' },
+        { label: 'Tribes', path: '/areas' },
         { label: area.name, isLast: true }
       ]} />
 
@@ -141,7 +141,7 @@ const AreaDetailPage = () => {
           ))
         ) : (
           <div className={`col-span-2 text-center py-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            No clusters found in this area
+            No clusters found in this Tribe
           </div>
         )}
       </div>

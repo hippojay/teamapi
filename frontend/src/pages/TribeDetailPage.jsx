@@ -83,7 +83,7 @@ const TribeDetailPage = () => {
     <div>
       {/* Breadcrumbs */}
       <Breadcrumbs items={[
-        { label: 'Areas', path: '/areas' },
+        { label: 'Tribes', path: '/areas' },
         area && { label: area.name, path: `/areas/${area.id}` },
         { label: 'Cluster', path: '/tribes' },
         { label: tribe.name, isLast: true }
@@ -98,7 +98,7 @@ const TribeDetailPage = () => {
               to={`/areas/${area.id}`}
               className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'} text-sm`}
             >
-              {area.name} Area
+              {area.name} Tribe
             </Link>
           )}
         </div>

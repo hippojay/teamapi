@@ -85,7 +85,7 @@ const HomePage = () => {
             </div>
             <div>
               <div className={`text-2xl font-bold ${darkMode ? 'text-dark-primary' : ''}`}>{stats.areas}</div>
-              <div className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Areas</div>
+              <div className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Tribes</div>
             </div>
           </div>
         </div>
@@ -205,7 +205,7 @@ const HomePage = () => {
             <li>
               <Link to="/areas" className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'} flex items-center`}>
                 <Users className="h-4 w-4 mr-2" />
-                View All Areas
+                View All Tribes
               </Link>
             </li>
             <li>

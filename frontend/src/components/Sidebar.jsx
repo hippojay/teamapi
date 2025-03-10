@@ -51,7 +51,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
   // Navigation items data
   const navItems = [
     { path: '/', icon: HomeIcon, label: 'Home' },
-    { path: '/areas', icon: (props) => <CustomGrid {...props} />, label: 'Areas' },
+    { path: '/areas', icon: (props) => <CustomGrid {...props} />, label: 'Tribes' },
     { path: '/tribes', icon: Layers, label: 'Clusters' },
     { path: '/squads', icon: Users, label: 'Squads' },
     { path: '/services', icon: Database, label: 'Services' },

@@ -64,10 +64,10 @@ const AreasPage = () => {
     <div>
       {/* Breadcrumbs */}
       <Breadcrumbs items={[
-        { label: 'Areas', isLast: true }
+        { label: 'Tribes', isLast: true }
       ]} />
 
-      <h1 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-dark-primary' : ''}`}>Areas</h1>
+      <h1 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-dark-primary' : ''}`}>Tribes</h1>
       
       <div className="space-y-6">
         {areas.length > 0 ? (
@@ -95,12 +95,12 @@ const AreasPage = () => {
                 to={`/areas/${area.id}`}
                 className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
               >
-                View Area
+                View Tribe
               </Link>
             </div>
           ))
         ) : (
-          <div className={`text-center py-10 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No areas found</div>
+          <div className={`text-center py-10 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No Tribes found</div>
         )}
       </div>
     </div>

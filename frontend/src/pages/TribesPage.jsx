@@ -89,7 +89,7 @@ const TribesPage = () => {
               </div>
               {areas[tribe.area_id] && (
                 <div className="mb-2 text-sm">
-                  <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Area: </span>
+                  <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Tribe: </span>
                   <Link to={`/areas/${tribe.area_id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
                     {areas[tribe.area_id].name}
                   </Link>
