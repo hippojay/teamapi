@@ -169,8 +169,60 @@ const TeamMembersList = ({ squad }) => {
       </div>
       
       {filteredMembers && filteredMembers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredMembers.map(member => renderMemberCard(member))}
+        <div className="space-y-6">
+          {/* Core Employees Section */}
+          {filteredMembers.some(member => member.employment_type === 'core') && (
+            <div>
+              <div className={`flex items-center my-3`}>
+                <div className={`${darkMode ? 'bg-green-900' : 'bg-green-100'} p-1.5 rounded-md mr-2`}>
+                  <Users className={`h-4 w-4 ${darkMode ? 'text-green-300' : 'text-green-700'}`} />
+                </div>
+                <h4 className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-700'}`}>Core Employees</h4>
+                <div className={`flex-grow ml-3 h-px ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredMembers
+                  .filter(member => member.employment_type === 'core')
+                  .map(member => renderMemberCard(member))}
+              </div>
+            </div>
+          )}
+          
+          {/* Contractors Section */}
+          {filteredMembers.some(member => member.employment_type !== 'core') && (
+            <div>
+              <div className={`flex items-center my-3`}>
+                <div className={`${darkMode ? 'bg-amber-900' : 'bg-amber-100'} p-1.5 rounded-md mr-2`}>
+                  <Users className={`h-4 w-4 ${darkMode ? 'text-amber-300' : 'text-amber-700'}`} />
+                </div>
+                <h4 className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-700'}`}>Contractors</h4>
+                <div className={`flex-grow ml-3 h-px ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredMembers
+                  .filter(member => member.employment_type !== 'core')
+                  .map(member => renderMemberCard(member))}
+              </div>
+            </div>
+          )}
+          
+          {/* Display vacancies separately if needed */}
+          {filteredMembers.some(member => member.is_vacancy) && (
+            <div>
+              <div className={`flex items-center my-3`}>
+                <div className={`${darkMode ? 'bg-yellow-900' : 'bg-yellow-100'} p-1.5 rounded-md mr-2`}>
+                  <Users className={`h-4 w-4 ${darkMode ? 'text-yellow-300' : 'text-yellow-700'}`} />
+                </div>
+                <h4 className={`font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-700'}`}>Vacancies</h4>
+                <div className={`flex-grow ml-3 h-px ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredMembers
+                  .filter(member => member.is_vacancy)
+                  .map(member => renderMemberCard(member))}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-center py-4`}>No team members found</div>
