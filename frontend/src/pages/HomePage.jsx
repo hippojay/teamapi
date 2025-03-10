@@ -3,6 +3,7 @@ import { Users, Database, GitBranch, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import OrganisationalGrid from '../components/OrganisationalGrid';
+import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import { useTheme } from '../context/ThemeContext';
 
 const HomePage = () => {
@@ -51,7 +52,22 @@ const HomePage = () => {
         
         // Get 3 random squads for featuring
         const shuffled = [...squads].sort(() => 0.5 - Math.random());
-        setRecentSquads(shuffled.slice(0, 3));
+        
+        // Pre-process squads to add vacancy_count if not present
+        const processedSquads = shuffled.slice(0, 3).map(squad => {
+          // Count team members with is_vacancy flag (if team members are loaded)
+          let vacancy_count = 0;
+          if (squad.team_members) {
+            vacancy_count = squad.team_members.filter(member => member.is_vacancy).length;
+          }
+          
+          return {
+            ...squad,
+            vacancy_count: squad.vacancy_count || vacancy_count || 0
+          };
+        });
+        
+        setRecentSquads(processedSquads);
         
         setLoading(false);
       } catch (err) {
@@ -150,16 +166,14 @@ const HomePage = () => {
                 {squad.status}
               </span>
             </div>
-            <div className={`flex items-center space-x-2 ${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4`}>
-              <Users className="h-5 w-5" />
-              <span>{squad.member_count > 0 ? squad.member_count : 'No'} member{squad.member_count !== 1 ? 's' : ''}</span>
-              <span className="mx-2">•</span>
-              <span className={`font-medium ${darkMode ? squad.total_capacity > 1.0 ? 'text-red-400' : squad.total_capacity >= 0.8 ? 'text-green-400' : squad.total_capacity >= 0.5 ? 'text-yellow-400' : 'text-gray-400' : getCapacityColor(squad.total_capacity)}`}>
-                {squad.total_capacity.toFixed(1)} FTE
-              </span>
-              <span className="mx-2">•</span>
-              <Clock className="h-5 w-5" />
-              <span>{squad.timezone}</span>
+            <div className="mb-4">
+              <CompactTeamCompositionBar 
+                core_count={squad.core_count || 0}
+                subcon_count={squad.subcon_count || 0}
+                core_capacity={squad.core_capacity || 0}
+                subcon_capacity={squad.subcon_capacity || 0}
+                vacancy_count={squad.vacancy_count || 0}
+              />
             </div>
             <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 line-clamp-2`}>
               {squad.description}
