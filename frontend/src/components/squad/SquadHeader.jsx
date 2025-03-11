@@ -173,6 +173,9 @@ const SquadHeader = ({ squad, tribe, onSquadUpdate, vacancyCount = 0 }) => {
         />
       </div>
 
+      {/* Horizontal line after team composition bar */}
+      <hr className={`my-4 ${darkMode ? 'border-dark-border' : 'border-gray-200'}`} />
+
       <div className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>
         <DescriptionEditor
           entityType="squad"
@@ -184,6 +187,9 @@ const SquadHeader = ({ squad, tribe, onSquadUpdate, vacancyCount = 0 }) => {
           }}
         />
       </div>
+      
+      {/* Horizontal line before contact info */}
+      <hr className={`my-4 ${darkMode ? 'border-dark-border' : 'border-gray-200'}`} />
       
       {/* Contact Info Section */}
       {errorMessage && (
