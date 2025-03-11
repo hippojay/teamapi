@@ -364,15 +364,15 @@ const DependencyMap = () => {
           <div className="flex flex-col gap-2">
             <div className="flex items-center">
               <div className="h-3 w-6 bg-blue-700 mr-2"></div>
-              <span className="text-sm">X-as-a-Service (Default)</span>
+              <span className="text-sm" title="Team consumes another team's service with minimal direct interaction.">X-as-a-Service (Default)</span>
             </div>
             <div className="flex items-center">
               <div className="h-3 w-6 bg-purple-700 mr-2 border-dotted border-t-2 border-white"></div>
-              <span className="text-sm">Collaboration</span>
+              <span className="text-sm" title="Teams work together closely with high communication frequency.">Collaboration</span>
             </div>
             <div className="flex items-center">
               <div className="h-3 w-6 bg-green-600 mr-2 border-dashed border-t-2 border-dotted border-white"></div>
-              <span className="text-sm">Facilitating</span>
+              <span className="text-sm" title="Team helps another team overcome obstacles or learn skills.">Facilitating</span>
             </div>
           </div>
         </div>

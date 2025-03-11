@@ -49,6 +49,8 @@ This will:
 - **On-Call Information**: View who's on call for each team
 - **Editable Descriptions**: Authenticated users can edit descriptions for Areas, Tribes, and Squads
 - **Authentication**: User login system to control who can edit descriptions
+- **Team Topologies Integration**: Teams are classified according to Team Topologies patterns
+- **Interaction Modes**: Dependencies between teams include Team Topologies interaction modes
 
 ## Project Structure
 
@@ -86,6 +88,13 @@ The application uses a hierarchical data model:
 - Squads contain Team Members and Services
 - Squads have Dependencies on other Squads
 - Squads have On-Call rosters
+
+### Team Topologies Integration
+
+The application incorporates Team Topologies concepts:
+- **Team Types**: Squads are classified as Stream-aligned, Platform, Enabling, or Complicated-subsystem teams
+- **Interaction Modes**: Dependencies between teams include interaction modes (Collaboration, X-as-a-Service, Facilitating)
+- Each type and interaction mode includes descriptive tooltips to help users understand Team Topologies concepts
 
 ## License
 

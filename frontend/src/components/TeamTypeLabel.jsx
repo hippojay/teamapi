@@ -1,6 +1,7 @@
 import React from 'react';
 import { Users, Layers, HelpCircle, Activity } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import PropTypes from 'prop-types';
 
 /**
  * A reusable component that displays a team type as a pill-shaped label
@@ -23,11 +24,12 @@ const TeamTypeLabel = ({
   const type = teamType?.toLowerCase() || 'stream_aligned';
   const { darkMode } = useTheme();
 
-  // Configuration for each team type
+  // Configuration for each team type with tooltip descriptions
   const typeConfig = {
     stream_aligned: {
       icon: <Users />,
       label: 'Stream-aligned',
+      tooltip: 'Delivers value directly to users via feature streams.',
       color: darkMode 
         ? 'bg-dark-blue-highlight text-dark-blue border-dark-blue-border' 
         : 'bg-blue-100 text-blue-800 border-blue-200'
@@ -35,6 +37,7 @@ const TeamTypeLabel = ({
     platform: {
       icon: <Layers />,
       label: 'Platform',
+      tooltip: 'Provides services that other teams build upon.',
       color: darkMode 
         ? 'bg-dark-purple-highlight text-dark-purple border-dark-purple-border' 
         : 'bg-purple-100 text-purple-800 border-purple-200'
@@ -42,6 +45,7 @@ const TeamTypeLabel = ({
     enabling: {
       icon: <HelpCircle />,
       label: 'Enabling',
+      tooltip: 'Assists other teams with specialized knowledge and capabilities.',
       color: darkMode 
         ? 'bg-dark-green-highlight text-dark-green border-dark-green-border' 
         : 'bg-green-100 text-green-800 border-green-200'
@@ -49,6 +53,7 @@ const TeamTypeLabel = ({
     complicated_subsystem: {
       icon: <Activity />,
       label: 'Complicated Subsystem',
+      tooltip: 'Focuses on complex components requiring deep expertise.',
       color: darkMode 
         ? 'bg-dark-amber-highlight text-dark-amber border-dark-amber-border' 
         : 'bg-amber-100 text-amber-800 border-amber-200'
@@ -73,7 +78,10 @@ const TeamTypeLabel = ({
   };
 
   return (
-    <span className={`inline-flex items-center rounded-full border ${config.color} ${sizeClasses[size] || sizeClasses.md} ${className}`}>
+    <span 
+      className={`inline-flex items-center rounded-full border ${config.color} ${sizeClasses[size] || sizeClasses.md} ${className}`}
+      title={config.tooltip}
+    >
       {showIcon && (
         <span className={`${iconSizeClasses[size] || iconSizeClasses.md} ${!showText ? '' : 'mr-1'}`}>
           {React.cloneElement(config.icon, { className: iconSizeClasses[size] || iconSizeClasses.md })}
@@ -82,6 +90,14 @@ const TeamTypeLabel = ({
       {showText && <span>{config.label}</span>}
     </span>
   );
+};
+
+TeamTypeLabel.propTypes = {
+  teamType: PropTypes.string,
+  showIcon: PropTypes.bool,
+  showText: PropTypes.bool,
+  size: PropTypes.oneOf(['sm', 'md', 'lg']),
+  className: PropTypes.string
 };
 
 export default TeamTypeLabel;

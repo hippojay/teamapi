@@ -27,6 +27,15 @@ const TeamTypeEditor = ({ teamType, onUpdate, readOnly = false }) => {
     complicated_subsystem: "Complicated Subsystem"
   };
   
+  // Short tooltips for labels (consistent with TeamTypeLabel.jsx)
+  const teamTypeTooltips = {
+    stream_aligned: "Delivers value directly to users via feature streams.",
+    platform: "Provides services that other teams build upon.",
+    enabling: "Assists other teams with specialized knowledge and capabilities.",
+    complicated_subsystem: "Focuses on complex components requiring deep expertise."
+  };
+  
+  // Longer descriptions for the editor interface
   const teamTypeDescriptions = {
     stream_aligned: "Teams aligned to a single, valuable stream of work; the most common team type.",
     platform: "Teams that enable stream-aligned teams to deliver work with substantial autonomy.",
@@ -74,7 +83,7 @@ const TeamTypeEditor = ({ teamType, onUpdate, readOnly = false }) => {
           <button 
             onClick={() => setShowInfo(!showInfo)}
             className={`ml-2 ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
-            title="Show team type information"
+            title={teamTypeTooltips[teamType] || "Show team type information"}
           >
             <HelpCircle className="h-4 w-4" />
           </button>
