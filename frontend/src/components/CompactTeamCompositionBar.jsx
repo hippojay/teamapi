@@ -51,7 +51,11 @@ const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, su
         </div>
           <button 
             className="text-blue-500 hover:text-blue-700 ml-1"
-            onClick={() => setShowModal(true)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowModal(true);
+            }}
             aria-label="Show team composition details"
           >
             <Info size={14} />
@@ -63,7 +67,11 @@ const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, su
       {showModal && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
-          onClick={() => setShowModal(false)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowModal(false);
+          }}
         >
           <div 
             ref={modalRef} 
@@ -74,7 +82,11 @@ const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, su
               <h3 className="font-bold text-lg">Team Composition Details</h3>
               <button 
                 className={`${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
-                onClick={() => setShowModal(false)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowModal(false);
+                }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -151,11 +163,15 @@ const CompactTeamCompositionBar = ({ core_count, subcon_count, core_capacity, su
               
               <div className="mt-6 text-right">
                 <button 
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                  onClick={() => setShowModal(false)}
-                >
-                  Close
-                </button>
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                onClick={(e) => {
+                    e.preventDefault();
+                  e.stopPropagation();
+                    setShowModal(false);
+                }}
+              >
+                Close
+              </button>
               </div>
           </div>
         </div>

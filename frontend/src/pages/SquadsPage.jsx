@@ -157,7 +157,14 @@ const SquadsPage = () => {
             const area = tribe ? areas[tribe.area_id] : null;
             
             return (
-              <div key={squad.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+              <div 
+                key={squad.id} 
+                className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border hover:border-blue-500 transition-colors cursor-pointer`}
+                onClick={(e) => {
+                  if (e.isDefaultPrevented()) return;
+                  window.location.href = `/squads/${squad.id}`;
+                }}
+              >
                 <div className="flex items-center justify-between mb-3">
                   <h2 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{squad.name}</h2>
                   <span className={`px-2 py-1 rounded-full text-xs ${
@@ -179,22 +186,28 @@ const SquadsPage = () => {
                 {tribe && (
                   <div className={`mb-2 text-sm ${darkMode ? 'text-dark-secondary' : ''}`}>
                     <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}>Cluster: </span>
-                    <Link to={`/tribes/${tribe.id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
+                    <span onClick={(e) => {
+                      e.preventDefault();
+                      window.location.href = `/tribes/${tribe.id}`;
+                    }} className={`cursor-pointer ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
                       {tribe.name}
-                    </Link>
+                    </span>
                     {area && (
                       <>
                         <span className={darkMode ? 'text-dark-secondary' : 'text-gray-600'}> in </span>
-                        <Link to={`/areas/${area.id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
+                        <span onClick={(e) => {
+                          e.preventDefault();
+                          window.location.href = `/areas/${area.id}`;
+                        }} className={`cursor-pointer ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
                           {area.name}
-                        </Link>
+                        </span>
                       </>
                     )}
                   </div>
                 )}
                 
                 {/* Team Composition Bar */}
-                <div className="mb-4">
+                <div className="mb-4" onClick={(e) => e.stopPropagation()}>
                   <CompactTeamCompositionBar 
                     core_count={squad.core_count} 
                     subcon_count={squad.subcon_count}
@@ -205,13 +218,7 @@ const SquadsPage = () => {
                 {squad.description && (
                   <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 line-clamp-2`}>{squad.description}</p>
                 )}
-                <Link 
-                  to={`/squads/${squad.id}`}
-                  className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                  View Squad
-                </Link>
-              </div>
+                </div>
             );
           })
         ) : (

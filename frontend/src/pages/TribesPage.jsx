@@ -83,8 +83,18 @@ const TribesPage = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {tribes.length > 0 ? (
-          tribes.map(tribe => (
-            <div key={tribe.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+          tribes.map(tribe => {
+            const handleCardClick = (e) => {
+              if (e.isDefaultPrevented()) return;
+              window.location.href = `/tribes/${tribe.id}`;
+            };
+
+            return (
+              <div 
+                key={tribe.id} 
+                className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border hover:border-blue-500 transition-colors cursor-pointer`}
+                onClick={handleCardClick}
+              >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center">
                   <h2 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{tribe.name}</h2>
@@ -98,15 +108,21 @@ const TribesPage = () => {
               {areas[tribe.area_id] && (
                 <div className="mb-2 text-sm">
                   <span className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'}`}>Tribe: </span>
-                  <Link to={`/areas/${tribe.area_id}`} className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}>
+                  <span 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.location.href = `/areas/${tribe.area_id}`;
+                    }} 
+                    className={`cursor-pointer ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:underline'}`}
+                  >
                     {areas[tribe.area_id].name}
-                  </Link>
+                  </span>
                 </div>
               )}
               
               {/* Team Composition Bar */}
               {tribe.core_count !== undefined && (
-                <div className="mb-3">
+                <div className="mb-3" onClick={(e) => e.stopPropagation()}>
                   <CompactTeamCompositionBar 
                     core_count={tribe.core_count || 0} 
                     subcon_count={tribe.subcon_count || 0}
@@ -118,14 +134,9 @@ const TribesPage = () => {
               {tribe.description && (
                 <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 line-clamp-2`}>{tribe.description}</p>
               )}
-              <Link 
-                to={`/tribes/${tribe.id}`}
-                className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                View Cluster
-              </Link>
-            </div>
-          ))
+              </div>
+            );
+          })
         ) : (
           <div className={`col-span-2 text-center py-10 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No Clusters found</div>
         )}

@@ -72,8 +72,18 @@ const AreasPage = () => {
       
       <div className="space-y-6">
         {areas.length > 0 ? (
-          areas.map(area => (
-            <div key={area.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+          areas.map(area => {
+            const handleCardClick = (e) => {
+              if (e.isDefaultPrevented()) return;
+              window.location.href = `/areas/${area.id}`;
+            };
+
+            return (
+              <div 
+                key={area.id} 
+                className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border hover:border-blue-500 transition-colors cursor-pointer`}
+                onClick={handleCardClick}
+              >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center">
                   <h2 className={`text-xl font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{area.name}</h2>
@@ -86,7 +96,7 @@ const AreasPage = () => {
 
                 {/* Team Composition Bar */}
                 {area.core_count !== undefined && (
-                  <div className="mt-3 mb-3">
+                  <div className="mt-3 mb-3" onClick={(e) => e.stopPropagation()}>
                     <CompactTeamCompositionBar 
                       core_count={area.core_count || 0} 
                       subcon_count={area.subcon_count || 0}
@@ -99,14 +109,9 @@ const AreasPage = () => {
               {area.description && (
                 <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4`}>{area.description}</p>
               )}
-              <Link 
-                to={`/areas/${area.id}`}
-                className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                View Tribe
-              </Link>
-            </div>
-          ))
+              </div>
+            );
+          })
         ) : (
           <div className={`text-center py-10 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No Tribes found</div>
         )}
