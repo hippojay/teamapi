@@ -96,6 +96,13 @@ The application incorporates Team Topologies concepts:
 - **Interaction Modes**: Dependencies between teams include interaction modes (Collaboration, X-as-a-Service, Facilitating)
 - Each type and interaction mode includes descriptive tooltips to help users understand Team Topologies concepts
 
+### Organizational Classification
+
+The application also provides classification for Areas and Tribes:
+- **CFU Aligned**: Consumer or Business funded and managed tribe or cluster
+- **Platform Group**: Provides services to be consumed by other teams
+- **Digital**: A digital funded and managed tribe
+
 ## License
 
 This project is for demonstration purposes only.

@@ -99,7 +99,7 @@ const TribesPage = () => {
                 <div className="flex items-center">
                   <h2 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{tribe.name}</h2>
                   {(tribe.label || tribe.label_str) && (
-                    <div className="ml-2">
+                    <div className="ml-2" onClick={(e) => e.stopPropagation()}>
                       <LabelDisplay label={tribe.label_str || tribe.label} />
                     </div>
                   )}

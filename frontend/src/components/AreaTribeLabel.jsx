@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { Building, Server, Globe, PenLine, Check, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -41,11 +42,26 @@ const AreaTribeLabel = ({ entityType, entityId, label, onLabelUpdated }) => {
     setSelectedLabel(normalizedLabel);
   }, [label]);
 
-  // Define available labels
+  // Define available labels with tooltips
   const labelOptions = [
-    { value: 'CFU_ALIGNED', label: 'CFU Aligned', icon: <Building size={16} /> },
-    { value: 'PLATFORM_GROUP', label: 'Platform Group', icon: <Server size={16} /> },
-    { value: 'DIGITAL', label: 'Digital', icon: <Globe size={16} /> },
+    { 
+      value: 'CFU_ALIGNED', 
+      label: 'CFU Aligned', 
+      icon: <Building size={16} />,
+      tooltip: 'A Consumer or Business funded and managed tribe or cluster'
+    },
+    { 
+      value: 'PLATFORM_GROUP', 
+      label: 'Platform Group', 
+      icon: <Server size={16} />,
+      tooltip: 'Provides services to be consumed by other teams'
+    },
+    { 
+      value: 'DIGITAL', 
+      label: 'Digital', 
+      icon: <Globe size={16} />,
+      tooltip: 'A digital funded and managed tribe'
+    },
   ];
 
   // Get label configuration for display
@@ -117,6 +133,7 @@ const AreaTribeLabel = ({ entityType, entityId, label, onLabelUpdated }) => {
                     ? 'bg-dark-card text-dark-secondary border-dark-border hover:bg-dark-hover'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
                 }`}
+              title={option.tooltip}
             >
               <span className="mr-1.5">{option.icon}</span>
               <span>{option.label}</span>
@@ -181,6 +198,7 @@ const AreaTribeLabel = ({ entityType, entityId, label, onLabelUpdated }) => {
               ? 'bg-dark-blue-highlight text-dark-blue border border-dark-blue-border'
               : 'bg-blue-100 text-blue-800 border border-blue-300'
             }`}
+          title={currentLabelConfig.tooltip}
         >
           <span className="mr-1.5">{currentLabelConfig.icon}</span>
           <span>{currentLabelConfig.label}</span>
@@ -202,6 +220,19 @@ const AreaTribeLabel = ({ entityType, entityId, label, onLabelUpdated }) => {
       )}
     </div>
   );
+};
+
+AreaTribeLabel.propTypes = {
+  entityType: PropTypes.oneOf(['area', 'tribe']).isRequired,
+  entityId: PropTypes.number.isRequired,
+  label: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.shape({
+      value: PropTypes.string,
+      name: PropTypes.string
+    })
+  ]),
+  onLabelUpdated: PropTypes.func
 };
 
 export default AreaTribeLabel;

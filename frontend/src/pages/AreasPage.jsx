@@ -88,7 +88,7 @@ const AreasPage = () => {
                 <div className="flex items-center">
                   <h2 className={`text-xl font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{area.name}</h2>
                   {(area.label || area.label_str) && (
-                    <div className="ml-2">
+                    <div className="ml-2" onClick={(e) => e.stopPropagation()}>
                       <LabelDisplay label={area.label_str || area.label} />
                     </div>
                   )}
