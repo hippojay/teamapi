@@ -107,7 +107,10 @@ const AreasPage = () => {
                 )}
               </div>
               {area.description && (
-                <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4`}>{area.description}</p>
+                <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 overflow-hidden`}>
+                  {/* Show full description without truncation */}
+                  {area.description}
+                </p>
               )}
               </div>
             );

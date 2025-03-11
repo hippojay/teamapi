@@ -132,7 +132,10 @@ const TribesPage = () => {
                 </div>
               )}
               {tribe.description && (
-                <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 line-clamp-2`}>{tribe.description}</p>
+                <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 overflow-hidden`}>
+                  {/* Show full description without truncation */}
+                  {tribe.description}
+                </p>
               )}
               </div>
             );

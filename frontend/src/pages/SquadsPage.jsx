@@ -216,7 +216,10 @@ const SquadsPage = () => {
                   />
                 </div>
                 {squad.description && (
-                  <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 line-clamp-2`}>{squad.description}</p>
+                  <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 overflow-hidden`}>
+                    {/* Show full description without truncation */}
+                    {squad.description}
+                  </p>
                 )}
                 </div>
             );
