@@ -17,9 +17,7 @@ class ServiceType(str, Enum):
     WEBPAGE = "WEBPAGE"
     APP_MODULE = "APP_MODULE"
 
-class DependencyType(str, Enum):
-    REQUIRED = "required"
-    OPTIONAL = "optional"
+# Removed DependencyType enum as per requirement
 
 class InteractionMode(str, Enum):
     COLLABORATION = "collaboration"
@@ -139,7 +137,6 @@ class ServiceUpdate(BaseModel):
 
 class DependencyBase(BaseModel):
     dependency_name: str
-    dependency_type: DependencyType
     interaction_mode: InteractionMode = InteractionMode.X_AS_A_SERVICE
     interaction_frequency: Optional[str] = None
 

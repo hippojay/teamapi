@@ -9,17 +9,6 @@ const DependenciesList = ({ dependencies, squadId, onDependenciesChange }) => {
   const { isAuthenticated } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [editingDependency, setEditingDependency] = useState(null);
-
-  const getDependencyBadge = (type) => {
-    switch (type.toLowerCase()) {
-      case 'required':
-        return <span className={`px-2 py-1 ${darkMode ? 'bg-dark-blue-highlight text-dark-blue' : 'bg-blue-100 text-blue-800'} rounded-full text-xs`}>Required</span>;
-      case 'optional':
-        return <span className={`px-2 py-1 ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'} rounded-full text-xs`}>Optional</span>;
-      default:
-        return <span className={`px-2 py-1 ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'} rounded-full text-xs`}>{type}</span>;
-    }
-  };
   
   const getInteractionModeIcon = (mode) => {
     switch (mode) {
@@ -99,7 +88,6 @@ const DependenciesList = ({ dependencies, squadId, onDependenciesChange }) => {
             <thead>
               <tr className={`${darkMode ? 'border-dark-border' : 'border-gray-200'} border-b`}>
                 <th className="text-left py-2 px-2">Dependency</th>
-                <th className="text-center py-2 px-2">Type</th>
                 <th className="text-center py-2 px-2">Interaction Mode</th>
                 <th className="text-center py-2 px-2">Frequency</th>
                 <th className="text-right py-2 px-2">Actions</th>
@@ -112,7 +100,6 @@ const DependenciesList = ({ dependencies, squadId, onDependenciesChange }) => {
                   className={`${darkMode ? 'border-dark-border hover:bg-dark-hover' : 'border-gray-200 hover:bg-gray-50'} border-b`}
                 >
                   <td className="py-2 px-2">{dep.dependency_name}</td>
-                  <td className="py-2 px-2 text-center">{getDependencyBadge(dep.dependency_type)}</td>
                   <td className="py-2 px-2 text-center flex items-center justify-center">
                     <div className="flex items-center">
                       {getInteractionModeIcon(dep.interaction_mode)}
@@ -171,9 +158,46 @@ const DependenciesList = ({ dependencies, squadId, onDependenciesChange }) => {
 
 // Modal component for adding/editing dependencies
 const DependencyModal = ({ isOpen, onClose, dependency, squadId, onSave, darkMode }) => {
+  // Add dark mode styles for select dropdowns
+  useEffect(() => {
+    // Add a style tag for dark mode dropdown options
+    if (darkMode) {
+      const styleEl = document.createElement('style');
+      styleEl.id = 'dark-select-styles';
+      styleEl.innerHTML = `
+        .dark-mode-active select {
+          background-color: #1e1e1e !important;
+          color: white !important;
+          -webkit-text-fill-color: white !important;
+          border-color: #4a5568 !important;
+        }
+        .dark-mode-active select option {
+          background-color: #1e1e1e !important;
+          color: white !important;
+          -webkit-text-fill-color: white !important;
+        }
+        .dark-mode-active input[type="text"] {
+          background-color: #1e1e1e !important;
+          color: white !important;
+          -webkit-text-fill-color: white !important;
+          border-color: #4a5568 !important;
+        }
+      `;
+      document.head.appendChild(styleEl);
+      document.body.classList.add('dark-mode-active');
+      
+      return () => {
+        const existingStyle = document.getElementById('dark-select-styles');
+        if (existingStyle) {
+          existingStyle.remove();
+        }
+        document.body.classList.remove('dark-mode-active');
+      };
+    }
+  }, [darkMode]);
+  
   const [formData, setFormData] = useState({
     dependency_name: dependency ? dependency.dependency_name : '',
-    dependency_type: dependency ? dependency.dependency_type : 'required',
     interaction_mode: dependency ? dependency.interaction_mode : 'x_as_a_service',
     interaction_frequency: dependency ? dependency.interaction_frequency : '',
     dependency_squad_id: dependency ? dependency.dependency_squad_id : '',
@@ -234,7 +258,7 @@ const DependencyModal = ({ isOpen, onClose, dependency, squadId, onSave, darkMod
   
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center">
-      <div className={`${darkMode ? 'bg-dark-card border-dark-border text-dark-primary' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-lg border w-full max-w-md mx-auto`}>
+      <div className={`${darkMode ? 'bg-dark-card border-dark-border text-white' : 'bg-white border-gray-200 text-gray-800'} p-6 rounded-lg shadow-lg border w-full max-w-md mx-auto`}>
         <h3 className="text-lg font-semibold mb-4">
           {dependency ? 'Edit Dependency' : 'Add Dependency'}
         </h3>
@@ -242,7 +266,7 @@ const DependencyModal = ({ isOpen, onClose, dependency, squadId, onSave, darkMod
         <form onSubmit={handleSubmit}>
           {/* Error message */}
           {error && (
-            <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+            <div className={`p-3 mb-4 text-sm rounded-lg ${darkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-700'}`}>
               {error}
             </div>
           )}
@@ -250,7 +274,7 @@ const DependencyModal = ({ isOpen, onClose, dependency, squadId, onSave, darkMod
           {/* Squad selection (for new dependencies) */}
           {!dependency && (
             <div className="mb-4">
-              <label className={`block text-sm font-medium ${darkMode ? 'text-dark-secondary' : 'text-gray-700'} mb-1`}>
+              <label className="block text-sm font-medium mb-1">
                 Dependency Squad
               </label>
               <select
@@ -258,7 +282,8 @@ const DependencyModal = ({ isOpen, onClose, dependency, squadId, onSave, darkMod
                 value={formData.dependency_squad_id}
                 onChange={handleInputChange}
                 required
-                className={`w-full border ${darkMode ? 'bg-dark-input border-dark-border text-dark-primary' : 'bg-white border-gray-300'} rounded-md p-2`}
+                className={`w-full border ${darkMode ? 'bg-dark-secondary text-white border-gray-600' : 'bg-white border-gray-300'} rounded-md p-2`}
+                style={{ color: darkMode ? 'white' : 'inherit' }}
               >
                 <option value="">Select a squad</option>
                 {squads.map(squad => (
@@ -272,7 +297,7 @@ const DependencyModal = ({ isOpen, onClose, dependency, squadId, onSave, darkMod
           
           {/* Dependency name */}
           <div className="mb-4">
-            <label className={`block text-sm font-medium ${darkMode ? 'text-dark-secondary' : 'text-gray-700'} mb-1`}>
+            <label className="block text-sm font-medium mb-1">
               Dependency Name
             </label>
             <input
@@ -281,36 +306,22 @@ const DependencyModal = ({ isOpen, onClose, dependency, squadId, onSave, darkMod
               value={formData.dependency_name}
               onChange={handleInputChange}
               required
-              className={`w-full border ${darkMode ? 'bg-dark-input border-dark-border text-dark-primary' : 'bg-white border-gray-300'} rounded-md p-2`}
+              className={`w-full border ${darkMode ? 'bg-dark-secondary text-white border-gray-600' : 'bg-white border-gray-300'} rounded-md p-2`}
+              style={{ color: darkMode ? 'white' : 'inherit' }}
             />
-          </div>
-          
-          {/* Dependency type */}
-          <div className="mb-4">
-            <label className={`block text-sm font-medium ${darkMode ? 'text-dark-secondary' : 'text-gray-700'} mb-1`}>
-              Dependency Type
-            </label>
-            <select
-              name="dependency_type"
-              value={formData.dependency_type}
-              onChange={handleInputChange}
-              className={`w-full border ${darkMode ? 'bg-dark-input border-dark-border text-dark-primary' : 'bg-white border-gray-300'} rounded-md p-2`}
-            >
-              <option value="required">Required</option>
-              <option value="optional">Optional</option>
-            </select>
           </div>
           
           {/* Interaction mode */}
           <div className="mb-4">
-            <label className={`block text-sm font-medium ${darkMode ? 'text-dark-secondary' : 'text-gray-700'} mb-1`}>
+            <label className="block text-sm font-medium mb-1">
               Interaction Mode
             </label>
             <select
               name="interaction_mode"
               value={formData.interaction_mode}
               onChange={handleInputChange}
-              className={`w-full border ${darkMode ? 'bg-dark-input border-dark-border text-dark-primary' : 'bg-white border-gray-300'} rounded-md p-2`}
+              className={`w-full border ${darkMode ? 'bg-dark-secondary text-white border-gray-600' : 'bg-white border-gray-300'} rounded-md p-2`}
+              style={{ color: darkMode ? 'white' : 'inherit' }}
             >
               <option value="x_as_a_service">X-as-a-Service</option>
               <option value="collaboration">Collaboration</option>
@@ -320,14 +331,15 @@ const DependencyModal = ({ isOpen, onClose, dependency, squadId, onSave, darkMod
           
           {/* Interaction frequency */}
           <div className="mb-4">
-            <label className={`block text-sm font-medium ${darkMode ? 'text-dark-secondary' : 'text-gray-700'} mb-1`}>
+            <label className="block text-sm font-medium mb-1">
               Interaction Frequency
             </label>
             <select
               name="interaction_frequency"
               value={formData.interaction_frequency}
               onChange={handleInputChange}
-              className={`w-full border ${darkMode ? 'bg-dark-input border-dark-border text-dark-primary' : 'bg-white border-gray-300'} rounded-md p-2`}
+              className={`w-full border ${darkMode ? 'bg-dark-secondary text-white border-gray-600' : 'bg-white border-gray-300'} rounded-md p-2`}
+              style={{ color: darkMode ? 'white' : 'inherit' }}
             >
               <option value="">Not specified</option>
               <option value="Regular">Regular</option>

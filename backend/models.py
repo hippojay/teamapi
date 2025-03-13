@@ -21,9 +21,7 @@ class ServiceStatus(enum.Enum):
     DEGRADED = "DEGRADED"
     DOWN = "DOWN"
 
-class DependencyType(enum.Enum):
-    REQUIRED = "required"
-    OPTIONAL = "optional"
+# Removed DependencyType enum as per requirement
 
 class InteractionMode(enum.Enum):
     COLLABORATION = "collaboration"
@@ -201,7 +199,7 @@ class Dependency(Base):
     dependent_squad_id = Column(Integer, ForeignKey("squads.id"))
     dependency_squad_id = Column(Integer, ForeignKey("squads.id"))
     dependency_name = Column(String)
-    dependency_type = Column(Enum(DependencyType), default=DependencyType.REQUIRED)
+    # Removed dependency_type field as per requirement
     interaction_mode = Column(Enum(InteractionMode), default=InteractionMode.X_AS_A_SERVICE)
     interaction_frequency = Column(String, nullable=True)  # "Regular", "As needed", "Scheduled"
     

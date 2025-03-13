@@ -13,7 +13,7 @@ const DependencyMap = () => {
   const [tooltipContent, setTooltipContent] = useState({ x: 0, y: 0, content: '', visible: false });
   
   // Filter options
-  const [selectedDependencyType, setSelectedDependencyType] = useState('all');
+  // Removed selectedDependencyType state
   const [selectedInteractionMode, setSelectedInteractionMode] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -42,13 +42,8 @@ const DependencyMap = () => {
   useEffect(() => {
     if (loading || squads.length === 0 || dependencies.length === 0) return;
     
-    // Filter dependencies based on selected type and interaction mode
+    // Filter dependencies based on selected interaction mode
     const filteredDependencies = dependencies.filter(dep => {
-      // Filter by dependency type
-      if (selectedDependencyType !== 'all' && dep.dependency_type.toLowerCase() !== selectedDependencyType) {
-        return false;
-      }
-      
       // Filter by interaction mode
       if (selectedInteractionMode !== 'all' && dep.interaction_mode !== selectedInteractionMode) {
         return false;
@@ -120,10 +115,9 @@ const DependencyMap = () => {
       .attr('viewBox', [0, 0, width, height])
       .attr('style', 'max-width: 100%; height: auto;');
     
-    // Define arrow marker for links - combine dependency type and interaction mode
+    // Define arrow marker for links - for interaction modes
     svg.append('defs').selectAll('marker')
-      .data(['required-collaboration', 'required-x_as_a_service', 'required-facilitating', 
-             'optional-collaboration', 'optional-x_as_a_service', 'optional-facilitating'])
+      .data(['collaboration', 'x_as_a_service', 'facilitating'])
       .enter().append('marker')
       .attr('id', d => `arrow-${d}`)
       .attr('viewBox', '0 -5 10 10')
@@ -134,16 +128,14 @@ const DependencyMap = () => {
       .attr('orient', 'auto')
       .append('path')
       .attr('fill', d => {
-        // Get base color from dependency type
-        const baseColor = d.startsWith('required') ? '#E53E3E' : '#3182CE';
-        
-        // Modify shade based on interaction mode
-        if (d.includes('collaboration')) {
-          return d3.color(baseColor).darker(0.5);
-        } else if (d.includes('facilitating')) {
-          return d3.color(baseColor).brighter(0.5);
+        // Set color based on interaction mode
+        if (d === 'collaboration') {
+          return '#9C5FFF'; // Purple
+        } else if (d === 'facilitating') {
+          return '#48BB78'; // Green
+        } else {
+          return '#3182CE'; // Blue for x_as_a_service
         }
-        return baseColor; // x_as_a_service - default color
       })
       .attr('d', 'M0,-5L10,0L0,5');
     
@@ -153,31 +145,26 @@ const DependencyMap = () => {
       .data(links)
       .enter().append('line')
       .attr('stroke', d => {
-        // Base color from dependency type
-        const baseColor = d.type === 'required' ? '#E53E3E' : '#3182CE';
-        
-        // Modify shade based on interaction mode
+        // Set color based on interaction mode
         if (d.interaction === 'collaboration') {
-          return d3.color(baseColor).darker(0.5);
+          return '#9C5FFF'; // Purple
         } else if (d.interaction === 'facilitating') {
-          return d3.color(baseColor).brighter(0.5);
+          return '#48BB78'; // Green
+        } else {
+          return '#3182CE'; // Blue for x_as_a_service
         }
-        return baseColor; // x_as_a_service - default color
       })
-      .attr('stroke-width', d => d.type === 'required' ? 2 : 1.5)
+      .attr('stroke-width', 2)
       .attr('stroke-dasharray', d => {
-        // Base pattern for optional dependencies
-        let pattern = d.type === 'optional' ? '5,5' : null;
-        
         // Modify pattern based on interaction mode
         if (d.interaction === 'collaboration') {
-          return pattern ? '8,4' : '3,3';
+          return '3,3';
         } else if (d.interaction === 'facilitating') {
-          return pattern ? '3,3,6,3' : '6,3';
+          return '6,3';
         }
-        return pattern; // x_as_a_service - default pattern
+        return null; // x_as_a_service - solid line
       })
-      .attr('marker-end', d => `url(#arrow-${d.type}-${d.interaction})`);
+      .attr('marker-end', d => `url(#arrow-${d.interaction})`);
     
     // Create color scale for nodes based on tribe
     const color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -266,7 +253,7 @@ const DependencyMap = () => {
     
     // Stop simulation when component unmounts
     return () => simulation.stop();
-  }, [loading, squads, dependencies, selectedDependencyType, selectedInteractionMode, searchTerm]);
+  }, [loading, squads, dependencies, selectedInteractionMode, searchTerm]);
   
   if (loading) {
     return <div className="flex justify-center items-center h-96">Loading dependency map...</div>;
@@ -295,18 +282,7 @@ const DependencyMap = () => {
       <h2 className="text-2xl font-semibold mb-4">Team Dependencies</h2>
       
       <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Dependency Type</label>
-          <select 
-            className="w-full border border-gray-300 rounded-md p-2"
-            value={selectedDependencyType}
-            onChange={(e) => setSelectedDependencyType(e.target.value)}
-          >
-            <option value="all">All Dependencies</option>
-            <option value="required">Required Dependencies</option>
-            <option value="optional">Optional Dependencies</option>
-          </select>
-        </div>
+        {/* Removed dependency type filter */}
         
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Interaction Mode</label>
@@ -344,20 +320,8 @@ const DependencyMap = () => {
         </div>
       </div>
       
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <h3 className="text-sm font-semibold mb-2">Dependency Types:</h3>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center">
-              <div className="h-3 w-6 bg-red-600 mr-2"></div>
-              <span className="text-sm">Required Dependency</span>
-            </div>
-            <div className="flex items-center">
-              <div className="h-3 w-6 bg-blue-600 mr-2 border-dashed border-t-2 border-white"></div>
-              <span className="text-sm">Optional Dependency</span>
-            </div>
-          </div>
-        </div>
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-1 gap-4">
+        {/* Removed dependency types legend */}
         
         <div>
           <h3 className="text-sm font-semibold mb-2">Interaction Modes:</h3>
