@@ -12,13 +12,15 @@ import PropTypes from 'prop-types';
  * @param {boolean} props.showText - Whether to display the text label (default: true)
  * @param {string} props.size - Size of the component (sm, md, lg) (default: md)
  * @param {string} props.className - Additional CSS classes to apply
+ * @param {Function} props.onClick - Click handler function
  */
 const TeamTypeLabel = ({ 
   teamType, 
   showIcon = true,
   showText = true,
   size = 'md',
-  className = ''
+  className = '',
+  onClick
 }) => {
   // Default to stream_aligned if teamType is not specified
   const type = teamType?.toLowerCase() || 'stream_aligned';
@@ -81,6 +83,7 @@ const TeamTypeLabel = ({
     <span 
       className={`inline-flex items-center rounded-full border ${config.color} ${sizeClasses[size] || sizeClasses.md} ${className}`}
       title={config.tooltip}
+      onClick={onClick}
     >
       {showIcon && (
         <span className={`${iconSizeClasses[size] || iconSizeClasses.md} ${!showText ? '' : 'mr-1'}`}>
@@ -97,7 +100,8 @@ TeamTypeLabel.propTypes = {
   showIcon: PropTypes.bool,
   showText: PropTypes.bool,
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
-  className: PropTypes.string
+  className: PropTypes.string,
+  onClick: PropTypes.func
 };
 
 export default TeamTypeLabel;

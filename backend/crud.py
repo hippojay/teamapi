@@ -429,13 +429,24 @@ def get_dependencies(db: Session, squad_id: int) -> List[models.Dependency]:
     # Convert to Dependency objects
     dependencies = []
     for row in result:
+        # Handle interaction_mode case sensitivity
+        interaction_mode = row.interaction_mode
+        if interaction_mode:
+            # Convert uppercase to lowercase for frontend compatibility
+            if interaction_mode == 'X_AS_A_SERVICE':
+                interaction_mode = 'x_as_a_service'
+            elif interaction_mode == 'COLLABORATION':
+                interaction_mode = 'collaboration'
+            elif interaction_mode == 'FACILITATING':
+                interaction_mode = 'facilitating'
+                
         # Create the base dependency object
         dependency = models.Dependency(
             id=row.id,
             dependent_squad_id=row.dependent_squad_id,
             dependency_squad_id=row.dependency_squad_id,
             dependency_name=row.dependency_name,
-            interaction_mode=row.interaction_mode,
+            interaction_mode=interaction_mode,
             interaction_frequency=row.interaction_frequency
         )
         
@@ -459,13 +470,24 @@ def get_all_dependencies(db: Session) -> List[models.Dependency]:
     # Convert to Dependency objects
     dependencies = []
     for row in result:
+        # Handle interaction_mode case sensitivity
+        interaction_mode = row.interaction_mode
+        if interaction_mode:
+            # Convert uppercase to lowercase for frontend compatibility
+            if interaction_mode == 'X_AS_A_SERVICE':
+                interaction_mode = 'x_as_a_service'
+            elif interaction_mode == 'COLLABORATION':
+                interaction_mode = 'collaboration'
+            elif interaction_mode == 'FACILITATING':
+                interaction_mode = 'facilitating'
+                
         # Create the base dependency object
         dependency = models.Dependency(
             id=row.id,
             dependent_squad_id=row.dependent_squad_id,
             dependency_squad_id=row.dependency_squad_id,
             dependency_name=row.dependency_name,
-            interaction_mode=row.interaction_mode,
+            interaction_mode=interaction_mode,
             interaction_frequency=row.interaction_frequency
         )
         
@@ -477,8 +499,8 @@ def get_all_dependencies(db: Session) -> List[models.Dependency]:
     return dependencies
 
 def create_dependency(db: Session, dependent_id: int, dependency_id: int, dependency_data: schemas.DependencyBase) -> models.Dependency:
-    # Ensure we use the enum values from the models module
-    interaction_mode_value = models.InteractionMode[dependency_data.interaction_mode.upper()] if isinstance(dependency_data.interaction_mode, str) else dependency_data.interaction_mode
+    # Use the interaction_mode as is, without converting to uppercase
+    interaction_mode_value = dependency_data.interaction_mode
     
     db_dependency = models.Dependency(
         dependent_squad_id=dependent_id,
@@ -501,10 +523,10 @@ def update_dependency(db: Session, dependency_id: int, dependency_data: schemas.
     # Update fields if provided
     update_data = dependency_data.dict(exclude_unset=True)
     
-    # Handle enum values explicitly
+    # Use the interaction_mode as is without converting to uppercase
     if 'interaction_mode' in update_data and update_data['interaction_mode'] is not None:
         interaction_mode = update_data['interaction_mode']
-        update_data['interaction_mode'] = models.InteractionMode[interaction_mode.upper()] if isinstance(interaction_mode, str) else interaction_mode
+        update_data['interaction_mode'] = interaction_mode
     
     for key, value in update_data.items():
         setattr(db_dependency, key, value)

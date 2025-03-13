@@ -126,12 +126,12 @@ const AreaDetailPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {tribes.length > 0 ? (
           tribes.map(tribe => (
-            <div key={tribe.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+            <div key={tribe.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border cursor-pointer hover:shadow-md hover:border-blue-500 transition-all duration-200`} onClick={() => window.location.href = `/tribes/${tribe.id}`}>
               <h3 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-dark-primary' : ''}`}>{tribe.name}</h3>
               
               {/* Team Composition Bar */}
               {tribe.core_count !== undefined && (
-                <div className="mb-4">
+                <div className="mb-4" onClick={(e) => e.stopPropagation()}>
                   <CompactTeamCompositionBar 
                     core_count={tribe.core_count || 0} 
                     subcon_count={tribe.subcon_count || 0}
@@ -143,12 +143,7 @@ const AreaDetailPage = () => {
               {tribe.description && (
                 <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 line-clamp-2`}>{tribe.description}</p>
               )}
-              <Link 
-                to={`/tribes/${tribe.id}`}
-                className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                View Cluster
-              </Link>
+
             </div>
           ))
         ) : (

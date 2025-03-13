@@ -141,7 +141,7 @@ const TribeDetailPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {squads.length > 0 ? (
           squads.map(squad => (
-            <div key={squad.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+            <div key={squad.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border cursor-pointer hover:shadow-md hover:border-blue-500 transition-all duration-200`} onClick={() => window.location.href = `/squads/${squad.id}`}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : ''}`}>{squad.name}</h3>
                 <span className={`px-2 py-1 rounded-full text-xs ${
@@ -158,11 +158,12 @@ const TribeDetailPage = () => {
                 <TeamTypeLabel 
                   teamType={squad.team_type || "stream_aligned"} 
                   size="sm"
+                  onClick={(e) => e.stopPropagation()}
                 />
               </div>
               
               {/* Team Composition Bar */}
-              <div className="mb-4">
+              <div className="mb-4" onClick={(e) => e.stopPropagation()}>
                 <CompactTeamCompositionBar 
                   core_count={squad.core_count} 
                   subcon_count={squad.subcon_count}
@@ -173,12 +174,7 @@ const TribeDetailPage = () => {
               {squad.description && (
                 <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 line-clamp-2`}>{squad.description}</p>
               )}
-              <Link 
-                to={`/squads/${squad.id}`}
-                className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                View Squad
-              </Link>
+
             </div>
           ))
         ) : (
