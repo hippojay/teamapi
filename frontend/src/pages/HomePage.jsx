@@ -94,7 +94,7 @@ const HomePage = () => {
       
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+        <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border cursor-pointer hover:shadow-md hover:border-blue-500 transition-all duration-200`} onClick={() => window.location.href = '/areas'}>
           <div className="flex items-center">
             <div className={`${darkMode ? 'bg-dark-blue-highlight' : 'bg-blue-100'} p-3 rounded-full mr-4`}>
               <Users className={`h-6 w-6 ${darkMode ? 'text-dark-blue' : 'text-blue-700'}`} />
@@ -106,7 +106,7 @@ const HomePage = () => {
           </div>
         </div>
         
-        <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+        <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border cursor-pointer hover:shadow-md hover:border-blue-500 transition-all duration-200`} onClick={() => window.location.href = '/tribes'}>
           <div className="flex items-center">
             <div className={`${darkMode ? 'bg-dark-green-highlight' : 'bg-green-100'} p-3 rounded-full mr-4`}>
               <Users className={`h-6 w-6 ${darkMode ? 'text-dark-green' : 'text-green-700'}`} />
@@ -118,7 +118,7 @@ const HomePage = () => {
           </div>
         </div>
         
-        <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+        <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border cursor-pointer hover:shadow-md hover:border-blue-500 transition-all duration-200`} onClick={() => window.location.href = '/squads'}>
           <div className="flex items-center">
             <div className={`${darkMode ? 'bg-dark-purple-highlight' : 'bg-purple-100'} p-3 rounded-full mr-4`}>
               <Users className={`h-6 w-6 ${darkMode ? 'text-dark-purple' : 'text-purple-700'}`} />
@@ -130,7 +130,7 @@ const HomePage = () => {
           </div>
         </div>
         
-        <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border`}>
+        <div className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} p-6 rounded-lg shadow-sm border cursor-pointer hover:shadow-md hover:border-blue-500 transition-all duration-200`} onClick={() => window.location.href = '/services'}>
           <div className="flex items-center">
             <div className={`${darkMode ? 'bg-dark-amber-highlight' : 'bg-orange-100'} p-3 rounded-full mr-4`}>
               <Database className={`h-6 w-6 ${darkMode ? 'text-dark-amber' : 'text-orange-700'}`} />
@@ -153,7 +153,7 @@ const HomePage = () => {
       <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-dark-primary' : ''}`}>Featured Squads</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         {recentSquads.map(squad => (
-          <div key={squad.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white'} p-6 rounded-lg shadow-sm border`}>
+          <div key={squad.id} className={`${darkMode ? 'bg-dark-card border-dark-border' : 'bg-white'} p-6 rounded-lg shadow-sm border cursor-pointer hover:shadow-md hover:border-blue-500 transition-all duration-200`} onClick={() => window.location.href = `/squads/${squad.id}`}>
             <div className="flex items-center justify-between mb-4">
               <h3 className={`text-lg font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>{squad.name}</h3>
               <span className={`px-3 py-1 rounded-full text-sm ${
@@ -166,7 +166,7 @@ const HomePage = () => {
                 {squad.status}
               </span>
             </div>
-            <div className="mb-4">
+            <div className="mb-4" onClick={(e) => e.stopPropagation()}>
               <CompactTeamCompositionBar 
                 core_count={squad.core_count || 0}
                 subcon_count={squad.subcon_count || 0}
@@ -178,12 +178,6 @@ const HomePage = () => {
             <p className={`${darkMode ? 'text-dark-secondary' : 'text-gray-600'} mb-4 line-clamp-2`}>
               {squad.description}
             </p>
-            <Link 
-              to={`/squads/${squad.id}`}
-              className={`inline-block px-4 py-2 ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded-lg`}
-            >
-              View Squad
-            </Link>
           </div>
         ))}
       </div>
