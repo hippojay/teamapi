@@ -416,10 +416,65 @@ def delete_service(db: Session, service_id: int) -> bool:
 
 # Dependency operations
 def get_dependencies(db: Session, squad_id: int) -> List[models.Dependency]:
-    return db.query(models.Dependency).filter(models.Dependency.dependent_squad_id == squad_id).all()
+    # Query dependencies with joined dependency squad for name
+    stmt = text("""
+        SELECT d.*, s.name as dependency_squad_name 
+        FROM dependencies d
+        JOIN squads s ON d.dependency_squad_id = s.id
+        WHERE d.dependent_squad_id = :squad_id
+    """)
+    
+    result = db.execute(stmt, {"squad_id": squad_id}).fetchall()
+    
+    # Convert to Dependency objects
+    dependencies = []
+    for row in result:
+        # Create the base dependency object
+        dependency = models.Dependency(
+            id=row.id,
+            dependent_squad_id=row.dependent_squad_id,
+            dependency_squad_id=row.dependency_squad_id,
+            dependency_name=row.dependency_name,
+            interaction_mode=row.interaction_mode,
+            interaction_frequency=row.interaction_frequency
+        )
+        
+        # Attach the squad name as a property
+        setattr(dependency, "dependency_squad_name", row.dependency_squad_name)
+        
+        dependencies.append(dependency)
+        
+    return dependencies
 
 def get_all_dependencies(db: Session) -> List[models.Dependency]:
-    return db.query(models.Dependency).all()
+    # Query all dependencies with joined dependency squad for name
+    stmt = text("""
+        SELECT d.*, s.name as dependency_squad_name 
+        FROM dependencies d
+        JOIN squads s ON d.dependency_squad_id = s.id
+    """)
+    
+    result = db.execute(stmt).fetchall()
+    
+    # Convert to Dependency objects
+    dependencies = []
+    for row in result:
+        # Create the base dependency object
+        dependency = models.Dependency(
+            id=row.id,
+            dependent_squad_id=row.dependent_squad_id,
+            dependency_squad_id=row.dependency_squad_id,
+            dependency_name=row.dependency_name,
+            interaction_mode=row.interaction_mode,
+            interaction_frequency=row.interaction_frequency
+        )
+        
+        # Attach the squad name as a property
+        setattr(dependency, "dependency_squad_name", row.dependency_squad_name)
+        
+        dependencies.append(dependency)
+        
+    return dependencies
 
 def create_dependency(db: Session, dependent_id: int, dependency_id: int, dependency_data: schemas.DependencyBase) -> models.Dependency:
     # Ensure we use the enum values from the models module

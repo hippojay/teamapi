@@ -3,6 +3,7 @@ import { GitBranch, Users, Package, Share2, PlusCircle, Edit, Trash } from 'luci
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api';
+import InteractionModeLabel from '../../components/InteractionModeLabel';
 
 const DependenciesList = ({ dependencies, squadId, onDependenciesChange }) => {
   const { darkMode } = useTheme();
@@ -99,12 +100,9 @@ const DependenciesList = ({ dependencies, squadId, onDependenciesChange }) => {
                   key={dep.id} 
                   className={`${darkMode ? 'border-dark-border hover:bg-dark-hover' : 'border-gray-200 hover:bg-gray-50'} border-b`}
                 >
-                  <td className="py-2 px-2">{dep.dependency_name}</td>
+                  <td className="py-2 px-2">{dep.dependency_squad_name || dep.dependency_name}</td>
                   <td className="py-2 px-2 text-center flex items-center justify-center">
-                    <div className="flex items-center">
-                      {getInteractionModeIcon(dep.interaction_mode)}
-                      <span className="ml-2">{getInteractionModeLabel(dep.interaction_mode)}</span>
-                    </div>
+                    <InteractionModeLabel interactionMode={dep.interaction_mode} size="md" />
                   </td>
                   <td className="py-2 px-2 text-center">{dep.interaction_frequency || 'Not specified'}</td>
                   <td className="py-2 px-2 text-right">

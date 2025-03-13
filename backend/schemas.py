@@ -144,6 +144,7 @@ class Dependency(DependencyBase):
     id: int
     dependent_squad_id: int
     dependency_squad_id: int
+    dependency_squad_name: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
