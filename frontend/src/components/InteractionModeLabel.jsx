@@ -37,7 +37,7 @@ const InteractionModeLabel = ({
     x_as_a_service: {
       icon: <Server />,
       label: 'X-as-a-Service',
-      tooltip: 'Team consumes another team's service with minimal direct interaction.',
+      tooltip: "Team consumes another team's service with minimal direct interaction.",
       color: darkMode 
         ? 'bg-dark-blue-highlight text-dark-blue border-dark-blue-border' 
         : 'bg-blue-100 text-blue-800 border-blue-200'
