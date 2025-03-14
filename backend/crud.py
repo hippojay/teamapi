@@ -499,9 +499,23 @@ def get_all_dependencies(db: Session) -> List[models.Dependency]:
     return dependencies
 
 def create_dependency(db: Session, dependent_id: int, dependency_id: int, dependency_data: schemas.DependencyBase) -> models.Dependency:
-    # Use the interaction_mode as is, without converting to uppercase
-    interaction_mode_value = dependency_data.interaction_mode
+    # Simplify the interaction_mode conversion to make it more reliable
+    interaction_mode_str = dependency_data.interaction_mode
     
+    # Map frontend values to enum values
+    interaction_mode_map = {
+        'x_as_a_service': models.InteractionMode.X_AS_A_SERVICE,
+        'collaboration': models.InteractionMode.COLLABORATION,
+        'facilitating': models.InteractionMode.FACILITATING
+    }
+    
+    # Get the appropriate enum value or default to X_AS_A_SERVICE
+    interaction_mode_value = interaction_mode_map.get(
+        interaction_mode_str.lower() if isinstance(interaction_mode_str, str) else '', 
+        models.InteractionMode.X_AS_A_SERVICE
+    )
+    
+    # Create dependency with the mapped enum value
     db_dependency = models.Dependency(
         dependent_squad_id=dependent_id,
         dependency_squad_id=dependency_id,
@@ -509,10 +523,20 @@ def create_dependency(db: Session, dependent_id: int, dependency_id: int, depend
         interaction_mode=interaction_mode_value,
         interaction_frequency=dependency_data.interaction_frequency
     )
+    
+    # Add and commit to database
     db.add(db_dependency)
     db.commit()
-    db.refresh(db_dependency)
-    return db_dependency
+    
+    # Instead of using refresh (which causes issues with enum conversion),
+    # we'll manually fetch the dependency again
+    created_dependency = db.query(models.Dependency).filter(
+        models.Dependency.dependent_squad_id == dependent_id,
+        models.Dependency.dependency_squad_id == dependency_id,
+        models.Dependency.dependency_name == dependency_data.dependency_name
+    ).order_by(models.Dependency.id.desc()).first()
+    
+    return created_dependency
 
 def update_dependency(db: Session, dependency_id: int, dependency_data: schemas.DependencyBase) -> Optional[models.Dependency]:
     # Get existing dependency
@@ -523,17 +547,32 @@ def update_dependency(db: Session, dependency_id: int, dependency_data: schemas.
     # Update fields if provided
     update_data = dependency_data.dict(exclude_unset=True)
     
-    # Use the interaction_mode as is without converting to uppercase
+    # Handle interaction_mode conversion using the same mapping as create_dependency
     if 'interaction_mode' in update_data and update_data['interaction_mode'] is not None:
-        interaction_mode = update_data['interaction_mode']
-        update_data['interaction_mode'] = interaction_mode
+        interaction_mode_str = update_data['interaction_mode']
+        
+        # Map frontend values to enum values
+        interaction_mode_map = {
+            'x_as_a_service': models.InteractionMode.X_AS_A_SERVICE,
+            'collaboration': models.InteractionMode.COLLABORATION,
+            'facilitating': models.InteractionMode.FACILITATING
+        }
+        
+        # Get the appropriate enum value or default to X_AS_A_SERVICE
+        update_data['interaction_mode'] = interaction_mode_map.get(
+            interaction_mode_str.lower() if isinstance(interaction_mode_str, str) else '',
+            models.InteractionMode.X_AS_A_SERVICE
+        )
     
+    # Update the dependency object
     for key, value in update_data.items():
         setattr(db_dependency, key, value)
     
     db.commit()
-    db.refresh(db_dependency)
-    return db_dependency
+    
+    # Get a fresh instance to avoid refresh issues
+    updated_dependency = db.query(models.Dependency).filter(models.Dependency.id == dependency_id).first()
+    return updated_dependency
 
 def delete_dependency(db: Session, dependency_id: int) -> bool:
     db_dependency = db.query(models.Dependency).filter(models.Dependency.id == dependency_id).first()

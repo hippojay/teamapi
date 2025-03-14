@@ -203,6 +203,7 @@ const DependencyModal = ({ isOpen, onClose, dependency, squadId, onSave, darkMod
   const [squads, setSquads] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
   
   // Fetch all squads when modal opens
   useEffect(() => {
@@ -223,30 +224,63 @@ const DependencyModal = ({ isOpen, onClose, dependency, squadId, onSave, darkMod
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear any previous success/error messages when form is changed
+    setError(null);
+    setSuccess(false);
   };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(false);
     
     try {
+      // Validate required fields
+      if (!formData.dependency_name) {
+        setError('Dependency name is required');
+        setLoading(false);
+        return;
+      }
+      
+      if (!dependency && !formData.dependency_squad_id) {
+        setError('Please select a squad');
+        setLoading(false);
+        return;
+      }
+      
+      // Ensure formData has the expected interaction_mode format
+      const processedFormData = {
+        ...formData,
+        // Ensure interaction_mode is one of the accepted values
+        interaction_mode: ['x_as_a_service', 'collaboration', 'facilitating'].includes(formData.interaction_mode) 
+          ? formData.interaction_mode 
+          : 'x_as_a_service'
+      };
+      
       if (dependency) {
         // Update existing dependency
-        await api.updateDependency(dependency.id, formData);
+        await api.updateDependency(dependency.id, processedFormData);
       } else {
         // Create new dependency
         const dependencyData = {
-          ...formData,
+          ...processedFormData,
           dependent_squad_id: squadId
         };
         await api.createDependency(dependencyData);
       }
       
-      onSave();
+      // Show success message
+      setSuccess(true);
+      
+      // Close modal and refresh dependencies after a short delay
+      setTimeout(() => {
+        // Refresh the dependencies list
+        onSave();
+      }, 1000);
     } catch (err) {
       console.error('Failed to save dependency:', err);
-      setError('Failed to save dependency. Please try again.');
+      setError('Failed to save dependency. Please try again, or refresh the page to see if your changes were saved.');
     } finally {
       setLoading(false);
     }
@@ -262,6 +296,13 @@ const DependencyModal = ({ isOpen, onClose, dependency, squadId, onSave, darkMod
         </h3>
         
         <form onSubmit={handleSubmit}>
+          {/* Success message */}
+          {success && (
+            <div className={`p-3 mb-4 text-sm rounded-lg ${darkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-700'}`}>
+              Dependency saved successfully!
+            </div>
+          )}
+          
           {/* Error message */}
           {error && (
             <div className={`p-3 mb-4 text-sm rounded-lg ${darkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-700'}`}>

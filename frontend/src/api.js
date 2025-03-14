@@ -233,33 +233,76 @@ const api = {
   createDependency: async (dependencyData) => {
     const { dependent_squad_id, dependency_squad_id, ...dependencyDetails } = dependencyData;
     
-    const response = await fetch(`${API_URL}/dependencies?dependent_id=${dependent_squad_id}&dependency_id=${dependency_squad_id}`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(dependencyDetails)
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Failed to create dependency');
+    // Normalize interaction_mode to ensure it's one of the accepted values
+    if (dependencyDetails.interaction_mode) {
+      const validModes = ['x_as_a_service', 'collaboration', 'facilitating'];
+      dependencyDetails.interaction_mode = validModes.includes(dependencyDetails.interaction_mode.toLowerCase())
+        ? dependencyDetails.interaction_mode.toLowerCase()
+        : 'x_as_a_service';
     }
     
-    return response.json();
+    try {
+      const response = await fetch(`${API_URL}/dependencies?dependent_id=${dependent_squad_id}&dependency_id=${dependency_squad_id}`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(dependencyDetails)
+      });
+      
+      if (!response.ok) {
+        // Try to parse the error response
+        let errorMessage = 'Failed to create dependency';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorMessage;
+        } catch (e) {
+          // If parsing fails, use default message
+        }
+        throw new Error(errorMessage);
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Create dependency error:', error);
+      throw error;
+    }
   },
   
   updateDependency: async (dependencyId, dependencyData) => {
-    const response = await fetch(`${API_URL}/dependencies/${dependencyId}`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(dependencyData)
-    });
+    // Normalize the dependencyData
+    const normalizedData = { ...dependencyData };
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Failed to update dependency');
+    // Normalize interaction_mode to ensure it's one of the accepted values
+    if (normalizedData.interaction_mode) {
+      const validModes = ['x_as_a_service', 'collaboration', 'facilitating'];
+      normalizedData.interaction_mode = validModes.includes(normalizedData.interaction_mode.toLowerCase())
+        ? normalizedData.interaction_mode.toLowerCase()
+        : 'x_as_a_service';
     }
     
-    return response.json();
+    try {
+      const response = await fetch(`${API_URL}/dependencies/${dependencyId}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(normalizedData)
+      });
+      
+      if (!response.ok) {
+        // Try to parse the error response
+        let errorMessage = 'Failed to update dependency';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorMessage;
+        } catch (e) {
+          // If parsing fails, use default message
+        }
+        throw new Error(errorMessage);
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Update dependency error:', error);
+      throw error;
+    }
   },
   
   deleteDependency: async (dependencyId) => {
