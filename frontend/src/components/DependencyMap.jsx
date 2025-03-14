@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTheme } from '../context/ThemeContext';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import * as d3 from 'd3';
 
 const DependencyMap = () => {
+  const { darkMode } = useTheme();
   const [dependencies, setDependencies] = useState([]);
   const [squads, setSquads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -113,7 +115,8 @@ const DependencyMap = () => {
       .attr('width', width)
       .attr('height', height)
       .attr('viewBox', [0, 0, width, height])
-      .attr('style', 'max-width: 100%; height: auto;');
+      .attr('style', 'max-width: 100%; height: auto;')
+      .attr('class', darkMode ? 'bg-dark-tertiary' : 'bg-white');
     
     // Define arrow marker for links - for interaction modes
     svg.append('defs').selectAll('marker')
@@ -190,7 +193,8 @@ const DependencyMap = () => {
     node.append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '.35em')
-      .attr('fill', '#fff')
+      .attr('fill', '#fff') // White text is good for both dark and light modes with colored backgrounds
+      .attr('font-weight', 'bold') // Make text bolder for better visibility
       .text(d => d.name.substring(0, 3))
       .append('title')
       .text(d => d.name);
@@ -278,16 +282,16 @@ const DependencyMap = () => {
   };
   
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-2xl font-semibold mb-4">Team Dependencies</h2>
+    <div className={`${darkMode ? 'bg-dark-card' : 'bg-white'} rounded-lg shadow p-6`}>
+      <h2 className={`text-2xl font-semibold mb-4 ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>Team Dependencies</h2>
       
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         {/* Removed dependency type filter */}
         
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Interaction Mode</label>
+          <label className={`block text-sm font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-700'} mb-1`}>Filter by Interaction Mode</label>
           <select 
-            className="w-full border border-gray-300 rounded-md p-2"
+            className={`w-full border ${darkMode ? 'border-dark-border bg-dark-tertiary text-dark-primary' : 'border-gray-300 bg-white text-gray-800'} rounded-md p-2`}
             value={selectedInteractionMode}
             onChange={(e) => setSelectedInteractionMode(e.target.value)}
           >
@@ -299,23 +303,23 @@ const DependencyMap = () => {
         </div>
         
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Search Squad</label>
+          <label className={`block text-sm font-medium ${darkMode ? 'text-dark-primary' : 'text-gray-700'} mb-1`}>Search Squad</label>
           <input 
             type="text"
             placeholder="Search by squad name"
-            className="w-full border border-gray-300 rounded-md p-2"
+            className={`w-full border ${darkMode ? 'border-dark-border bg-dark-tertiary text-dark-primary placeholder-gray-500' : 'border-gray-300 bg-white text-gray-800'} rounded-md p-2`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
       
-      <div className="bg-gray-50 p-4 rounded-lg relative overflow-hidden">
+      <div className={`${darkMode ? 'bg-dark-secondary' : 'bg-gray-50'} p-4 rounded-lg relative overflow-hidden`}>
         <div className="flex justify-center">
           <svg ref={svgRef} className="cursor-grab active:cursor-grabbing"></svg>
         </div>
         
-        <div className="text-xs text-gray-500 mt-4">
+        <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-4`}>
           <p>Drag nodes to reposition. Click on a node to view squad details.</p>
         </div>
       </div>
@@ -324,19 +328,19 @@ const DependencyMap = () => {
         {/* Removed dependency types legend */}
         
         <div>
-          <h3 className="text-sm font-semibold mb-2">Interaction Modes:</h3>
+          <h3 className={`text-sm font-semibold mb-2 ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>Interaction Modes:</h3>
           <div className="flex flex-col gap-2">
             <div className="flex items-center">
               <div className="h-3 w-6 bg-blue-700 mr-2"></div>
-              <span className="text-sm" title="Team consumes another team's service with minimal direct interaction.">X-as-a-Service (Default)</span>
+              <span className={`text-sm ${darkMode ? 'text-dark-primary' : ''}`} title="Team consumes another team's service with minimal direct interaction.">X-as-a-Service (Default)</span>
             </div>
             <div className="flex items-center">
               <div className="h-3 w-6 bg-purple-700 mr-2 border-dotted border-t-2 border-white"></div>
-              <span className="text-sm" title="Teams work together closely with high communication frequency.">Collaboration</span>
+              <span className={`text-sm ${darkMode ? 'text-dark-primary' : ''}`} title="Teams work together closely with high communication frequency.">Collaboration</span>
             </div>
             <div className="flex items-center">
               <div className="h-3 w-6 bg-green-600 mr-2 border-dashed border-t-2 border-dotted border-white"></div>
-              <span className="text-sm" title="Team helps another team overcome obstacles or learn skills.">Facilitating</span>
+              <span className={`text-sm ${darkMode ? 'text-dark-primary' : ''}`} title="Team helps another team overcome obstacles or learn skills.">Facilitating</span>
             </div>
           </div>
         </div>
@@ -345,7 +349,7 @@ const DependencyMap = () => {
       {/* Tooltip container */}
       <div 
         ref={tooltipRef}
-        className="absolute bg-white shadow-lg rounded p-2 text-sm z-50 pointer-events-none"
+        className={`absolute ${darkMode ? 'bg-dark-tertiary text-dark-primary' : 'bg-white text-gray-800'} shadow-lg rounded p-2 text-sm z-50 pointer-events-none`}
         style={{
           left: `${tooltipContent.x + 10}px`,
           top: `${tooltipContent.y - 10}px`,
