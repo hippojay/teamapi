@@ -6,3 +6,4 @@ backend/team_portal.db
 launch.json
 *.xlsx
 *.xlsb
+*.xlsm
