@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { Link } from 'react-router-dom';
 import api from '../api';
 import * as d3 from 'd3';
 
@@ -206,7 +205,7 @@ const DependencyMap = () => {
       const outgoing = links.filter(link => link.source.id === d.id).length;
       
       // Show tooltip
-      const tooltip = d3.select(tooltipRef.current);
+      // Using tooltipRef directly without assigning to a variable
       setTooltipContent({
         x: event.pageX,
         y: event.pageY,
@@ -257,7 +256,7 @@ const DependencyMap = () => {
     
     // Stop simulation when component unmounts
     return () => simulation.stop();
-  }, [loading, squads, dependencies, selectedInteractionMode, searchTerm]);
+  }, [loading, squads, dependencies, selectedInteractionMode, searchTerm, darkMode]);
   
   if (loading) {
     return <div className="flex justify-center items-center h-96">Loading dependency map...</div>;
@@ -271,15 +270,7 @@ const DependencyMap = () => {
     return <div className="p-4 bg-yellow-100 rounded-lg">No dependencies found in the system.</div>;
   }
   
-  // Get interaction mode label
-  const getInteractionModeLabel = (mode) => {
-    switch (mode) {
-      case 'collaboration': return 'Collaboration';
-      case 'x_as_a_service': return 'X-as-a-Service';
-      case 'facilitating': return 'Facilitating';
-      default: return mode;
-    }
-  };
+  // Removed unused getInteractionModeLabel function
   
   return (
     <div className={`${darkMode ? 'bg-dark-card' : 'bg-white'} rounded-lg shadow p-6`}>

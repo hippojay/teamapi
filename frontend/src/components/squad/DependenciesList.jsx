@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GitBranch, Users, Package, Share2, PlusCircle, Edit, Trash } from 'lucide-react';
+import { GitBranch, PlusCircle, Edit, Trash } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api';
@@ -11,31 +11,7 @@ const DependenciesList = ({ dependencies, squadId, onDependenciesChange }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingDependency, setEditingDependency] = useState(null);
   
-  const getInteractionModeIcon = (mode) => {
-    switch (mode) {
-      case 'collaboration':
-        return <Users className={`h-4 w-4 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`} title="Collaboration" />;
-      case 'x_as_a_service':
-        return <Package className={`h-4 w-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} title="X-as-a-Service" />;
-      case 'facilitating':
-        return <Share2 className={`h-4 w-4 ${darkMode ? 'text-green-400' : 'text-green-600'}`} title="Facilitating" />;
-      default:
-        return <Package className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} title="Undefined" />;
-    }
-  };
-  
-  const getInteractionModeLabel = (mode) => {
-    switch (mode) {
-      case 'collaboration':
-        return "Collaboration";
-      case 'x_as_a_service':
-        return "X-as-a-Service";
-      case 'facilitating':
-        return "Facilitating";
-      default:
-        return mode;
-    }
-  };
+  // Removed unused interaction mode helper functions - using InteractionModeLabel component instead
 
   // Handler for editing a dependency
   const handleEditDependency = (dependency) => {
