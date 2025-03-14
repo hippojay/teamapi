@@ -189,7 +189,7 @@ const TeamMembersList = ({ squad }) => {
           )}
           
           {/* Contractors Section */}
-          {filteredMembers.some(member => member.employment_type !== 'core') && (
+          {filteredMembers.some(member => member.employment_type == 'subcon') && (
             <div>
               <div className={`flex items-center my-3`}>
                 <div className={`${darkMode ? 'bg-amber-900' : 'bg-amber-100'} p-1.5 rounded-md mr-2`}>
@@ -200,7 +200,7 @@ const TeamMembersList = ({ squad }) => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredMembers
-                  .filter(member => member.employment_type !== 'core')
+                  .filter(member => member.employment_type == 'subcon')
                   .map(member => renderMemberCard(member))}
               </div>
             </div>

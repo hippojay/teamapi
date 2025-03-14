@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from database import SessionLocal, engine, Base
 import models
-from models import ServiceStatus, DependencyType, ServiceType, InteractionMode
+from models import ServiceStatus, Dependency, ServiceType, InteractionMode
 
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)
@@ -293,7 +293,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
                 vendor_name = row['Vendor Name']
         else:
             # For vacancies, don't update counts but set default values
-            employment_type = "core"  # Default for vacancies
+            employment_type = None  # Default for vacancies
             vendor_name = None
                 
         # No random image URL generation for production data
@@ -304,18 +304,11 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         
         # Generate email for vacancies or members with missing email
         if is_vacancy or not has_email:
-            role_part = row['Position'].lower().replace(' ', '.') if not pd.isna(row['Position']) else "role"
-            squad_part = squad_name.lower().replace(' ', '.')
-            if is_vacancy:
-                email = f"vacancy.{role_part}.{squad_part}@example.com"
-            else:
-                # For non-vacancies with missing email
-                name_part = name.lower().replace(' ', '.')
-                email = f"{name_part}.{squad_part}@example.com"
+            # Set email to None for vacancies and any entry missing an email
+            email = None  # Don't generate dummy emails for any entries
         else:
-            # Normal case - use provided email
-            email = row['Business Email Address']
-            
+            # Normal case - use provided email only when it exists
+            email = row['Business Email Address']            
         # Check if member exists in database already
         if email in members_by_email and not is_vacancy:
             # Member already exists

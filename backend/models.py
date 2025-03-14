@@ -147,14 +147,14 @@ class TeamMember(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
-    email = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=True)
     role = Column(String)
     function = Column(String, nullable=True)  # Function/capability (Engineering, Design, Product, etc.)
     supervisor_id = Column(Integer, ForeignKey("team_members.id"), nullable=True)
     location = Column(String, nullable=True)
     geography = Column(String, nullable=True)  # Work Geography (Europe, UK, AMEA)
     image_url = Column(String, nullable=True)  # Profile picture URL
-    employment_type = Column(String, default="core", nullable=True)  # 'core' for regular employees, 'subcon' for contractors
+    employment_type = Column(String, nullable=True)  # 'core' for regular employees, 'subcon' for contractors
     vendor_name = Column(String, nullable=True)  # Vendor name for contractors
     is_external = Column(Boolean, default=False)  # Flag for external supervisors not in the squad setup
     is_vacancy = Column(Boolean, default=False)  # Flag for vacancy positions
