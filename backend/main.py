@@ -14,6 +14,7 @@ import search_crud
 import user_crud
 import user_auth
 import auth
+import audit_logger
 from search_schemas import SearchResults, SearchResultItem
 
 # Create database tables
@@ -44,6 +45,10 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = auth.create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
+    
+    # Log the login event
+    audit_logger.log_login(db, user.id, user.username or user.email)
+    
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/users/me", response_model=schemas.User)
@@ -269,6 +274,9 @@ def update_area_label(
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
     
+    # Get the current label for logging
+    old_label = area.label.name if area.label else None
+    
     if label:
         try:
             # Use lowercase labels now
@@ -286,6 +294,10 @@ def update_area_label(
     db.commit()
     db.refresh(area)
     
+    # Log the label update
+    new_label = area.label.name if area.label else None
+    audit_logger.log_label_update(db, current_user.id, "area", area_id, old_label, new_label)
+    
     return {"message": f"Area label updated to {label if label else 'None'}", "label": label}
 
 # Tribe label endpoint
@@ -300,6 +312,9 @@ def update_tribe_label(
     tribe = crud.get_tribe(db, tribe_id)
     if not tribe:
         raise HTTPException(status_code=404, detail="Tribe not found")
+    
+    # Get the current label for logging
+    old_label = tribe.label.name if tribe.label else None
     
     if label:
         try:
@@ -317,6 +332,10 @@ def update_tribe_label(
         
     db.commit()
     db.refresh(tribe)
+    
+    # Log the label update
+    new_label = tribe.label.name if tribe.label else None
+    audit_logger.log_label_update(db, current_user.id, "tribe", tribe_id, old_label, new_label)
     
     return {"message": f"Tribe label updated to {label if label else 'None'}", "label": label}
 
@@ -379,6 +398,9 @@ def update_description(
     
     if edit is None:
         raise HTTPException(status_code=404, detail=f"{entity_type.capitalize()} not found")
+    
+    # Log the description update
+    audit_logger.log_description_update(db, current_user.id, entity_type, entity_id)
     
     return edit
 
@@ -656,7 +678,32 @@ def create_objective(
         if not squad:
             raise HTTPException(status_code=404, detail="Squad not found")
     
-    return crud.create_objective(db, objective)
+    # Create the objective
+    new_objective = crud.create_objective(db, objective)
+    
+    # Log the objective creation
+    entity_type = None
+    entity_id = None
+    if objective.area_id:
+        entity_type = "area"
+        entity_id = objective.area_id
+    elif objective.tribe_id:
+        entity_type = "tribe"
+        entity_id = objective.tribe_id
+    elif objective.squad_id:
+        entity_type = "squad"
+        entity_id = objective.squad_id
+    
+    audit_logger.log_objective_action(
+        db=db,
+        user_id=current_user.id,
+        action="create",
+        objective_id=new_objective.id,
+        entity_type=entity_type,
+        entity_id=entity_id
+    )
+    
+    return new_objective
 
 @app.put("/objectives/{objective_id}", response_model=schemas.Objective)
 def update_objective(
@@ -668,6 +715,15 @@ def update_objective(
     updated_objective = crud.update_objective(db, objective_id, objective)
     if not updated_objective:
         raise HTTPException(status_code=404, detail="Objective not found")
+    
+    # Log the objective update
+    audit_logger.log_objective_action(
+        db=db,
+        user_id=current_user.id,
+        action="update",
+        objective_id=objective_id
+    )
+    
     return updated_objective
 
 @app.delete("/objectives/{objective_id}", status_code=204)
@@ -676,9 +732,38 @@ def delete_objective(
     current_user: schemas.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    # Get the objective first for logging
+    objective = crud.get_objective(db, objective_id)
+    if not objective:
+        raise HTTPException(status_code=404, detail="Objective not found")
+    
+    # Delete the objective
     success = crud.delete_objective(db, objective_id)
     if not success:
         raise HTTPException(status_code=404, detail="Objective not found")
+    
+    # Log the objective deletion
+    entity_type = None
+    entity_id = None
+    if objective.area_id:
+        entity_type = "area"
+        entity_id = objective.area_id
+    elif objective.tribe_id:
+        entity_type = "tribe"
+        entity_id = objective.tribe_id
+    elif objective.squad_id:
+        entity_type = "squad"
+        entity_id = objective.squad_id
+        
+    audit_logger.log_objective_action(
+        db=db,
+        user_id=current_user.id,
+        action="delete",
+        objective_id=objective_id,
+        entity_type=entity_type,
+        entity_id=entity_id
+    )
+    
     return None
 
 @app.get("/key-results", response_model=List[schemas.KeyResult])
@@ -704,7 +789,19 @@ def create_key_result(
     if not objective:
         raise HTTPException(status_code=404, detail="Objective not found")
     
-    return crud.create_key_result(db, key_result)
+    # Create the key result
+    new_key_result = crud.create_key_result(db, key_result)
+    
+    # Log the key result creation
+    audit_logger.log_key_result_action(
+        db=db,
+        user_id=current_user.id,
+        action="create",
+        key_result_id=new_key_result.id,
+        objective_id=key_result.objective_id
+    )
+    
+    return new_key_result
 
 @app.put("/key-results/{key_result_id}", response_model=schemas.KeyResult)
 def update_key_result(
@@ -716,6 +813,16 @@ def update_key_result(
     updated_key_result = crud.update_key_result(db, key_result_id, key_result)
     if not updated_key_result:
         raise HTTPException(status_code=404, detail="Key Result not found")
+    
+    # Log the key result update
+    audit_logger.log_key_result_action(
+        db=db,
+        user_id=current_user.id,
+        action="update",
+        key_result_id=key_result_id,
+        objective_id=updated_key_result.objective_id
+    )
+    
     return updated_key_result
 
 @app.delete("/key-results/{key_result_id}", status_code=204)
@@ -724,9 +831,28 @@ def delete_key_result(
     current_user: schemas.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    # Get the key result first for logging
+    key_result = crud.get_key_result(db, key_result_id)
+    if not key_result:
+        raise HTTPException(status_code=404, detail="Key Result not found")
+    
+    # Store the objective_id for logging
+    objective_id = key_result.objective_id
+    
+    # Delete the key result
     success = crud.delete_key_result(db, key_result_id)
     if not success:
         raise HTTPException(status_code=404, detail="Key Result not found")
+    
+    # Log the key result deletion
+    audit_logger.log_key_result_action(
+        db=db,
+        user_id=current_user.id,
+        action="delete",
+        key_result_id=key_result_id,
+        objective_id=objective_id
+    )
+    
     return None
 
 # Search
