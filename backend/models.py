@@ -69,15 +69,23 @@ class TeamType(enum.Enum):
     COMPLICATED_SUBSYSTEM = "complicated_subsystem"
 
 
+class UserRole(enum.Enum):
+    admin = "admin"
+    guest = "guest"
+    team_member = "team_member"
+
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=True)  # Can be null for new registrations
     email = Column(String, unique=True, index=True)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
     hashed_password = Column(String)
-    is_active = Column(Boolean, default=True)
-    is_admin = Column(Boolean, default=False)
+    role = Column(Enum(UserRole), default=UserRole.guest)
+    is_active = Column(Boolean, default=False)  # Only active after email verification
+    is_admin = Column(Boolean, default=False)  # Deprecated, use role instead
     created_at = Column(DateTime, default=func.now())
     last_login = Column(DateTime, nullable=True)
 
@@ -93,6 +101,44 @@ class DescriptionEdit(Base):
     
     # Relationship to the user who made the edit
     editor = relationship("User")
+
+class ValidationToken(Base):
+    __tablename__ = "validation_tokens"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String, unique=True, index=True)
+    email = Column(String, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    token_type = Column(String, default="email_verification")  # email_verification, password_reset, etc.
+    expires_at = Column(DateTime)
+    created_at = Column(DateTime, default=func.now())
+    
+    # Relationships
+    user = relationship("User")
+    
+class AdminSetting(Base):
+    __tablename__ = "admin_settings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String, unique=True, index=True)
+    value = Column(String)
+    description = Column(String, nullable=True)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    action = Column(String)  # CREATE, UPDATE, DELETE, LOGIN, etc.
+    entity_type = Column(String)  # User, Squad, Service, etc.
+    entity_id = Column(Integer, nullable=True)
+    details = Column(String, nullable=True)
+    created_at = Column(DateTime, default=func.now())
+    
+    # Relationships
+    user = relationship("User")
 
 
 class AreaLabel(enum.Enum):

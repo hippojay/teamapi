@@ -23,17 +23,30 @@ def create_admin_user(username: str, email: str, password: str):
             print(f"User '{username}' already exists.")
             return
         
+        existing_email = user_crud.get_user_by_email(db, email)
+        if existing_email:
+            print(f"User with email '{email}' already exists.")
+            return
+            
         # Create new admin user
         # Handle potential bcrypt version issues
         try:
-            user_data = schemas.UserCreate(
+            from auth import get_password_hash
+            hashed_password = get_password_hash(password)
+            
+            db_user = models.User(
                 username=username,
                 email=email,
-                password=password,
-                is_admin=True
+                first_name="Admin",
+                last_name="User",
+                hashed_password=hashed_password,
+                is_admin=True,
+                is_active=True,
+                role=models.UserRole.ADMIN
             )
-            
-            user = user_crud.create_user(db, user_data)
+            db.add(db_user)
+            db.commit()
+            db.refresh(db_user)
         except Exception as e:
             print(f"Error using standard method: {e}")
             print("Trying alternative approach...")
@@ -44,14 +57,17 @@ def create_admin_user(username: str, email: str, password: str):
             db_user = models.User(
                 username=username,
                 email=email,
+                first_name="Admin",
+                last_name="User",
                 hashed_password=hashed_password,
-                is_admin=True
+                is_admin=True,
+                is_active=True,
+                role="admin"
             )
             db.add(db_user)
             db.commit()
             db.refresh(db_user)
             print(f"Created user with alternative method")
-            user = db_user
         print(f"Admin user '{username}' created successfully!")
         
     finally:

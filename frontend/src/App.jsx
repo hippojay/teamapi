@@ -16,6 +16,13 @@ import UserDetailPage from './pages/UserDetailPage';
 import UsersPage from './pages/UsersPage';
 import DependencyMapPage from './pages/DependencyMapPage';
 import OKRsPage from './pages/OKRsPage';
+import ProfilePage from './pages/ProfilePage';
+import AdminPage from './pages/AdminPage';
+import RegisterForm from './components/RegisterForm';
+import LoginPage from './pages/LoginPage';
+import EmailVerificationPage from './pages/EmailVerificationPage';
+import PasswordResetRequestPage from './pages/PasswordResetRequestPage';
+import PasswordResetPage from './pages/PasswordResetPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -54,6 +61,15 @@ function App() {
             
             {/* OKRs */}
             <Route path="/okrs" element={<OKRsPage />} />
+            
+            {/* User Management */}
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/register" element={<RegisterForm />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/verify-email" element={<EmailVerificationPage />} />
+            <Route path="/reset-password-request" element={<PasswordResetRequestPage />} />
+            <Route path="/reset-password" element={<PasswordResetPage />} />
             
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />

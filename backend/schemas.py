@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field, EmailStr
+from pydantic import BaseModel, ConfigDict, Field, EmailStr, validator
 from typing import List, Optional
 from enum import Enum
 
@@ -284,14 +284,29 @@ class AreaDetail(Area):
     label_str: Optional[str] = None
 
 
+# User role enum - names match database values
+class UserRole(str, Enum):
+    admin = "admin"
+    guest = "guest"
+    team_member = "team_member"
+
 # User and Authentication schemas
 class UserBase(BaseModel):
-    username: str
     email: EmailStr
-    is_admin: bool = False
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    role: UserRole = UserRole.guest
+    is_admin: bool = False  # Deprecated, use role instead
 
 class UserCreate(UserBase):
     password: str
+
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
 
 class User(UserBase):
     id: int
@@ -300,6 +315,15 @@ class User(UserBase):
     last_login: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+    
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[UserRole] = None
+    is_active: Optional[bool] = None
+    password: Optional[str] = None  # For password changes
 
 # Token schemas
 class Token(BaseModel):
@@ -324,6 +348,68 @@ class DescriptionEdit(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
     
+# Admin Settings schemas
+class AdminSettingBase(BaseModel):
+    key: str
+    value: str
+    description: Optional[str] = None
+
+class AdminSetting(AdminSettingBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class AdminSettingCreate(AdminSettingBase):
+    pass
+
+class AdminSettingUpdate(BaseModel):
+    value: str
+    description: Optional[str] = None
+
+# Validation Token schemas
+class ValidationTokenBase(BaseModel):
+    token: str
+    email: EmailStr
+    token_type: str = "email_verification"
+    expires_at: datetime
+
+class ValidationToken(ValidationTokenBase):
+    id: int
+    user_id: Optional[int] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+# Audit Log schemas
+class AuditLogBase(BaseModel):
+    action: str
+    entity_type: str
+    entity_id: Optional[int] = None
+    details: Optional[str] = None
+
+class AuditLog(AuditLogBase):
+    id: int
+    user_id: Optional[int] = None
+    created_at: datetime
+    user: Optional[User] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+# Email verification schemas
+class EmailVerification(BaseModel):
+    email: EmailStr
+    token: str
+
+# Password reset schemas
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordReset(BaseModel):
+    token: str
+    new_password: str
+
 # OKR schemas
 class KeyResultBase(BaseModel):
     content: str

@@ -1,8 +1,8 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict, Any
 import uvicorn
 from datetime import timedelta
 
@@ -12,6 +12,7 @@ import schemas
 import crud
 import search_crud
 import user_crud
+import user_auth
 import auth
 from search_schemas import SearchResults, SearchResultItem
 
@@ -50,14 +51,191 @@ async def read_users_me(current_user: schemas.User = Depends(auth.get_current_ac
     return current_user
 
 @app.post("/users/", response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = user_crud.get_user_by_email(db, email=user.email)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
+    # Only admins can create users directly
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to create users")
+        
+    db_user = user_auth.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    db_user = user_crud.get_user_by_username(db, username=user.username)
-    if db_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
-    return user_crud.create_user(db=db, user=user)
+        
+    if user.username:
+        db_user = user_auth.get_user_by_username(db, username=user.username)
+        if db_user:
+            raise HTTPException(status_code=400, detail="Username already registered")
+    
+    # Validate email domain
+    if not user_auth.is_email_allowed(user.email, db):
+        raise HTTPException(status_code=403, detail="Email domain not allowed for registration")
+    
+    # Create user with full details
+    hashed_password = auth.get_password_hash(user.password)
+    db_user = models.User(
+        username=user.username,
+        email=user.email,
+        hashed_password=hashed_password,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        role=models.UserRole[user.role] if user.role else models.UserRole.guest,
+        is_active=True,  # Admins can create pre-verified users
+        is_admin=user.is_admin
+    )
+    
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    
+    # Log the user creation
+    user_auth.log_user_action(db, current_user.id, "CREATE", "User", db_user.id, f"User created by admin: {user.email}")
+    
+    return db_user
+
+@app.post("/register", response_model=Dict[str, Any])
+def register_user(user: schemas.UserRegister, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    # Validate password complexity
+    if not user_auth.validate_password(user.password):
+        raise HTTPException(
+            status_code=400, 
+            detail="Password must be at least 8 characters and include uppercase, lowercase, digit, and special character"
+        )
+    
+    try:
+        db_user = user_auth.register_user(db, user)
+        
+        # Create verification token
+        token = user_auth.create_verification_token(db, user.email, db_user.id)
+        
+        # Send verification email asynchronously
+        background_tasks.add_task(user_auth.send_verification_email, user.email, token)
+        
+        return {
+            "message": "Registration successful. Please check your email for verification instructions.",
+            "user_id": db_user.id,
+            "email": db_user.email
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+
+@app.post("/verify-email", response_model=Dict[str, str])
+def verify_email(verification: schemas.EmailVerification, db: Session = Depends(get_db)):
+    if user_auth.verify_email(db, verification):
+        return {"message": "Email verified successfully. You can now log in."}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+
+@app.post("/reset-password-request", response_model=Dict[str, str])
+def request_password_reset(request: schemas.PasswordResetRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    # Always return success even if email doesn't exist (security best practice)
+    user = user_auth.get_user_by_email(db, request.email)
+    if user:
+        token = user_auth.create_password_reset_token(db, request.email, user.id)
+        background_tasks.add_task(user_auth.send_password_reset_email, request.email, token)
+    
+    return {"message": "If your email is registered, you will receive password reset instructions."}
+
+@app.post("/reset-password", response_model=Dict[str, str])
+def reset_password(reset: schemas.PasswordReset, db: Session = Depends(get_db)):
+    # Validate password complexity
+    if not user_auth.validate_password(reset.new_password):
+        raise HTTPException(
+            status_code=400, 
+            detail="Password must be at least 8 characters and include uppercase, lowercase, digit, and special character"
+        )
+    
+    if user_auth.reset_password(db, reset):
+        return {"message": "Password reset successful. You can now log in with your new password."}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid or expired password reset token")
+
+# User profile management
+@app.get("/profile", response_model=schemas.User)
+def get_user_profile(current_user: schemas.User = Depends(auth.get_current_active_user)):
+    return current_user
+
+@app.put("/profile", response_model=schemas.User)
+def update_user_profile(user_update: schemas.UserUpdate, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+    # Users can't update their own role or active status
+    if user_update.role is not None or user_update.is_active is not None:
+        if not user_auth.is_admin(current_user):
+            raise HTTPException(status_code=403, detail="Not authorized to change role or active status")
+    
+    # Update the user profile
+    updated_user = user_auth.update_user(db, current_user.id, user_update)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return updated_user
+
+# Admin-only user management endpoints
+@app.get("/admin/users", response_model=List[schemas.User])
+def get_all_users(skip: int = 0, limit: int = 100, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to access user management")
+    
+    users = user_auth.get_all_users(db, skip, limit)
+    return users
+
+@app.get("/admin/users/{user_id}", response_model=schemas.User)
+def get_user(user_id: int, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to access user management")
+    
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return user
+
+@app.put("/admin/users/{user_id}", response_model=schemas.User)
+def admin_update_user(user_id: int, user_update: schemas.UserUpdate, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to update users")
+    
+    updated_user = user_auth.update_user(db, user_id, user_update)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return updated_user
+
+# Admin settings endpoints
+@app.get("/admin/settings", response_model=List[schemas.AdminSetting])
+def get_admin_settings(current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to access admin settings")
+    
+    settings = user_auth.get_admin_settings(db)
+    return settings
+
+@app.get("/admin/settings/{key}", response_model=schemas.AdminSetting)
+def get_admin_setting(key: str, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to access admin settings")
+    
+    setting = user_auth.get_admin_setting(db, key)
+    if not setting:
+        raise HTTPException(status_code=404, detail=f"Setting with key '{key}' not found")
+    
+    return setting
+
+@app.put("/admin/settings/{key}", response_model=schemas.AdminSetting)
+def update_admin_setting(key: str, setting: schemas.AdminSettingUpdate, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to update admin settings")
+    
+    updated_setting = user_auth.update_admin_setting(db, setting, key, current_user.id)
+    return updated_setting
+
+# Audit log endpoints
+@app.get("/admin/audit-logs", response_model=List[schemas.AuditLog])
+def get_audit_logs(skip: int = 0, limit: int = 100, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to access audit logs")
+    
+    logs = user_auth.get_audit_logs(db, skip, limit)
+    return logs
 
 # Root endpoint
 @app.get("/")
@@ -93,8 +271,8 @@ def update_area_label(
     
     if label:
         try:
-            # Convert string to enum value if provided
-            area.label = models.AreaLabel[label.upper()]
+            # Use lowercase labels now
+            area.label = models.AreaLabel[label]
         except KeyError:
             valid_labels = [l.name for l in models.AreaLabel]
             raise HTTPException(
@@ -125,8 +303,8 @@ def update_tribe_label(
     
     if label:
         try:
-            # Convert string to enum value if provided
-            tribe.label = models.TribeLabel[label.upper()]
+            # Use lowercase labels now
+            tribe.label = models.TribeLabel[label]
         except KeyError:
             valid_labels = [l.name for l in models.TribeLabel]
             raise HTTPException(

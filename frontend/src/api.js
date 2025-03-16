@@ -66,6 +66,190 @@ const api = {
     }
   },
   
+  // User registration and authentication
+  register: async (userData) => {
+    const response = await fetch(`${API_URL}/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw { response: { data: errorData } };
+    }
+    
+    return response.json();
+  },
+  
+  verifyEmail: async (email, token) => {
+    const response = await fetch(`${API_URL}/verify-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, token }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw { response: { data: errorData } };
+    }
+    
+    return response.json();
+  },
+  
+  requestPasswordReset: async (email) => {
+    const response = await fetch(`${API_URL}/reset-password-request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw { response: { data: errorData } };
+    }
+    
+    return response.json();
+  },
+  
+  resetPassword: async (token, newPassword) => {
+    const response = await fetch(`${API_URL}/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token, new_password: newPassword }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw { response: { data: errorData } };
+    }
+    
+    return response.json();
+  },
+  
+  // User profile management
+  updateProfile: async (userData) => {
+    const response = await fetch(`${API_URL}/profile`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(userData),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw { response: { data: errorData } };
+    }
+    
+    return response.json();
+  },
+  
+  changePassword: async (passwordData) => {
+    // This would typically be a separate endpoint
+    // but we're using the profile endpoint for simplicity
+    const response = await fetch(`${API_URL}/profile`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ password: passwordData.newPassword }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw { response: { data: errorData } };
+    }
+    
+    return response.json();
+  },
+  
+  // Admin endpoints
+  getUsers: async () => {
+    const response = await fetch(`${API_URL}/admin/users`, {
+      headers: getAuthHeaders(),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to retrieve users');
+    }
+    
+    return response.json();
+  },
+  
+  createUser: async (userData) => {
+    const response = await fetch(`${API_URL}/users/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(userData),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw { response: { data: errorData } };
+    }
+    
+    return response.json();
+  },
+  
+  updateUser: async (userId, userData) => {
+    const response = await fetch(`${API_URL}/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(userData),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw { response: { data: errorData } };
+    }
+    
+    return response.json();
+  },
+  
+  getAdminSettings: async () => {
+    const response = await fetch(`${API_URL}/admin/settings`, {
+      headers: getAuthHeaders(),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to retrieve settings');
+    }
+    
+    return response.json();
+  },
+  
+  updateAdminSetting: async (key, settingData) => {
+    const response = await fetch(`${API_URL}/admin/settings/${key}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(settingData),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw { response: { data: errorData } };
+    }
+    
+    return response.json();
+  },
+  
+  getAuditLogs: async () => {
+    const response = await fetch(`${API_URL}/admin/audit-logs`, {
+      headers: getAuthHeaders(),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to retrieve audit logs');
+    }
+    
+    return response.json();
+  },
+  
   // Description editing
   getDescription: async (entityType, entityId) => {
     const response = await fetch(`${API_URL}/descriptions/${entityType}/${entityId}`);
