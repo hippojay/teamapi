@@ -84,6 +84,17 @@ const api = {
     return response.json();
   },
   
+  getTokenInfo: async (token) => {
+    const response = await fetch(`${API_URL}/token-info/${token}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw { response: { data: errorData } };
+    }
+    
+    return response.json();
+  },
+  
   verifyEmail: async (email, token) => {
     const response = await fetch(`${API_URL}/verify-email`, {
       method: 'POST',

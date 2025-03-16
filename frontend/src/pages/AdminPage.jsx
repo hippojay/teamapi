@@ -32,6 +32,12 @@ const AdminPage = () => {
     role: 'guest',
     is_active: true
   });
+  const [newSetting, setNewSetting] = useState({
+    key: '',
+    value: '',
+    description: ''
+  });
+  const [showAddSettingModal, setShowAddSettingModal] = useState(false);
 
   useEffect(() => {
     // Check if user is admin
@@ -128,6 +134,25 @@ const AdminPage = () => {
     } catch (error) {
       setError('Failed to create user. Please try again.');
       console.error('Error creating user:', error);
+    }
+  };
+  
+  const handleAddSetting = async () => {
+    try {
+      await api.updateAdminSetting(newSetting.key, {
+        value: newSetting.value,
+        description: newSetting.description
+      });
+      setShowAddSettingModal(false);
+      setNewSetting({
+        key: '',
+        value: '',
+        description: ''
+      });
+      loadData();
+    } catch (error) {
+      setError('Failed to create setting. Please try again.');
+      console.error('Error creating setting:', error);
     }
   };
   
@@ -552,6 +577,18 @@ const AdminPage = () => {
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div>
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex-1">
+                  <h3 className={`text-xl font-semibold ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>System Settings</h3>
+                </div>
+                <button
+                  onClick={() => setShowAddSettingModal(true)}
+                  className={`flex items-center px-3 py-2 rounded-md text-white ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'}`}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Setting
+                </button>
+              </div>
               <div className={`overflow-x-auto rounded-lg border ${darkMode ? 'border-dark-border' : 'border-gray-200'}`}>
                 <table className={`min-w-full divide-y ${darkMode ? 'divide-dark-border' : 'divide-gray-200'}`}>
                   <thead className={darkMode ? 'bg-dark-tertiary' : 'bg-gray-50'}>
@@ -573,20 +610,36 @@ const AdminPage = () => {
                         <tr key={setting.id} className={darkMode ? 'bg-dark-secondary' : 'bg-white'}>
                           <td className="px-6 py-4 whitespace-nowrap font-medium">{setting.key}</td>
                           <td className="px-6 py-4">
-                            {editingSettings[setting.key] !== undefined ? (
-                              <textarea
-                                value={editingSettings[setting.key]}
-                                onChange={(e) => handleEditSetting(setting.key, e.target.value)}
-                                className={`w-full px-2 py-1 border rounded ${
-                                  darkMode 
-                                    ? 'bg-dark-tertiary border-dark-border text-dark-primary' 
-                                    : 'bg-white border-gray-300 text-gray-900'
-                                }`}
-                                rows={setting.key === 'allowed_email_domains' ? 3 : 1}
-                              />
-                            ) : (
-                              <div className="text-sm whitespace-pre-wrap">{setting.value}</div>
-                            )}
+                                {editingSettings[setting.key] !== undefined ? (
+                                  <div>
+                                    <textarea
+                                      value={editingSettings[setting.key]}
+                                      onChange={(e) => handleEditSetting(setting.key, e.target.value)}
+                                      className={`w-full px-2 py-1 border rounded ${
+                                        darkMode 
+                                          ? 'bg-dark-tertiary border-dark-border text-dark-primary' 
+                                          : 'bg-white border-gray-300 text-gray-900'
+                                      }`}
+                                      rows={setting.key === 'allowed_email_domains' ? 5 : 2}
+                                      placeholder={setting.key === 'allowed_email_domains' ? "example.com\ngmail.com\ndomain.org" : ""}
+                                    />
+                                    {setting.key === 'allowed_email_domains' && (
+                                      <div className="text-xs mt-1 text-gray-500">
+                                        Enter one domain per line or separate with commas.<br />
+                                        Users will only be able to register with email addresses from these domains.
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <div className="text-sm whitespace-pre-wrap">{setting.value}</div>
+                                    {setting.key === 'allowed_email_domains' && (
+                                      <div className="text-xs mt-1 text-gray-500">
+                                        Only users with email addresses from these domains can register.
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm text-gray-500 whitespace-pre-wrap">{setting.description}</div>
@@ -646,6 +699,68 @@ const AdminPage = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Add Setting Modal */}
+              {showAddSettingModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className={`rounded-lg shadow-xl w-full max-w-md p-6 ${darkMode ? 'bg-dark-secondary' : 'bg-white'}`}>
+                    <h2 className="text-xl font-semibold mb-4">Add New Setting</h2>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Key</label>
+                        <input
+                          type="text"
+                          value={newSetting.key}
+                          onChange={(e) => setNewSetting({...newSetting, key: e.target.value})}
+                          className={`w-full px-3 py-2 border rounded-md ${darkMode ? 'bg-dark-tertiary border-dark-border text-dark-primary' : 'bg-white border-gray-300 text-gray-900'}`}
+                          placeholder="allowed_email_domains"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Value</label>
+                        <textarea
+                          value={newSetting.value}
+                          onChange={(e) => setNewSetting({...newSetting, value: e.target.value})}
+                          className={`w-full px-3 py-2 border rounded-md ${darkMode ? 'bg-dark-tertiary border-dark-border text-dark-primary' : 'bg-white border-gray-300 text-gray-900'}`}
+                          rows="4"
+                          placeholder="example.com\ngmail.com\ndomain.org"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Description</label>
+                        <textarea
+                          value={newSetting.description}
+                          onChange={(e) => setNewSetting({...newSetting, description: e.target.value})}
+                          className={`w-full px-3 py-2 border rounded-md ${darkMode ? 'bg-dark-tertiary border-dark-border text-dark-primary' : 'bg-white border-gray-300 text-gray-900'}`}
+                          rows="2"
+                          placeholder="Description of this setting..."
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <button
+                        onClick={() => setShowAddSettingModal(false)}
+                        className={`px-4 py-2 rounded-md ${darkMode ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                      >
+                        Cancel
+                      </button>
+                      
+                      <button
+                        onClick={handleAddSetting}
+                        className={`px-4 py-2 rounded-md text-white ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'}`}
+                      >
+                        Add Setting
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           

@@ -10,24 +10,28 @@ import user_auth
 
 def log_login(db: Session, user_id: int, username: str):
     """Log a user login event"""
+    # Ensure we have a non-empty username
+    display_name = username if username else f"User #{user_id}"
     user_auth.log_user_action(
         db=db,
         user_id=user_id,
         action="LOGIN",
         entity_type="User",
         entity_id=user_id,
-        details=f"User logged in: {username}"
+        details=f"User logged in: {display_name}"
     )
 
 def log_logout(db: Session, user_id: int, username: str):
     """Log a user logout event"""
+    # Ensure we have a non-empty username
+    display_name = username if username else f"User #{user_id}"
     user_auth.log_user_action(
         db=db,
         user_id=user_id,
         action="LOGOUT",
         entity_type="User",
         entity_id=user_id,
-        details=f"User logged out: {username}"
+        details=f"User logged out: {display_name}"
     )
 
 def log_label_update(

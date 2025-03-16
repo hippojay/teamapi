@@ -18,7 +18,7 @@ async def send_verification_email(email: str, token: str):
     This would be replaced with an actual email sending mechanism in production.
     """
     # For now, just print the verification link
-    print(f"Verification link for {email}: http://localhost:3000/verify-email?token={token}")
+    print(f"Verification link for {email}: http://localhost:3000/verify-email?token={token}&email={email}")
 
 async def send_password_reset_email(email: str, token: str):
     """
@@ -46,7 +46,16 @@ def get_allowed_email_domains(db: Session) -> List[str]:
     setting = db.query(models.AdminSetting).filter(models.AdminSetting.key == "allowed_email_domains").first()
     if not setting or not setting.value:
         return ["example.com"]  # Default if not configured
-    return [domain.strip() for domain in setting.value.split(",")]
+    
+    # Split by newlines and commas, then strip whitespace
+    domains = []
+    for line in setting.value.splitlines():
+        for domain in line.split(','):
+            domain = domain.strip()
+            if domain:  # Only add non-empty domains
+                domains.append(domain)
+    
+    return domains
 
 def is_email_allowed(email: str, db: Session) -> bool:
     """Check if email domain is in allowed domains list"""
@@ -125,10 +134,11 @@ def register_user(db: Session, user_data: schemas.UserRegister) -> models.User:
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create the user with inactive status
+    # Create the user with inactive status and use email as username
     hashed_password = get_password_hash(user_data.password)
     db_user = models.User(
         email=user_data.email,
+        username=user_data.email,  # Set username equal to email
         first_name=user_data.first_name,
         last_name=user_data.last_name,
         hashed_password=hashed_password,

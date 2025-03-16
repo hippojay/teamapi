@@ -23,20 +23,41 @@ const EmailVerificationPage = () => {
   const email = query.get('email');
 
   useEffect(() => {
-    // Only verify if both token and email are present
-    if (token && email) {
-      verifyEmail();
-    } else {
-      setError('Missing verification information. Please use the link from your email.');
-    }
+    const verifyWithToken = async () => {
+      // If we have a token but no email, try to get the email from the token
+      if (token && !email) {
+        try {
+          setIsVerifying(true);
+          const tokenInfo = await api.getTokenInfo(token);
+          if (tokenInfo && tokenInfo.email) {
+            // Now we have both token and email - verify it
+            await verifyEmail(tokenInfo.email, token);
+          }
+        } catch (err) {
+          setError(err.response?.data?.detail || 'Invalid or expired verification token.');
+          setIsVerifying(false);
+        }
+      } else if (token && email) {
+        // If we have both token and email directly from URL, verify it
+        verifyEmail(email, token);
+      } else {
+        setError('Missing verification information. Please use the link from your email.');
+      }
+    };
+    
+    verifyWithToken();
   }, [token, email]);
 
-  const verifyEmail = async () => {
+  const verifyEmail = async (emailToVerify, tokenToUse) => {
     setIsVerifying(true);
     setError('');
     
     try {
-      await api.verifyEmail(email, token);
+      // Use the provided parameters or fall back to the URL parameters
+      const finalEmail = emailToVerify || email;
+      const finalToken = tokenToUse || token;
+      
+      await api.verifyEmail(finalEmail, finalToken);
       setIsSuccess(true);
     } catch (err) {
       setError(err.response?.data?.detail || 'Verification failed. The link may have expired or is invalid.');

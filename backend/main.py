@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List, Optional, Union, Dict, Any
 import uvicorn
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from database import get_db, engine, Base
 import models
@@ -19,6 +19,10 @@ from search_schemas import SearchResults, SearchResultItem
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Initialize allowed email domains setting if it doesn't exist
+from initialize_email_domains import initialize_email_domains
+initialize_email_domains()
 
 app = FastAPI(title="Team API Portal")
 
@@ -41,9 +45,11 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    # Use email as the subject if username is None
+    subject = user.username if user.username else user.email
     access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": subject}, expires_delta=access_token_expires
     )
     
     # Log the login event
@@ -74,10 +80,11 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), current
     if not user_auth.is_email_allowed(user.email, db):
         raise HTTPException(status_code=403, detail="Email domain not allowed for registration")
     
-    # Create user with full details
+    # Create user with full details (use email as username if not provided)
+    username = user.username if user.username else user.email
     hashed_password = auth.get_password_hash(user.password)
     db_user = models.User(
-        username=user.username,
+        username=username,
         email=user.email,
         hashed_password=hashed_password,
         first_name=user.first_name,
@@ -123,6 +130,27 @@ def register_user(user: schemas.UserRegister, background_tasks: BackgroundTasks,
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+
+@app.get("/token-info/{token}")
+def get_token_info(token: str, db: Session = Depends(get_db)):
+    """
+    Get information about a verification token without verifying it.
+    This is used for the email verification page when the email is not in the URL.
+    """
+    # Look up the token in the database
+    db_token = db.query(models.ValidationToken).filter(
+        models.ValidationToken.token == token
+    ).first()
+    
+    if not db_token:
+        raise HTTPException(status_code=404, detail="Token not found")
+    
+    # Check if the token is expired
+    if db_token.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Token expired")
+    
+    # Return the email associated with the token
+    return {"email": db_token.email, "token_type": db_token.token_type}
 
 @app.post("/verify-email", response_model=Dict[str, str])
 def verify_email(verification: schemas.EmailVerification, db: Session = Depends(get_db)):
