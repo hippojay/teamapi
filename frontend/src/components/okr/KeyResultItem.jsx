@@ -29,7 +29,7 @@ const KeyResultItem = ({ keyResult, objectiveId, onUpdate, onDelete }) => {
         <div className="flex-1">
           <div className="flex items-center">
             <span className="mr-2 px-2 py-0.5 text-xs rounded-full font-semibold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-              KR{keyResult.position || 1}
+              KR{keyResult.displayPosition || keyResult.position || 1}
             </span>
             <h5 className="font-medium">{keyResult.content}</h5>
           </div>

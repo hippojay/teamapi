@@ -592,22 +592,77 @@ def get_on_call(db: Session, squad_id: int) -> Optional[models.OnCallRoster]:
 
 # Objective operations
 def get_objectives(db: Session, area_id: Optional[int] = None, tribe_id: Optional[int] = None, squad_id: Optional[int] = None) -> List[models.Objective]:
+    
+    # Step 1: Get direct objectives for the specified entity
     query = db.query(models.Objective)
     
-    # Apply filters if provided
-    filters = []
+    # Apply filters for direct objectives
+    direct_filters = []
     if area_id:
-        filters.append(models.Objective.area_id == area_id)
+        direct_filters.append(models.Objective.area_id == area_id)
     if tribe_id:
-        filters.append(models.Objective.tribe_id == tribe_id)
+        direct_filters.append(models.Objective.tribe_id == tribe_id)
     if squad_id:
-        filters.append(models.Objective.squad_id == squad_id)
+        direct_filters.append(models.Objective.squad_id == squad_id)
     
-    # If any filters are applied, use them
-    if filters:
-        query = query.filter(or_(*filters))
+    # Execute query for direct objectives
+    if direct_filters:
+        direct_objectives = query.filter(or_(*direct_filters)).all()
+    else:
+        direct_objectives = query.all()
     
-    return query.all()
+    # Step 2: Get cascaded objectives if appropriate
+    cascaded_objectives = []
+    
+    # Handle cascading if we're looking at a specific entity
+    if tribe_id or squad_id:
+        # If we're looking at a tribe, get cascaded objectives from the parent area
+        if tribe_id and not area_id:
+            # Get the parent area of this tribe
+            tribe = db.query(models.Tribe).filter(models.Tribe.id == tribe_id).first()
+            if tribe and tribe.area_id:
+                # Get cascaded objectives from the parent area
+                cascaded_from_area = db.query(models.Objective).filter(
+                    models.Objective.area_id == tribe.area_id,
+                    models.Objective.cascade == True
+                ).all()
+                cascaded_objectives.extend(cascaded_from_area)
+        
+        # If we're looking at a squad, get cascaded objectives from both the parent tribe and area
+        if squad_id:
+            # Get the parent tribe of this squad
+            squad = db.query(models.Squad).filter(models.Squad.id == squad_id).first()
+            if squad:
+                # Get cascaded objectives from the parent tribe
+                if squad.tribe_id:
+                    cascaded_from_tribe = db.query(models.Objective).filter(
+                        models.Objective.tribe_id == squad.tribe_id,
+                        models.Objective.cascade == True
+                    ).all()
+                    cascaded_objectives.extend(cascaded_from_tribe)
+                
+                # Get the parent area of the parent tribe
+                if squad.tribe_id:
+                    tribe = db.query(models.Tribe).filter(models.Tribe.id == squad.tribe_id).first()
+                    if tribe and tribe.area_id:
+                        # Get cascaded objectives from the grandparent area
+                        cascaded_from_area = db.query(models.Objective).filter(
+                            models.Objective.area_id == tribe.area_id,
+                            models.Objective.cascade == True
+                        ).all()
+                        cascaded_objectives.extend(cascaded_from_area)
+    
+    # Combine direct and cascaded objectives, making sure to avoid duplicates
+    all_objectives = direct_objectives.copy()
+    
+    # Add cascaded objectives, avoiding duplicates by checking IDs
+    existing_ids = {obj.id for obj in all_objectives}
+    for obj in cascaded_objectives:
+        if obj.id not in existing_ids:
+            all_objectives.append(obj)
+            existing_ids.add(obj.id)
+    
+    return all_objectives
 
 def get_objective(db: Session, objective_id: int) -> Optional[models.Objective]:
     return db.query(models.Objective).filter(models.Objective.id == objective_id).first()
@@ -661,14 +716,24 @@ def get_key_result(db: Session, key_result_id: int) -> Optional[models.KeyResult
 
 def create_key_result(db: Session, key_result: schemas.KeyResultCreate) -> models.KeyResult:
     # Get the count of existing key results for this objective to set the position
-    position = db.query(models.KeyResult).filter(models.KeyResult.objective_id == key_result.objective_id).count() + 1
+    existing_key_results = db.query(models.KeyResult).filter(models.KeyResult.objective_id == key_result.objective_id).all()
+    
+    # Use the explicitly provided position if available, otherwise use next available position
+    if key_result.position is not None:
+        position = key_result.position
+    else:
+        # Calculate next position based on the highest current position
+        position = 1  # Default if there are no key results yet
+        if existing_key_results:
+            max_position = max([kr.position or 0 for kr in existing_key_results])
+            position = max_position + 1
     
     db_key_result = models.KeyResult(
         content=key_result.content,
         objective_id=key_result.objective_id,
         current_value=key_result.current_value,
         target_value=key_result.target_value,
-        position=key_result.position if key_result.position else position
+        position=position
     )
     db.add(db_key_result)
     db.commit()
@@ -679,6 +744,39 @@ def update_key_result(db: Session, key_result_id: int, key_result: schemas.KeyRe
     db_key_result = get_key_result(db, key_result_id)
     if not db_key_result:
         return None
+    
+    # Check if position is being updated
+    old_position = db_key_result.position
+    new_position = key_result.position
+    
+    # Handle position changes
+    if new_position is not None and old_position != new_position and db_key_result.objective_id:
+        # Get all key results for this objective
+        objective_id = db_key_result.objective_id
+        
+        # If moving to a higher position (e.g. from 1 to 3)
+        if old_position < new_position:
+            # Shift down all positions between old+1 and new
+            key_results_to_update = db.query(models.KeyResult).filter(
+                models.KeyResult.objective_id == objective_id,
+                models.KeyResult.position > old_position,
+                models.KeyResult.position <= new_position
+            ).all()
+            
+            for kr in key_results_to_update:
+                kr.position -= 1
+                
+        # If moving to a lower position (e.g. from 3 to 1)
+        elif old_position > new_position:
+            # Shift up all positions between new and old-1
+            key_results_to_update = db.query(models.KeyResult).filter(
+                models.KeyResult.objective_id == objective_id,
+                models.KeyResult.position >= new_position,
+                models.KeyResult.position < old_position
+            ).all()
+            
+            for kr in key_results_to_update:
+                kr.position += 1
     
     # Update fields if provided
     update_data = key_result.dict(exclude_unset=True)
@@ -695,6 +793,24 @@ def delete_key_result(db: Session, key_result_id: int) -> bool:
     if not db_key_result:
         return False
     
+    # Get the objective ID and position before deleting
+    objective_id = db_key_result.objective_id
+    deleted_position = db_key_result.position
+    
+    # Delete the key result
     db.delete(db_key_result)
+    
+    # Update positions for remaining key results
+    if deleted_position:
+        # Get all key results for this objective with higher positions
+        key_results_to_update = db.query(models.KeyResult).filter(
+            models.KeyResult.objective_id == objective_id,
+            models.KeyResult.position > deleted_position
+        ).all()
+        
+        # Decrease their positions by 1
+        for kr in key_results_to_update:
+            kr.position -= 1
+    
     db.commit()
     return True

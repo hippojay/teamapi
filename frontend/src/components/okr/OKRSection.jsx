@@ -162,18 +162,39 @@ const OKRSection = ({ areaId, tribeId, squadId, entityName, entityType }) => {
         </p>
       ) : (
         <div className="space-y-2">
-          {objectives.map(objective => (
-            <OKRItem
-              key={objective.id}
-              objective={objective}
-              entityType={entityType}
-              onUpdateObjective={handleUpdateObjective}
-              onDeleteObjective={handleDeleteObjective}
-              onAddKeyResult={handleAddKeyResult}
-              onUpdateKeyResult={handleUpdateKeyResult}
-              onDeleteKeyResult={handleDeleteKeyResult}
-            />
-          ))}
+          {objectives
+            .slice() // Create a copy to avoid mutating the original array
+            .sort((a, b) => {
+              // Sort cascaded OKRs first
+              const aIsCascaded = (a.area_id && entityType !== 'area') || (a.tribe_id && entityType !== 'tribe' && entityType !== 'area');
+              const bIsCascaded = (b.area_id && entityType !== 'area') || (b.tribe_id && entityType !== 'tribe' && entityType !== 'area');
+              
+              if (aIsCascaded && !bIsCascaded) return -1;
+              if (!aIsCascaded && bIsCascaded) return 1;
+              
+              // For cascaded OKRs, prioritize Area over Tribe
+              if (aIsCascaded && bIsCascaded) {
+                const aIsArea = a.area_id && entityType !== 'area';
+                const bIsArea = b.area_id && entityType !== 'area';
+                if (aIsArea && !bIsArea) return -1;
+                if (!aIsArea && bIsArea) return 1;
+              }
+              
+              // Otherwise sort by ID (assuming newer objectives have higher IDs)
+              return b.id - a.id;
+            })
+            .map(objective => (
+              <OKRItem
+                key={objective.id}
+                objective={objective}
+                entityType={entityType}
+                onUpdateObjective={handleUpdateObjective}
+                onDeleteObjective={handleDeleteObjective}
+                onAddKeyResult={handleAddKeyResult}
+                onUpdateKeyResult={handleUpdateKeyResult}
+                onDeleteKeyResult={handleDeleteKeyResult}
+              />
+            ))}
         </div>
       )}
 

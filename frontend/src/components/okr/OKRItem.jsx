@@ -39,23 +39,27 @@ const OKRItem = ({
   
   // Get the source entity label
   const getSourceLabel = () => {
-    if (objective.area_id && (!objective.tribe_id && !objective.squad_id)) {
-      return 'Area OKR';
-    } else if (objective.tribe_id && !objective.squad_id) {
+    if (objective.area_id && entityType !== 'area') {
+      // Get the area name if available, otherwise just show 'Area' (update: now Tribe)
       return 'Tribe OKR';
+    } else if (objective.tribe_id && entityType !== 'tribe' && entityType !== 'area') {
+      // Get the tribe name if available, otherwise just show 'Tribe' (update: now cluster)
+      return 'Cluster OKR';
     }
     return null;
   };
 
   // Determine if this is a cascaded OKR
   const isCascaded = () => {
-    // For Squad: cascaded if from Area or Tribe
-    if (entityType === 'squad' && (objective.area_id || objective.tribe_id) && objective.cascade) {
-      return true;
-    }
-    // For Tribe: cascaded if from Area
-    if (entityType === 'tribe' && objective.area_id && objective.cascade) {
-      return true;
+    if (objective.cascade) {
+      // For tribe: cascaded if from area and we're viewing a tribe
+      if (entityType === 'tribe' && objective.area_id) {
+        return true;
+      }
+      // For squad: cascaded if from area or tribe and we're viewing a squad
+      if (entityType === 'squad' && (objective.area_id || objective.tribe_id)) {
+        return true;
+      }
     }
     return false;
   };
@@ -77,12 +81,12 @@ const OKRItem = ({
             </span>
             <h3 className="font-medium">{objective.content}</h3>
             {showCascadeLabel && (
-              <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+              <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-purple-200 text-purple-800 dark:bg-purple-800 dark:text-purple-200 font-semibold">
                 {cascadeLabel}
               </span>
             )}
             {objective.cascade && !showCascadeLabel && (
-              <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+              <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200 font-semibold">
                 Cascaded
               </span>
             )}
@@ -186,15 +190,18 @@ const OKRItem = ({
             </p>
           ) : (
             <div className="space-y-1">
-            {objective.key_results.map(kr => (
-            <KeyResultItem
-            key={kr.id}
-            keyResult={kr}
-            objectiveId={objective.id}
-            onUpdate={onUpdateKeyResult}
-            onDelete={(krId) => onDeleteKeyResult(objective.id, krId)}
-            />
-            ))}
+              {objective.key_results
+                .slice() // Create a copy to avoid mutating the original array
+                .sort((a, b) => (a.position || 1) - (b.position || 1)) // Sort by position
+                .map((kr, index) => (
+                  <KeyResultItem
+                    key={kr.id}
+                    keyResult={{...kr, displayPosition: index + 1}} // Pass the display position
+                    objectiveId={objective.id}
+                    onUpdate={onUpdateKeyResult}
+                    onDelete={(krId) => onDeleteKeyResult(objective.id, krId)}
+                  />
+                ))}
             </div>
           )}
         </div>
