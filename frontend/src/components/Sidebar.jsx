@@ -1,44 +1,13 @@
 import React from 'react';
-import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronRight, ChevronLeftCircle, ChevronRightCircle, Target } from 'lucide-react';
+import { Users, Home as HomeIcon, Database, Layers, User, ChevronLeftCircle, ChevronRightCircle, Target } from 'lucide-react';
 import CustomGrid from './CustomGrid';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import { createPortal } from 'react-dom';
 
 const Sidebar = ({ isCollapsed, toggleCollapse }) => {
-  const [showUserMenu, setShowUserMenu] = React.useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
   const { darkMode } = useTheme();
-  const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
-  const userMenuRef = React.useRef(null);
-  const dropdownRef = React.useRef(null);
-
-  // Handle click outside of user menu to close it
-  React.useEffect(() => {
-    const handleClickOutside = (event) => {
-      // Only close if clicking outside both the button and dropdown
-      if (
-        userMenuRef.current && 
-        !userMenuRef.current.contains(event.target) &&
-        (!dropdownRef.current || !dropdownRef.current.contains(event.target))
-      ) {
-        setShowUserMenu(false);
-      }
-    };
-
-    // Add event listener when the menu is shown
-    if (showUserMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    // Clean up the event listener
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showUserMenu]);
 
   // Function to check if a route is active
   const isActive = (path) => {
@@ -101,76 +70,8 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
       
 
       
-      {/* Footer with Authentication Controls */}
+      {/* Footer with Version Information */}
       <div className={`mt-auto p-4 border-t ${darkMode ? 'border-dark-border text-dark-secondary' : 'border-gray-200 text-gray-500'} text-xs ${isCollapsed ? 'text-center' : ''}`}>
-        {!isAuthenticated ? (
-          <button 
-            onClick={() => window.showLoginModal()}
-            className={`w-full flex items-center ${
-              isCollapsed ? 'justify-center' : 'justify-center space-x-2'
-            } p-2 text-blue-600 ${darkMode ? 'hover:bg-gray-800' : 'hover:bg-blue-50'} border ${darkMode ? 'border-dark-border' : 'border-gray-200'} shadow-sm rounded-md transition-colors mb-3`}
-            title={isCollapsed ? "Log In" : ""}
-          >
-            <LogIn className="h-4 w-4" />
-            {!isCollapsed && <span>Log In</span>}
-          </button>
-        ) : (
-          <div className="relative mb-3" ref={userMenuRef}>
-            <button 
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className={`w-full flex items-center ${
-                isCollapsed ? 'justify-center' : 'justify-between'
-              } p-2 ${darkMode ? 'text-dark-primary hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'} border ${darkMode ? 'border-dark-border' : 'border-gray-200'} shadow-sm rounded-md transition-colors`}
-              title={isCollapsed ? user?.username : ""}
-            >
-              <div className="flex items-center">
-                <User className="h-4 w-4 text-blue-600 mr-2" />
-                {!isCollapsed && <span className="font-medium text-sm">{user?.username}</span>}
-              </div>
-              {!isCollapsed && <ChevronRight className="h-3 w-3" />}
-            </button>
-            
-            {showUserMenu && createPortal(
-              <div 
-                ref={dropdownRef}
-                className={`fixed ${darkMode ? 'bg-dark-tertiary border-dark-border' : 'bg-white border-gray-200'} rounded-md shadow-xl border overflow-hidden z-[9999]`}
-                style={{
-                  left: userMenuRef.current ? 
-                    (isCollapsed ? 
-                      userMenuRef.current.getBoundingClientRect().right + 8 + 'px' : 
-                      userMenuRef.current.getBoundingClientRect().right + 8 + 'px') : 
-                    (isCollapsed ? '4rem' : '16rem'),
-                  top: userMenuRef.current ? userMenuRef.current.getBoundingClientRect().top + 'px' : 'auto',
-                  width: '12rem',
-                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
-                }}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    try {
-                      logout();
-                      localStorage.removeItem('token');
-                      setShowUserMenu(false);
-                      setTimeout(() => {
-                        navigate('/');
-                        window.location.reload();
-                      }, 100);
-                    } catch (error) {
-                      console.error("Logout error:", error);
-                    }
-                  }}
-                  className={`w-full text-left px-4 py-3 text-red-600 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-red-50'} flex items-center`}
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  <span>Log out</span>
-                </button>
-              </div>,
-              document.body
-            )}
-          </div>
-        )}
-        
         {!isCollapsed && <p className="text-center">Who What Where - v1.0</p>}
       </div>
     </div>
