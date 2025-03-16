@@ -143,13 +143,13 @@ const OKRSection = ({ areaId, tribeId, squadId, entityName, entityType }) => {
   }
 
   return (
-    <div className={`mt-6 p-4 ${darkMode ? 'bg-gray-800 text-white' : 'bg-white'} rounded-lg shadow`}>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Objectives & Key Results</h2>
+    <div className={`mt-4 p-3 ${darkMode ? 'bg-gray-800 text-white' : 'bg-white'} rounded-lg shadow`}>
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-lg font-semibold">Objectives & Key Results</h2>
         {isAuthenticated && (
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+            className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
           >
             Add Objective
           </button>
@@ -161,7 +161,7 @@ const OKRSection = ({ areaId, tribeId, squadId, entityName, entityType }) => {
           No objectives found for this {entityType}.
         </p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {objectives.map(objective => (
             <OKRItem
               key={objective.id}

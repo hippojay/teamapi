@@ -64,10 +64,10 @@ const OKRItem = ({
   const showCascadeLabel = isCascaded() && cascadeLabel;
 
   return (
-    <div className={`border ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'} rounded-lg overflow-hidden`}>
+    <div className={`border ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'} rounded-lg overflow-hidden mb-3`}>
       {/* Objective header */}
       <div 
-        className={`p-3 flex justify-between items-start cursor-pointer ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+        className={`py-2 px-3 flex justify-between items-start cursor-pointer ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex-1">
@@ -102,16 +102,16 @@ const OKRItem = ({
                 className={`stroke-current ${darkMode ? 'text-gray-700' : 'text-gray-200'}`} 
                 strokeWidth="4" 
               />
-              {/* Progress circle */}
+              {/* Progress circle - always visible even at 0% */}
               <circle 
                 cx="18" 
                 cy="18" 
                 r="16" 
                 fill="none" 
-                className="stroke-current text-blue-500" 
+                className={`stroke-current ${progress === 0 ? (darkMode ? 'text-gray-500' : 'text-gray-400') : 'text-blue-500'}`} 
                 strokeWidth="4" 
                 strokeDasharray="100" 
-                strokeDashoffset={100 - progress} 
+                strokeDashoffset={progress === 0 ? 99.9 : (100 - progress)} 
                 strokeLinecap="round" 
                 transform="rotate(-90 18 18)" 
               />
@@ -144,7 +144,7 @@ const OKRItem = ({
 
       {/* Key Results (expanded view) */}
       {expanded && (
-        <div className={`p-3 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div className={`py-2 px-3 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
           <div className="flex justify-between items-center mb-3">
             <h4 className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Key Results</h4>
             {isAuthenticated && (
@@ -185,16 +185,16 @@ const OKRItem = ({
               No key results defined for this objective.
             </p>
           ) : (
-            <div className="space-y-3">
-              {objective.key_results.map(kr => (
-                <KeyResultItem
-                  key={kr.id}
-                  keyResult={kr}
-                  objectiveId={objective.id}
-                  onUpdate={onUpdateKeyResult}
-                  onDelete={(krId) => onDeleteKeyResult(objective.id, krId)}
-                />
-              ))}
+            <div className="space-y-1">
+            {objective.key_results.map(kr => (
+            <KeyResultItem
+            key={kr.id}
+            keyResult={kr}
+            objectiveId={objective.id}
+            onUpdate={onUpdateKeyResult}
+            onDelete={(krId) => onDeleteKeyResult(objective.id, krId)}
+            />
+            ))}
             </div>
           )}
         </div>
