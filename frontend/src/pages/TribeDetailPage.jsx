@@ -4,6 +4,7 @@ import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import TeamTypeLabel from '../components/TeamTypeLabel';
 import DescriptionEditor from '../components/DescriptionEditor';
 import AreaTribeLabel from '../components/AreaTribeLabel';
+import { OKRSection } from '../components/okr';
 import { useTheme } from '../context/ThemeContext';
 import { Breadcrumbs } from '../components/common';
 import api from '../api';
@@ -135,6 +136,13 @@ const TribeDetailPage = () => {
           />
         </div>
       </div>
+
+      {/* OKR Section */}
+      <OKRSection 
+        tribeId={tribe.id} 
+        entityName={tribe.name} 
+        entityType="tribe" 
+      />
 
       {/* Squads in this Tribe */}
       <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-dark-primary' : ''}`}>Squads</h2>

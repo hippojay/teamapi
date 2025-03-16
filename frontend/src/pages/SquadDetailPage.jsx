@@ -1,6 +1,7 @@
 import { Breadcrumbs } from '../components/common';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { OKRSection } from '../components/okr';
 
 import { useTheme } from '../context/ThemeContext';
 import api from '../api';
@@ -124,6 +125,13 @@ const SquadDetailPage = () => {
             tribe={tribe} 
             onSquadUpdate={handleSquadUpdate}
             vacancyCount={vacancyCount}
+          />
+
+          {/* OKRs */}
+          <OKRSection 
+            squadId={parseInt(id)}
+            entityName={squad.name}
+            entityType="squad"
           />
 
           {/* Services */}

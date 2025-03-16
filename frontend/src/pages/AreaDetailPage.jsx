@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import DescriptionEditor from '../components/DescriptionEditor';
 import AreaTribeLabel from '../components/AreaTribeLabel';
+import { OKRSection } from '../components/okr';
 import { useTheme } from '../context/ThemeContext';
 import { Breadcrumbs } from '../components/common';
 import api from '../api';
@@ -120,6 +121,13 @@ const AreaDetailPage = () => {
           />
         </div>
       </div>
+
+      {/* OKR Section */}
+      <OKRSection 
+        areaId={area.id} 
+        entityName={area.name} 
+        entityType="area" 
+      />
 
       {/* Tribes in this Area */}
       <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-dark-primary' : ''}`}>Clusters</h2>

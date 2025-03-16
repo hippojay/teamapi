@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select, join
-from typing import List, Optional
+from sqlalchemy import select, join, or_
+from typing import List, Optional, Union
 from sqlalchemy.sql import text
+from datetime import datetime
 
 import models
 import schemas
@@ -586,3 +587,112 @@ def delete_dependency(db: Session, dependency_id: int) -> bool:
 # On-call roster operations
 def get_on_call(db: Session, squad_id: int) -> Optional[models.OnCallRoster]:
     return db.query(models.OnCallRoster).filter(models.OnCallRoster.squad_id == squad_id).first()
+
+# OKR CRUD operations
+
+# Objective operations
+def get_objectives(db: Session, area_id: Optional[int] = None, tribe_id: Optional[int] = None, squad_id: Optional[int] = None) -> List[models.Objective]:
+    query = db.query(models.Objective)
+    
+    # Apply filters if provided
+    filters = []
+    if area_id:
+        filters.append(models.Objective.area_id == area_id)
+    if tribe_id:
+        filters.append(models.Objective.tribe_id == tribe_id)
+    if squad_id:
+        filters.append(models.Objective.squad_id == squad_id)
+    
+    # If any filters are applied, use them
+    if filters:
+        query = query.filter(or_(*filters))
+    
+    return query.all()
+
+def get_objective(db: Session, objective_id: int) -> Optional[models.Objective]:
+    return db.query(models.Objective).filter(models.Objective.id == objective_id).first()
+
+def create_objective(db: Session, objective: schemas.ObjectiveCreate) -> models.Objective:
+    db_objective = models.Objective(
+        title=objective.title,
+        description=objective.description,
+        area_id=objective.area_id,
+        tribe_id=objective.tribe_id,
+        squad_id=objective.squad_id,
+        cascade=objective.cascade
+    )
+    db.add(db_objective)
+    db.commit()
+    db.refresh(db_objective)
+    return db_objective
+
+def update_objective(db: Session, objective_id: int, objective: schemas.ObjectiveUpdate) -> Optional[models.Objective]:
+    db_objective = get_objective(db, objective_id)
+    if not db_objective:
+        return None
+    
+    # Update fields if provided
+    update_data = objective.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_objective, field, value)
+    
+    db_objective.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(db_objective)
+    return db_objective
+
+def delete_objective(db: Session, objective_id: int) -> bool:
+    db_objective = get_objective(db, objective_id)
+    if not db_objective:
+        return False
+    
+    db.delete(db_objective)
+    db.commit()
+    return True
+
+# Key Result operations
+def get_key_results(db: Session, objective_id: Optional[int] = None) -> List[models.KeyResult]:
+    query = db.query(models.KeyResult)
+    if objective_id:
+        query = query.filter(models.KeyResult.objective_id == objective_id)
+    return query.all()
+
+def get_key_result(db: Session, key_result_id: int) -> Optional[models.KeyResult]:
+    return db.query(models.KeyResult).filter(models.KeyResult.id == key_result_id).first()
+
+def create_key_result(db: Session, key_result: schemas.KeyResultCreate) -> models.KeyResult:
+    db_key_result = models.KeyResult(
+        title=key_result.title,
+        description=key_result.description,
+        objective_id=key_result.objective_id,
+        current_value=key_result.current_value,
+        target_value=key_result.target_value
+    )
+    db.add(db_key_result)
+    db.commit()
+    db.refresh(db_key_result)
+    return db_key_result
+
+def update_key_result(db: Session, key_result_id: int, key_result: schemas.KeyResultUpdate) -> Optional[models.KeyResult]:
+    db_key_result = get_key_result(db, key_result_id)
+    if not db_key_result:
+        return None
+    
+    # Update fields if provided
+    update_data = key_result.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_key_result, field, value)
+    
+    db_key_result.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(db_key_result)
+    return db_key_result
+
+def delete_key_result(db: Session, key_result_id: int) -> bool:
+    db_key_result = get_key_result(db, key_result_id)
+    if not db_key_result:
+        return False
+    
+    db.delete(db_key_result)
+    db.commit()
+    return True

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronRight, ChevronLeftCircle, ChevronRightCircle } from 'lucide-react';
+import { Users, Home as HomeIcon, Database, Layers, User, LogIn, LogOut, ChevronRight, ChevronLeftCircle, ChevronRightCircle, Target } from 'lucide-react';
 import CustomGrid from './CustomGrid';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -56,6 +56,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
     { path: '/squads', icon: Users, label: 'Squads' },
     { path: '/services', icon: Database, label: 'Services' },
     { path: '/users', icon: User, label: 'Team Members' },
+    { path: '/okrs', icon: Target, label: 'OKRs' },
   ];
 
   return (

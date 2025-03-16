@@ -399,6 +399,127 @@ const api = {
     }
   },
   
+// OKR functions
+  getObjectives: async (areaId = null, tribeId = null, squadId = null) => {
+    let url = `${API_URL}/objectives?`;
+    if (areaId) url += `area_id=${areaId}&`;
+    if (tribeId) url += `tribe_id=${tribeId}&`;
+    if (squadId) url += `squad_id=${squadId}&`;
+    
+    const response = await fetch(url);
+    return response.json();
+  },
+  
+  getObjective: async (objectiveId) => {
+    const response = await fetch(`${API_URL}/objectives/${objectiveId}`);
+    if (!response.ok) {
+      throw new Error('Objective not found');
+    }
+    return response.json();
+  },
+  
+  createObjective: async (objectiveData) => {
+    const response = await fetch(`${API_URL}/objectives`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(objectiveData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to create objective');
+    }
+    
+    return response.json();
+  },
+  
+  updateObjective: async (objectiveId, objectiveData) => {
+    const response = await fetch(`${API_URL}/objectives/${objectiveId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(objectiveData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update objective');
+    }
+    
+    return response.json();
+  },
+  
+  deleteObjective: async (objectiveId) => {
+    const response = await fetch(`${API_URL}/objectives/${objectiveId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to delete objective');
+    }
+    
+    return true;
+  },
+  
+  getKeyResults: async (objectiveId = null) => {
+    const url = objectiveId ? `${API_URL}/key-results?objective_id=${objectiveId}` : `${API_URL}/key-results`;
+    const response = await fetch(url);
+    return response.json();
+  },
+  
+  getKeyResult: async (keyResultId) => {
+    const response = await fetch(`${API_URL}/key-results/${keyResultId}`);
+    if (!response.ok) {
+      throw new Error('Key Result not found');
+    }
+    return response.json();
+  },
+  
+  createKeyResult: async (keyResultData) => {
+    const response = await fetch(`${API_URL}/key-results`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(keyResultData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to create key result');
+    }
+    
+    return response.json();
+  },
+  
+  updateKeyResult: async (keyResultId, keyResultData) => {
+    const response = await fetch(`${API_URL}/key-results/${keyResultId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(keyResultData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update key result');
+    }
+    
+    return response.json();
+  },
+  
+  deleteKeyResult: async (keyResultId) => {
+    const response = await fetch(`${API_URL}/key-results/${keyResultId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to delete key result');
+    }
+    
+    return true;
+  },
+  
   // Search
   search: async (query) => {
     // Only search if query is at least 3 characters

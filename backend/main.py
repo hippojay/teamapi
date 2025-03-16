@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Union
 import uvicorn
 from datetime import timedelta
 
@@ -431,6 +431,125 @@ def get_on_call(squad_id: int, db: Session = Depends(get_db)):
     if not on_call:
         raise HTTPException(status_code=404, detail="On-call roster not found")
     return on_call
+
+# OKR endpoints
+@app.get("/objectives", response_model=List[schemas.Objective])
+def get_objectives(
+    area_id: Optional[int] = None, 
+    tribe_id: Optional[int] = None, 
+    squad_id: Optional[int] = None, 
+    db: Session = Depends(get_db)
+):
+    objectives = crud.get_objectives(db, area_id, tribe_id, squad_id)
+    return objectives
+
+@app.get("/objectives/{objective_id}", response_model=schemas.Objective)
+def get_objective(objective_id: int, db: Session = Depends(get_db)):
+    objective = crud.get_objective(db, objective_id)
+    if not objective:
+        raise HTTPException(status_code=404, detail="Objective not found")
+    return objective
+
+@app.post("/objectives", response_model=schemas.Objective, status_code=201)
+def create_objective(
+    objective: schemas.ObjectiveCreate,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Check that at least one of area_id, tribe_id, or squad_id is provided
+    if not any([objective.area_id, objective.tribe_id, objective.squad_id]):
+        raise HTTPException(status_code=400, detail="At least one of area_id, tribe_id, or squad_id must be provided")
+    
+    # If area_id is provided, verify it exists
+    if objective.area_id:
+        area = crud.get_area(db, objective.area_id)
+        if not area:
+            raise HTTPException(status_code=404, detail="Area not found")
+    
+    # If tribe_id is provided, verify it exists
+    if objective.tribe_id:
+        tribe = crud.get_tribe(db, objective.tribe_id)
+        if not tribe:
+            raise HTTPException(status_code=404, detail="Tribe not found")
+    
+    # If squad_id is provided, verify it exists
+    if objective.squad_id:
+        squad = crud.get_squad(db, objective.squad_id)
+        if not squad:
+            raise HTTPException(status_code=404, detail="Squad not found")
+    
+    return crud.create_objective(db, objective)
+
+@app.put("/objectives/{objective_id}", response_model=schemas.Objective)
+def update_objective(
+    objective_id: int,
+    objective: schemas.ObjectiveUpdate,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    updated_objective = crud.update_objective(db, objective_id, objective)
+    if not updated_objective:
+        raise HTTPException(status_code=404, detail="Objective not found")
+    return updated_objective
+
+@app.delete("/objectives/{objective_id}", status_code=204)
+def delete_objective(
+    objective_id: int,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    success = crud.delete_objective(db, objective_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Objective not found")
+    return None
+
+@app.get("/key-results", response_model=List[schemas.KeyResult])
+def get_key_results(objective_id: Optional[int] = None, db: Session = Depends(get_db)):
+    key_results = crud.get_key_results(db, objective_id)
+    return key_results
+
+@app.get("/key-results/{key_result_id}", response_model=schemas.KeyResult)
+def get_key_result(key_result_id: int, db: Session = Depends(get_db)):
+    key_result = crud.get_key_result(db, key_result_id)
+    if not key_result:
+        raise HTTPException(status_code=404, detail="Key Result not found")
+    return key_result
+
+@app.post("/key-results", response_model=schemas.KeyResult, status_code=201)
+def create_key_result(
+    key_result: schemas.KeyResultCreate,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Verify the objective exists
+    objective = crud.get_objective(db, key_result.objective_id)
+    if not objective:
+        raise HTTPException(status_code=404, detail="Objective not found")
+    
+    return crud.create_key_result(db, key_result)
+
+@app.put("/key-results/{key_result_id}", response_model=schemas.KeyResult)
+def update_key_result(
+    key_result_id: int,
+    key_result: schemas.KeyResultUpdate,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    updated_key_result = crud.update_key_result(db, key_result_id, key_result)
+    if not updated_key_result:
+        raise HTTPException(status_code=404, detail="Key Result not found")
+    return updated_key_result
+
+@app.delete("/key-results/{key_result_id}", status_code=204)
+def delete_key_result(
+    key_result_id: int,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    success = crud.delete_key_result(db, key_result_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Key Result not found")
+    return None
 
 # Search
 @app.get("/search", response_model=SearchResults)

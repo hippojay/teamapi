@@ -15,6 +15,7 @@ import ServiceDetailPage from './pages/ServiceDetailPage';
 import UserDetailPage from './pages/UserDetailPage';
 import UsersPage from './pages/UsersPage';
 import DependencyMapPage from './pages/DependencyMapPage';
+import OKRsPage from './pages/OKRsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -50,6 +51,9 @@ function App() {
             
             {/* Dependencies */}
             <Route path="/dependencies" element={<DependencyMapPage />} />
+            
+            {/* OKRs */}
+            <Route path="/okrs" element={<OKRsPage />} />
             
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />

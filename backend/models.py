@@ -5,6 +5,41 @@ import enum
 
 from database import Base
 
+# OKR classes
+class Objective(Base):
+    __tablename__ = "objectives"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    description = Column(Text, nullable=True)
+    area_id = Column(Integer, ForeignKey("areas.id"), nullable=True)
+    tribe_id = Column(Integer, ForeignKey("tribes.id"), nullable=True)
+    squad_id = Column(Integer, ForeignKey("squads.id"), nullable=True)
+    cascade = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    area = relationship("Area", back_populates="objectives")
+    tribe = relationship("Tribe", back_populates="objectives")
+    squad = relationship("Squad", back_populates="objectives")
+    key_results = relationship("KeyResult", back_populates="objective", cascade="all, delete-orphan")
+
+class KeyResult(Base):
+    __tablename__ = "key_results"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    description = Column(Text, nullable=True)
+    objective_id = Column(Integer, ForeignKey("objectives.id"))
+    current_value = Column(Float, default=0.0)
+    target_value = Column(Float, default=100.0)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    objective = relationship("Objective", back_populates="key_results")
+
 # Association table for many-to-many relationship between squads and team members
 squad_members = Table(
     'squad_members',
@@ -82,6 +117,7 @@ class Area(Base):
     
     # Relationships
     tribes = relationship("Tribe", back_populates="area", cascade="all, delete-orphan")
+    objectives = relationship("Objective", back_populates="area", cascade="all, delete-orphan")
 
 class TribeLabel(enum.Enum):
     CFU_ALIGNED = "cfu_aligned"
@@ -106,6 +142,7 @@ class Tribe(Base):
     # Relationships
     area = relationship("Area", back_populates="tribes")
     squads = relationship("Squad", back_populates="tribe", cascade="all, delete-orphan")
+    objectives = relationship("Objective", back_populates="tribe", cascade="all, delete-orphan")
 
 class Squad(Base):
     __tablename__ = "squads"
@@ -141,6 +178,7 @@ class Squad(Base):
                               foreign_keys="[Dependency.dependent_squad_id]",
                               back_populates="dependent_squad")
     on_call = relationship("OnCallRoster", back_populates="squad", uselist=False, cascade="all, delete-orphan")
+    objectives = relationship("Objective", back_populates="squad", cascade="all, delete-orphan")
 
 class TeamMember(Base):
     __tablename__ = "team_members"

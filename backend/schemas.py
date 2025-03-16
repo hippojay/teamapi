@@ -323,3 +323,59 @@ class DescriptionEdit(BaseModel):
     editor: User
 
     model_config = ConfigDict(from_attributes=True)
+    
+# OKR schemas
+class KeyResultBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+    current_value: float = 0.0
+    target_value: float = 100.0
+
+class KeyResultCreate(KeyResultBase):
+    objective_id: int
+
+class KeyResultUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    current_value: Optional[float] = None
+    target_value: Optional[float] = None
+
+class KeyResult(KeyResultBase):
+    id: int
+    objective_id: int
+    created_at: datetime
+    updated_at: datetime
+    
+    @property
+    def progress(self) -> float:
+        if self.target_value == 0:
+            return 0
+        return (self.current_value / self.target_value) * 100
+        
+    model_config = ConfigDict(from_attributes=True)
+        
+class ObjectiveBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+    cascade: bool = False
+
+class ObjectiveCreate(ObjectiveBase):
+    area_id: Optional[int] = None
+    tribe_id: Optional[int] = None
+    squad_id: Optional[int] = None
+
+class ObjectiveUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    cascade: Optional[bool] = None
+
+class Objective(ObjectiveBase):
+    id: int
+    area_id: Optional[int] = None
+    tribe_id: Optional[int] = None
+    squad_id: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    key_results: List[KeyResult] = []
+    
+    model_config = ConfigDict(from_attributes=True)
