@@ -614,8 +614,7 @@ def get_objective(db: Session, objective_id: int) -> Optional[models.Objective]:
 
 def create_objective(db: Session, objective: schemas.ObjectiveCreate) -> models.Objective:
     db_objective = models.Objective(
-        title=objective.title,
-        description=objective.description,
+        content=objective.content,
         area_id=objective.area_id,
         tribe_id=objective.tribe_id,
         squad_id=objective.squad_id,
@@ -661,12 +660,15 @@ def get_key_result(db: Session, key_result_id: int) -> Optional[models.KeyResult
     return db.query(models.KeyResult).filter(models.KeyResult.id == key_result_id).first()
 
 def create_key_result(db: Session, key_result: schemas.KeyResultCreate) -> models.KeyResult:
+    # Get the count of existing key results for this objective to set the position
+    position = db.query(models.KeyResult).filter(models.KeyResult.objective_id == key_result.objective_id).count() + 1
+    
     db_key_result = models.KeyResult(
-        title=key_result.title,
-        description=key_result.description,
+        content=key_result.content,
         objective_id=key_result.objective_id,
         current_value=key_result.current_value,
-        target_value=key_result.target_value
+        target_value=key_result.target_value,
+        position=key_result.position if key_result.position else position
     )
     db.add(db_key_result)
     db.commit()

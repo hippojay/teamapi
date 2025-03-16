@@ -26,12 +26,12 @@ const KeyResultItem = ({ keyResult, objectiveId, onUpdate, onDelete }) => {
     <div className={`p-3 border ${darkMode ? 'border-gray-700 bg-gray-700' : 'border-gray-200 bg-white'} rounded-lg`}>
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <h5 className="font-medium">{keyResult.title}</h5>
-          {keyResult.description && (
-            <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {keyResult.description}
-            </p>
-          )}
+          <div className="flex items-center">
+            <span className="mr-2 px-2 py-1 text-xs rounded-full font-semibold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+              KR{keyResult.position || 1}
+            </span>
+            <h5 className="font-medium">{keyResult.content}</h5>
+          </div>
         </div>
         
         {isAuthenticated && (

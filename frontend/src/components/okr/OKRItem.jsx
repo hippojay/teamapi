@@ -72,7 +72,10 @@ const OKRItem = ({
       >
         <div className="flex-1">
           <div className="flex items-center">
-            <h3 className="font-medium">{objective.title}</h3>
+            <span className="mr-2 px-2 py-1 text-xs rounded-full font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+              O
+            </span>
+            <h3 className="font-medium">{objective.content}</h3>
             {showCascadeLabel && (
               <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
                 {cascadeLabel}
@@ -84,11 +87,6 @@ const OKRItem = ({
               </span>
             )}
           </div>
-          {objective.description && (
-            <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {objective.description}
-            </p>
-          )}
         </div>
         
         <div className="flex items-center space-x-2 ml-4">

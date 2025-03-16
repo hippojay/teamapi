@@ -326,19 +326,19 @@ class DescriptionEdit(BaseModel):
     
 # OKR schemas
 class KeyResultBase(BaseModel):
-    title: str
-    description: Optional[str] = None
+    content: str
     current_value: float = 0.0
     target_value: float = 100.0
+    position: int = 1
 
 class KeyResultCreate(KeyResultBase):
     objective_id: int
 
 class KeyResultUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
+    content: Optional[str] = None
     current_value: Optional[float] = None
     target_value: Optional[float] = None
+    position: Optional[int] = None
 
 class KeyResult(KeyResultBase):
     id: int
@@ -355,8 +355,7 @@ class KeyResult(KeyResultBase):
     model_config = ConfigDict(from_attributes=True)
         
 class ObjectiveBase(BaseModel):
-    title: str
-    description: Optional[str] = None
+    content: str
     cascade: bool = False
 
 class ObjectiveCreate(ObjectiveBase):
@@ -365,8 +364,7 @@ class ObjectiveCreate(ObjectiveBase):
     squad_id: Optional[int] = None
 
 class ObjectiveUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
+    content: Optional[str] = None
     cascade: Optional[bool] = None
 
 class Objective(ObjectiveBase):

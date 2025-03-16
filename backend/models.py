@@ -10,8 +10,7 @@ class Objective(Base):
     __tablename__ = "objectives"
     
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True)
-    description = Column(Text, nullable=True)
+    content = Column(Text, nullable=False)
     area_id = Column(Integer, ForeignKey("areas.id"), nullable=True)
     tribe_id = Column(Integer, ForeignKey("tribes.id"), nullable=True)
     squad_id = Column(Integer, ForeignKey("squads.id"), nullable=True)
@@ -29,11 +28,11 @@ class KeyResult(Base):
     __tablename__ = "key_results"
     
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True)
-    description = Column(Text, nullable=True)
+    content = Column(Text, nullable=False)
     objective_id = Column(Integer, ForeignKey("objectives.id"))
     current_value = Column(Float, default=0.0)
     target_value = Column(Float, default=100.0)
+    position = Column(Integer, default=1)  # For ordering KR1, KR2, etc.
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     

@@ -4,8 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 const OKRModal = ({ onClose, onSave, title, initialData = {}, entityType }) => {
   const { darkMode } = useTheme();
   const [formData, setFormData] = useState({
-    title: initialData.title || '',
-    description: initialData.description || '',
+    content: initialData.content || '',
     cascade: initialData.cascade || false
   });
   const [errors, setErrors] = useState({});
@@ -28,8 +27,8 @@ const OKRModal = ({ onClose, onSave, title, initialData = {}, entityType }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
+    if (!formData.content.trim()) {
+      newErrors.content = 'Objective content is required';
     }
     
     setErrors(newErrors);
@@ -54,34 +53,19 @@ const OKRModal = ({ onClose, onSave, title, initialData = {}, entityType }) => {
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="title">
-              Title *
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} ${errors.title ? 'border-red-500' : ''}`}
-              placeholder="Objective title"
-            />
-            {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title}</p>}
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="description">
-              Description
+            <label className="block text-sm font-medium mb-1" htmlFor="content">
+              Objective *
             </label>
             <textarea
-              id="description"
-              name="description"
-              value={formData.description}
+              id="content"
+              name="content"
+              value={formData.content}
               onChange={handleChange}
               rows="3"
-              className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
-              placeholder="Describe the objective (optional)"
+              className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} ${errors.content ? 'border-red-500' : ''}`}
+              placeholder="What is the objective?"
             ></textarea>
+            {errors.content && <p className="mt-1 text-sm text-red-500">{errors.content}</p>}
           </div>
           
           {showCascadeOption && (

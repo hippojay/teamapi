@@ -4,10 +4,10 @@ import { useTheme } from '../../context/ThemeContext';
 const KeyResultModal = ({ onClose, onSave, title, initialData = {} }) => {
   const { darkMode } = useTheme();
   const [formData, setFormData] = useState({
-    title: initialData.title || '',
-    description: initialData.description || '',
+    content: initialData.content || '',
     current_value: initialData.current_value !== undefined ? initialData.current_value : 0,
-    target_value: initialData.target_value !== undefined ? initialData.target_value : 100
+    target_value: initialData.target_value !== undefined ? initialData.target_value : 100,
+    position: initialData.position || 1
   });
   const [errors, setErrors] = useState({});
 
@@ -38,8 +38,8 @@ const KeyResultModal = ({ onClose, onSave, title, initialData = {} }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
+    if (!formData.content.trim()) {
+      newErrors.content = 'Key result content is required';
     }
     
     if (formData.target_value <= 0) {
@@ -48,6 +48,10 @@ const KeyResultModal = ({ onClose, onSave, title, initialData = {} }) => {
     
     if (formData.current_value < 0) {
       newErrors.current_value = 'Current value cannot be negative';
+    }
+    
+    if (formData.position < 1) {
+      newErrors.position = 'Position must be at least 1';
     }
     
     setErrors(newErrors);
@@ -69,37 +73,37 @@ const KeyResultModal = ({ onClose, onSave, title, initialData = {} }) => {
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="title">
-              Title *
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} ${errors.title ? 'border-red-500' : ''}`}
-              placeholder="Key result title"
-            />
-            {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title}</p>}
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="description">
-              Description
+            <label className="block text-sm font-medium mb-1" htmlFor="content">
+              Key Result *
             </label>
             <textarea
-              id="description"
-              name="description"
-              value={formData.description}
+              id="content"
+              name="content"
+              value={formData.content}
               onChange={handleChange}
               rows="2"
-              className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
-              placeholder="Describe the key result (optional)"
+              className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} ${errors.content ? 'border-red-500' : ''}`}
+              placeholder="What is the key result?"
             ></textarea>
+            {errors.content && <p className="mt-1 text-sm text-red-500">{errors.content}</p>}
           </div>
           
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium mb-1" htmlFor="position">
+                Position
+              </label>
+              <input
+                type="number"
+                id="position"
+                name="position"
+                value={formData.position}
+                onChange={handleChange}
+                min="1"
+                className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} ${errors.position ? 'border-red-500' : ''}`}
+              />
+              {errors.position && <p className="mt-1 text-sm text-red-500">{errors.position}</p>}
+            </div>
             <div>
               <label className="block text-sm font-medium mb-1" htmlFor="current_value">
                 Current Value
