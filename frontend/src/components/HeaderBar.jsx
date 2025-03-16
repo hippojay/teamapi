@@ -89,7 +89,7 @@ const HeaderBar = () => {
                   onClick={() => setProfileOpen(false)}
                 >
                   <User className="h-4 w-4 mr-2" />
-                  My Profile
+                  My Settings
                 </Link>
 
                 {isAdmin(user) && (

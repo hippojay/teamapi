@@ -111,14 +111,14 @@ const ProfilePage = () => {
   if (!user) {
     return (
       <div className={`container mx-auto mt-16 p-4 ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>
-        <div className="text-center">Loading profile...</div>
+        <div className="text-center">Loading settings...</div>
       </div>
     );
   }
   
   return (
     <div className={`container mx-auto mt-16 p-6 ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>
-      <h1 className="text-3xl font-bold mb-8">Your Profile</h1>
+      <h1 className="text-3xl font-bold mb-8">Your Settings</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Profile Information */}
