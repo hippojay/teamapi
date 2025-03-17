@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { GitBranch, PlusCircle, Edit, Trash } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { canEditDependencies } from '../../utils/authUtils';
 import api from '../../api';
 import InteractionModeLabel from '../../components/InteractionModeLabel';
 
-const DependenciesList = ({ dependencies, squadId, onDependenciesChange }) => {
+const DependenciesList = ({ dependencies, squadId, onDependenciesChange, squad }) => {
   const { darkMode } = useTheme();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const canEdit = isAuthenticated && canEditDependencies(user, squad);
   const [showModal, setShowModal] = useState(false);
   const [editingDependency, setEditingDependency] = useState(null);
   
@@ -48,7 +50,7 @@ const DependenciesList = ({ dependencies, squadId, onDependenciesChange }) => {
           <GitBranch className={`h-5 w-5 mr-2 ${darkMode ? 'text-blue-400' : ''}`} />
           Dependencies
         </h3>
-        {isAuthenticated && (
+        {canEdit && (
           <button 
             onClick={handleAddDependency}
             className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} flex items-center text-sm`}
@@ -82,7 +84,7 @@ const DependenciesList = ({ dependencies, squadId, onDependenciesChange }) => {
                   </td>
                   <td className="py-2 px-2 text-center">{dep.interaction_frequency || 'Not specified'}</td>
                   <td className="py-2 px-2 text-right">
-                    {isAuthenticated && (
+                    {canEdit && (
                       <div className="flex justify-end space-x-2">
                         <button 
                           onClick={() => handleEditDependency(dep)}

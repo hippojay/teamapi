@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 import { Database, GitBranch, Globe, Server, Smartphone, Code, Plus, Edit, Trash2, X, ChevronRight } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { canEditServices } from '../../utils/authUtils';
 import ServiceEditor from '../ServiceEditor';
 import api from '../../api';
 
 const ServicesList = ({ squad, services, setServices }) => {
   const { darkMode } = useTheme();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const canEdit = isAuthenticated && canEditServices(user, squad);
   const [editingService, setEditingService] = useState(null);
   const [isAddingService, setIsAddingService] = useState(false);
   const [filteredServices, setFilteredServices] = useState([]);
@@ -158,7 +160,7 @@ const ServicesList = ({ squad, services, setServices }) => {
           <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>v{service.version}</span>
           {getStatusBadge(service.status)}
           
-          {isAuthenticated && (
+          {canEdit && (
             <>
               <button 
                 onClick={(e) => {
@@ -306,7 +308,7 @@ const ServicesList = ({ squad, services, setServices }) => {
           <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-center py-4`}>No services found</div>
         )}
       </div>
-      {isAuthenticated && !isAddingService && (
+      {canEdit && !isAddingService && (
         <div className={`mt-3 pt-3 ${darkMode ? 'border-dark-border' : 'border-gray-200'} border-t text-right`}>
           <button 
             className={`px-3 py-1.5 ${darkMode ? 'bg-blue-800 text-blue-200 border border-blue-600 hover:bg-blue-900' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'} rounded-md flex items-center ml-auto font-medium`}

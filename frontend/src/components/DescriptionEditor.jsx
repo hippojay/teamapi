@@ -2,16 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Pencil, X, Save, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { canEditDescription } from '../utils/authUtils';
 import api from '../api';
 import ReactMarkdown from 'react-markdown';
 
-const DescriptionEditor = ({ entityType, entityId, initialDescription, onDescriptionUpdated }) => {
+const DescriptionEditor = ({ entityType, entityId, initialDescription, onDescriptionUpdated, entity }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [description, setDescription] = useState(initialDescription || '');
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { darkMode } = useTheme();
+  
+  // Determine if user can edit this description
+  const canEdit = isAuthenticated && canEditDescription(user, entityType, entity);
   
   // Update local state when initialDescription prop changes
   useEffect(() => {
@@ -101,7 +105,7 @@ const DescriptionEditor = ({ entityType, entityId, initialDescription, onDescrip
         )}
       </div>
       
-      {isAuthenticated && (
+      {canEdit && (
         <button
           onClick={() => setIsEditing(true)}
           className={`absolute top-0 right-0 p-1 rounded-md ${

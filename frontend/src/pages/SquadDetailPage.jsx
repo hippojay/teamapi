@@ -150,7 +150,8 @@ const SquadDetailPage = () => {
           {/* Dependencies */}
           <DependenciesList 
             dependencies={dependencies} 
-            squadId={parseInt(id)} 
+            squadId={parseInt(id)}
+            squad={squad}
             onDependenciesChange={handleDependenciesChange} 
           />
 

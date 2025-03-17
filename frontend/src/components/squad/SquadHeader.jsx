@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { canEditSquad } from '../../utils/authUtils';
 import TeamTypeLabel from '../TeamTypeLabel';
 import TeamTypeEditor from '../TeamTypeEditor';
 import DescriptionEditor from '../DescriptionEditor';
@@ -18,7 +19,8 @@ import {
 
 const SquadHeader = ({ squad, tribe, onSquadUpdate, vacancyCount = 0 }) => {
   const { darkMode } = useTheme();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const canEdit = isAuthenticated && canEditSquad(user, squad);
   const [editingTeamType, setEditingTeamType] = useState(false);
   const [updatingTeamType, setUpdatingTeamType] = useState(false);
 
@@ -121,7 +123,7 @@ const SquadHeader = ({ squad, tribe, onSquadUpdate, vacancyCount = 0 }) => {
             teamType={squad.team_type || "stream_aligned"} 
             size="md"
           />
-          {isAuthenticated && (
+          {canEdit && (
             <button 
               onClick={() => setEditingTeamType(true)}
               className={`ml-2 text-xs ${darkMode ? 'text-blue-400 hover:text-blue-300 hover:underline' : 'text-blue-600 hover:text-blue-800 hover:underline'}`}
@@ -132,7 +134,7 @@ const SquadHeader = ({ squad, tribe, onSquadUpdate, vacancyCount = 0 }) => {
         </div>
         
         {/* Edit Team Type Dialog */}
-        {isAuthenticated && editingTeamType && (
+        {canEdit && editingTeamType && (
           <div className={`mt-3 p-3 border rounded-md ${darkMode ? 'bg-dark-tertiary border-dark-border' : 'bg-gray-50 border-gray-200'}`}>
             <div className={updatingTeamType ? "opacity-50 pointer-events-none" : ""}>
               <TeamTypeEditor 
@@ -180,6 +182,7 @@ const SquadHeader = ({ squad, tribe, onSquadUpdate, vacancyCount = 0 }) => {
         <DescriptionEditor
           entityType="squad"
           entityId={squad.id}
+          entity={squad}
           initialDescription={squad.description || `The ${squad.name} squad is responsible for developing and maintaining services for the ${tribe ? tribe.name : ''} tribe.`}
           onDescriptionUpdated={(newDescription) => {
             // Update the local state with the new description
@@ -301,7 +304,7 @@ const SquadHeader = ({ squad, tribe, onSquadUpdate, vacancyCount = 0 }) => {
           {/* Display Contact Buttons */}
           <div className="flex flex-wrap gap-2 relative">
             {/* Edit button for authenticated users - pen icon */}
-            {isAuthenticated && (
+            {canEdit && (
               <button
                 onClick={() => setIsEditing(true)}
                 className={`absolute right-0 top-0 p-1.5 rounded-full ${darkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-500'}`}
