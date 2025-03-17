@@ -38,12 +38,12 @@ def add_admin_user(username: str, email: str, password: str = None):
             print(f"User '{username}' already exists.")
             
             # Check if user is already an admin
-            if existing_user.role == models.UserRole.ADMIN or existing_user.is_admin:
+            if existing_user.role == models.UserRole.admin or existing_user.is_admin:
                 print(f"User '{username}' is already an admin.")
                 return True
                 
             # Make existing user an admin
-            existing_user.role = models.UserRole.ADMIN
+            existing_user.role = models.UserRole.admin
             existing_user.is_admin = True
             db.commit()
             print(f"User '{username}' has been promoted to admin.")
@@ -68,7 +68,7 @@ def add_admin_user(username: str, email: str, password: str = None):
                 hashed_password=hashed_password,
                 is_admin=True,
                 is_active=True,
-                role=models.UserRole.ADMIN
+                role=models.UserRole.admin
             )
             
             db.add(db_user)

@@ -42,7 +42,7 @@ def create_admin_user(username: str, email: str, password: str):
                 hashed_password=hashed_password,
                 is_admin=True,
                 is_active=True,
-                role=models.UserRole.ADMIN
+                role=models.UserRole.admin
             )
             db.add(db_user)
             db.commit()
