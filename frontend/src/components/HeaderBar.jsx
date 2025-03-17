@@ -5,7 +5,7 @@ import CustomGrid from './CustomGrid';
 import SearchBar from './SearchBar';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { isAdmin } from '../utils/roleUtils';
+import { isAdmin, isTeamMember } from '../utils/roleUtils';
 
 const HeaderBar = () => {
   const { darkMode, toggleTheme } = useTheme();
@@ -83,7 +83,19 @@ const HeaderBar = () => {
                   <div className="text-xs text-gray-500">{user.email}</div>
                 </div>
                 
-                <Link 
+                
+                {isTeamMember(user) && (
+                  <Link 
+                    to="/users/me"
+                    className={`flex items-center px-4 py-2 text-sm ${darkMode ? 'text-dark-primary hover:bg-dark-hover' : 'text-gray-700 hover:bg-gray-100'} w-full text-left`}
+                    onClick={() => setProfileOpen(false)}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    My Profile
+                  </Link>
+                )}
+
+                  <Link 
                   to="/profile"
                   className={`flex items-center px-4 py-2 text-sm ${darkMode ? 'text-dark-primary hover:bg-dark-hover' : 'text-gray-700 hover:bg-gray-100'} w-full text-left`}
                   onClick={() => setProfileOpen(false)}
@@ -91,6 +103,7 @@ const HeaderBar = () => {
                   <User className="h-4 w-4 mr-2" />
                   My Settings
                 </Link>
+
 
                 {isAdmin(user) && (
                   <Link 

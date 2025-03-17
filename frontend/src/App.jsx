@@ -14,6 +14,7 @@ import ServicesPage from './pages/ServicesPage';
 import ServiceDetailPage from './pages/ServiceDetailPage';
 import UserDetailPage from './pages/UserDetailPage';
 import UsersPage from './pages/UsersPage';
+import MyProfileRedirect from './components/users/MyProfileRedirect';
 import DependencyMapPage from './pages/DependencyMapPage';
 import OKRsPage from './pages/OKRsPage';
 import ProfilePage from './pages/ProfilePage';
@@ -54,6 +55,7 @@ function App() {
             
             {/* Users */}
             <Route path="/users" element={<UsersPage />} />
+            <Route path="/users/me" element={<MyProfileRedirect />} />
             <Route path="/users/:id" element={<UserDetailPage />} />
             
             {/* Dependencies */}
