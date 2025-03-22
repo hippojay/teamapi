@@ -463,3 +463,19 @@ class Objective(ObjectiveBase):
     key_results: List[KeyResult] = []
     
     model_config = ConfigDict(from_attributes=True)
+    
+# System information schemas
+class SystemInfoBase(BaseModel):
+    version: str
+    initialized: bool = True
+    schema_version: int = 1
+    
+class SystemInfo(SystemInfoBase):
+    id: int
+    initialized_at: Optional[datetime] = None
+    last_migration: Optional[str] = None
+    migrations_applied: Optional[str] = None  # JSON string
+    created_at: datetime
+    updated_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)

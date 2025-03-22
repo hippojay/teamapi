@@ -1,76 +1,101 @@
 #!/bin/bash
-# Make this script executable with: chmod +x run.sh
 
-# Check if Python is installed
-if ! command -v python3 &> /dev/null; then
-    echo "Python 3 is not installed. Please install Python 3 and try again."
-    exit 1
-fi
+# Determine script directory and navigate to project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$SCRIPT_DIR"
 
-# Check if Node.js is installed
-if ! command -v node &> /dev/null; then
-    echo "Node.js is not installed. Please install Node.js and try again."
-    exit 1
-fi
-
-# Backend setup
-cd backend
-
-# Create a virtual environment if it doesn't exist
-if [ ! -d "venv" ]; then
-    echo "Creating Python virtual environment..."
-    python3 -m venv venv
-fi
-
-# Activate the virtual environment
-source venv/bin/activate
-
-# Install dependencies
-echo "Installing backend dependencies..."
-pip install -r requirements.txt
-
-# Load data if database doesn't exist
-if [ ! -f "team_portal.db" ]; then
-    echo "Database not found. Loading initial data..."
-    python load_data.py
-fi
-
-# Start the backend server in the background
-echo "Starting backend server..."
-python main.py &
-BACKEND_PID=$!
-echo "Backend running with PID $BACKEND_PID"
-
-# Wait for the backend to start
-echo "Waiting for backend to start..."
-sleep 5
-
-# Frontend setup
-cd ../frontend
-
-# Install dependencies if node_modules doesn't exist
-if [ ! -d "node_modules" ]; then
-    echo "Installing frontend dependencies..."
-    npm install
-fi
-
-# Start the frontend in development mode
-echo "Starting frontend development server..."
-npm start &
-FRONTEND_PID=$!
-echo "Frontend running with PID $FRONTEND_PID"
-
-# Function to handle script termination
-function cleanup {
-    echo "Stopping services..."
-    kill $BACKEND_PID
-    kill $FRONTEND_PID
-    exit 0
+# Function to print colored output
+print_color() {
+    case "$1" in
+        "red") printf "\033[91m%s\033[0m\n" "$2" ;;
+        "green") printf "\033[92m%s\033[0m\n" "$2" ;;
+        "yellow") printf "\033[93m%s\033[0m\n" "$2" ;;
+        "blue") printf "\033[94m%s\033[0m\n" "$2" ;;
+        *) printf "%s\n" "$2" ;;
+    esac
 }
 
-# Register the cleanup function for termination signals
-trap cleanup SIGINT SIGTERM
+# Function to print help information
+show_help() {
+    echo "Who What Where Portal Control Script"
+    echo ""
+    echo "Usage: $0 [command] [options]"
+    echo ""
+    echo "Commands:"
+    echo "  --init, -i              Initialize the database (creates tables and admin user)"
+    echo "  --help, -h              Show this help message"
+    echo ""
+    echo "Options for --init:"
+    echo "  --admin-username=NAME   Set custom admin username (default: admin)"
+    echo "  --admin-email=EMAIL     Set custom admin email (default: admin@example.com)"
+    echo ""
+    echo "Examples:"
+    echo "  $0                      Start the application normally"
+    echo "  $0 --init               Initialize the database with default settings"
+    echo "  $0 --init --admin-username=myadmin --admin-email=admin@mycompany.com"
+    echo ""
+    echo "Note: To load data, use the dedicated scripts:"
+    echo "  python backend/load_data.py       # Load sample data"
+    echo "  python backend/load_prod_data.py  # Load production data"
+    echo ""
+}
 
-# Keep the script running
-echo "Services started. Press Ctrl+C to stop."
-wait
+# Parse command line arguments
+PRIMARY_COMMAND=""
+ADMIN_USERNAME=""
+ADMIN_EMAIL=""
+
+# Process options
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --help|-h)
+            show_help
+            exit 0
+            ;;
+        --init|-i)
+            PRIMARY_COMMAND="init"
+            shift
+            ;;
+        --admin-username=*)
+            ADMIN_USERNAME="${1#*=}"
+            shift
+            ;;
+        --admin-email=*)
+            ADMIN_EMAIL="${1#*=}"
+            shift
+            ;;
+        *)
+            print_color "red" "Unknown option: $1"
+            print_color "yellow" "Use --help to see available options."
+            exit 1
+            ;;
+    esac
+done
+
+# Execute the appropriate command
+if [[ "$PRIMARY_COMMAND" == "init" ]]; then
+    print_color "yellow" "Initializing database for Who What Where Portal..."
+    
+    # Build command with optional parameters
+    COMMAND="python backend/main.py --force-initdb"
+    
+    if [[ -n "$ADMIN_USERNAME" ]]; then
+        COMMAND="$COMMAND --admin-username=$ADMIN_USERNAME"
+    fi
+    
+    if [[ -n "$ADMIN_EMAIL" ]]; then
+        COMMAND="$COMMAND --admin-email=$ADMIN_EMAIL"
+    fi
+    
+    # Execute initialization command
+    print_color "yellow" "Running: $COMMAND"
+    eval $COMMAND
+    exit $?
+
+else
+    # If no specific command is given, start the backend service
+    print_color "green" "Starting Who What Where Portal backend service..."
+    cd backend
+    python main.py
+    exit $?
+fi

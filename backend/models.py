@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Text, Enum, Table, DateTime
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Text, Enum, Table, DateTime, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import enum
@@ -38,6 +38,20 @@ class KeyResult(Base):
     
     # Relationships
     objective = relationship("Objective", back_populates="key_results")
+
+# System information table for tracking database version and initialization status
+class SystemInfo(Base):
+    __tablename__ = "system_info"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    version = Column(String, nullable=False)
+    initialized = Column(Boolean, default=False)
+    initialized_at = Column(DateTime, nullable=True)
+    last_migration = Column(String, nullable=True)
+    schema_version = Column(Integer, default=1)
+    migrations_applied = Column(JSON, nullable=True)  # Track which migrations have been applied
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
 # Association table for many-to-many relationship between squads and team members
 squad_members = Table(

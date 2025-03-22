@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from typing import List, Optional, Union, Dict, Any
 import uvicorn
 from datetime import timedelta, datetime
+import sys
+import argparse
 
 from database import get_db, engine, Base
 import models
@@ -17,12 +19,23 @@ import auth
 import audit_logger
 from search_schemas import SearchResults, SearchResultItem
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+# Import database initializer
+import db_initializer
 
-# Initialize allowed email domains setting if it doesn't exist
-from initialize_email_domains import initialize_email_domains
-initialize_email_domains()
+# Check if database is initialized, and initialize if needed
+if not db_initializer.check_database_initialized():
+    print("\033[93mDatabase not initialized. Performing first-time setup...\033[0m")
+    success = db_initializer.initialize_database()
+    if success:
+        print("\033[92mDatabase initialized successfully!\033[0m")
+    else:
+        print("\033[91mDatabase initialization failed. Please check the logs.\033[0m")
+else:
+    # Database is initialized, run any pending migrations
+    db_initializer.run_migrations()
+
+# For backward compatibility, ensure all tables exist
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Team API Portal")
 
@@ -274,6 +287,19 @@ def get_audit_logs(skip: int = 0, limit: int = 100, current_user: schemas.User =
 @app.get("/")
 def read_root():
     return {"message": "Team API Portal Backend"}
+
+# System information endpoint
+@app.get("/system/info", response_model=schemas.SystemInfo)
+def get_system_info(current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+    """Get system information including database version and initialization status"""
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to access system information")
+    
+    system_info = db.query(models.SystemInfo).first()
+    if not system_info:
+        raise HTTPException(status_code=404, detail="System information not found")
+    
+    return system_info
 
 # Squad team type endpoints
 @app.put("/squads/{squad_id}/team-type")
@@ -900,4 +926,27 @@ def search(q: str, limit: int = 20, db: Session = Depends(get_db)):
     return SearchResults(results=results, total=len(results))
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Who What Where Portal Backend")
+    parser.add_argument("--force-initdb", action="store_true", help="Force database initialization")
+    parser.add_argument("--host", default="0.0.0.0", help="Host to bind the server to (default: 0.0.0.0)")
+    parser.add_argument("--port", type=int, default=8000, help="Port to bind the server to (default: 8000)")
+    parser.add_argument("--admin-username", default="admin", help="Admin username for initialization (default: admin)")
+    parser.add_argument("--admin-email", default="admin@example.com", help="Admin email for initialization (default: admin@example.com)")
+    args = parser.parse_args()
+    
+    # Handle force initialization if requested
+    if args.force_initdb:
+        print("\033[93mForcing database initialization...\033[0m")
+        success = db_initializer.initialize_database(
+            admin_username=args.admin_username,
+            admin_email=args.admin_email
+        )
+        if success:
+            print("\033[92mDatabase initialized successfully!\033[0m")
+        else:
+            print("\033[91mDatabase initialization failed. Check the logs for details.\033[0m")
+            sys.exit(1)
+            
+    # Start the server
+    uvicorn.run("main:app", host=args.host, port=args.port, reload=True)
