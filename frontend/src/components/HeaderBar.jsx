@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sun, Moon, User, LogOut, Settings, Key } from 'lucide-react';
+import { Sun, Moon, User, LogOut, Settings, UserPlus } from 'lucide-react';
 import CustomGrid from './CustomGrid';
 import SearchBar from './SearchBar';
 import { useTheme } from '../context/ThemeContext';
@@ -131,8 +131,8 @@ const HeaderBar = () => {
             to="/login"
             className={`flex items-center px-3 py-1 rounded ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white transition-colors`}
           >
-            <Key className="h-4 w-4 mr-1" />
-            Login
+            <UserPlus className="h-4 w-4 mr-1" />
+            Sign In
           </Link>
         )}
       </div>
