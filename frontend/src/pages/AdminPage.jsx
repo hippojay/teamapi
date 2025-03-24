@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Check, X, Edit, Search, User, Settings, History, Plus, Save } from 'lucide-react';
+import { Check, X, Edit, Search, User, Settings, History, Plus, Save, Upload, Database } from 'lucide-react';
 import { isAdmin, formatRole, getRoleBadgeClasses } from '../utils/roleUtils';
 import api from '../api';
 
@@ -12,6 +12,16 @@ const AdminPage = () => {
   const navigate = useNavigate();
   
   const [activeTab, setActiveTab] = useState('users');
+  // State for file upload
+  const [uploadFile, setUploadFile] = useState(null);
+  const [dataType, setDataType] = useState('organization');
+  const [isDryRun, setIsDryRun] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isLoadingSheets, setIsLoadingSheets] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
+  const [fileError, setFileError] = useState('');
+  const [worksheets, setWorksheets] = useState([]);
+  const [selectedWorksheet, setSelectedWorksheet] = useState('');
   const [users, setUsers] = useState([]);
   const [settings, setSettings] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
@@ -53,6 +63,8 @@ const AdminPage = () => {
       } else if (activeTab === 'audit') {
         const response = await api.getAuditLogs();
         setAuditLogs(response);
+      } else if (activeTab === 'upload') {
+        // No data to load for upload tab
       }
     } catch (error) {
       setError('Failed to load data. Please try again.');
@@ -61,6 +73,91 @@ const AdminPage = () => {
       setIsLoading(false);
     }
   }, [activeTab]);
+  
+  // Handle file selection
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Check file extension
+      const validExtensions = ['.xlsx', '.xlsb', '.xlsm', '.xls'];
+      const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+      
+      if (validExtensions.includes(fileExtension)) {
+        setUploadFile(file);
+        setFileError('');
+        setUploadResult(null);
+        
+        // Reset worksheets and selected worksheet
+        setWorksheets([]);
+        setSelectedWorksheet('');
+        
+        // Get sheet names from the file
+        setIsLoadingSheets(true);
+        try {
+          const result = await api.getExcelSheets(file);
+          if (result.sheets && result.sheets.length > 0) {
+            setWorksheets(result.sheets);
+            // Default to first sheet if only one, or default sheet based on data type
+            if (result.sheets.length === 1) {
+              setSelectedWorksheet(result.sheets[0]);
+            } else {
+              // Try to find default sheets based on data type
+              if (dataType === 'services' && result.sheets.includes('Services')) {
+                setSelectedWorksheet('Services');
+              } else if (result.sheets.includes('Sheet1')) {
+                setSelectedWorksheet('Sheet1');
+              } else {
+                setSelectedWorksheet(result.sheets[0]);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error getting sheet names:', error);
+          setFileError('Error reading Excel file: ' + (error.message || 'Unknown error'));
+          setUploadFile(null);
+        } finally {
+          setIsLoadingSheets(false);
+        }
+      } else {
+        setFileError('Invalid file format. Please upload an Excel file (.xlsx, .xlsb, .xlsm, .xls)');
+        setUploadFile(null);
+        setWorksheets([]);
+        setSelectedWorksheet('');
+      }
+    }
+  };
+  
+  // Handle file upload
+  const handleFileUpload = async () => {
+    if (!uploadFile) {
+      setFileError('Please select a file to upload');
+      return;
+    }
+    
+    if (!selectedWorksheet) {
+      setFileError('Please select a worksheet from the Excel file');
+      return;
+    }
+    
+    setIsUploading(true);
+    setError('');
+    setUploadResult(null);
+    
+    try {
+      const result = await api.uploadData(uploadFile, dataType, selectedWorksheet, isDryRun);
+      setUploadResult(result);
+      // Reset file input
+      document.getElementById('file-upload').value = '';
+      setUploadFile(null);
+      setWorksheets([]);
+      setSelectedWorksheet('');
+    } catch (error) {
+      setError(error.message || 'Failed to upload data');
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   useEffect(() => {
     // Check if user is admin
@@ -205,6 +302,18 @@ const AdminPage = () => {
         >
           <History className="h-4 w-4 mr-1 inline-block" />
           Audit Logs
+        </button>
+        
+        <button
+          className={`py-2 px-4 text-center ${
+            activeTab === 'upload'
+              ? `border-b-2 ${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
+              : `${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-600 hover:text-gray-800'}`
+          }`}
+          onClick={() => setActiveTab('upload')}
+        >
+          <Database className="h-4 w-4 mr-1 inline-block" />
+          Upload Data
         </button>
       </div>
       
@@ -829,6 +938,168 @@ const AdminPage = () => {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+          
+          {/* Data Upload Tab */}
+          {activeTab === 'upload' && (
+            <div>
+              <div className="mb-8">
+                <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-dark-primary' : 'text-gray-800'}`}>
+                  Upload Organisation Data
+                </h3>
+                <div className={`p-6 rounded-lg ${darkMode ? 'bg-dark-secondary border border-dark-border' : 'bg-white border border-gray-200 shadow-sm'}`}>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">Data Type</label>
+                    <div className="flex space-x-4">
+                      <label className="inline-flex items-center">
+                        <input
+                          type="radio"
+                          name="dataType"
+                          value="organization"
+                          checked={dataType === 'organization'}
+                          onChange={() => setDataType('organization')}
+                          className="mr-2"
+                        />
+                        <span>Organisation Structure</span>
+                      </label>
+                      <label className="inline-flex items-center">
+                        <input
+                          type="radio"
+                          name="dataType"
+                          value="services"
+                          checked={dataType === 'services'}
+                          onChange={() => setDataType('services')}
+                          className="mr-2"
+                        />
+                        <span>Services</span>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">Upload File</label>
+                    <div className={`border-2 border-dashed rounded-lg p-6 text-center ${darkMode ? 'border-dark-border hover:bg-dark-tertiary' : 'border-gray-300 hover:bg-gray-50'}`}>
+                      <input
+                        id="file-upload"
+                        type="file"
+                        accept=".xlsx,.xlsb,.xlsm,.xls"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      {uploadFile ? (
+                        <div>
+                          <p className="mb-2">Selected file: <span className="font-semibold">{uploadFile.name}</span></p>
+                          <div className="flex justify-center space-x-2">
+                            <button
+                              onClick={() => {
+                                setUploadFile(null);
+                                document.getElementById('file-upload').value = '';
+                                setWorksheets([]);
+                                setSelectedWorksheet('');
+                              }}
+                              className={`px-3 py-1 rounded text-sm ${darkMode ? 'bg-red-900 text-red-200 hover:bg-red-800' : 'bg-red-100 text-red-800 hover:bg-red-200'}`}
+                            >
+                              Remove
+                            </button>
+                            <label
+                              htmlFor="file-upload"
+                              className={`px-3 py-1 rounded text-sm cursor-pointer ${darkMode ? 'bg-blue-800 text-blue-200 hover:bg-blue-700' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'}`}
+                            >
+                              Change File
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <Upload className="mx-auto h-12 w-12 mb-2 text-gray-400" />
+                          <p className="mb-2">Drag and drop your Excel file here, or</p>
+                          <label
+                            htmlFor="file-upload"
+                            className={`inline-block px-4 py-2 rounded cursor-pointer ${darkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                          >
+                            Browse for file
+                          </label>
+                          <p className="mt-2 text-sm text-gray-500">
+                            Supported formats: .xlsx, .xlsb, .xlsm, .xls
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    {fileError && <p className="text-red-500 mt-2 text-sm">{fileError}</p>}
+                    {isLoadingSheets && <p className="text-blue-500 mt-2 text-sm">Loading sheet names...</p>}
+                  </div>
+                  
+                  {/* Worksheet selection dropdown */}
+                  {worksheets.length > 0 && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-2">Select Worksheet</label>
+                      <select
+                        value={selectedWorksheet}
+                        onChange={(e) => setSelectedWorksheet(e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-md ${darkMode ? 'bg-dark-tertiary border-dark-border text-dark-primary' : 'bg-white border-gray-300 text-gray-900'}`}
+                      >
+                        {worksheets.map((sheet) => (
+                          <option key={sheet} value={sheet}>{sheet}</option>
+                        ))}
+                      </select>
+                      {worksheets.length === 1 && (
+                        <p className="text-gray-500 mt-1 text-sm">Only one worksheet found in this file.</p>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="mb-4">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={isDryRun}
+                        onChange={() => setIsDryRun(!isDryRun)}
+                        className="mr-2"
+                      />
+                      <span>Dry Run (Preview changes without applying them)</span>
+                    </label>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleFileUpload}
+                      disabled={!uploadFile || isUploading}
+                      className={`flex items-center px-4 py-2 rounded ${!uploadFile || isUploading ? 
+                        (darkMode ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-gray-300 text-gray-500 cursor-not-allowed') : 
+                        (darkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600')}`}
+                    >
+                      {isUploading ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 mr-1" />
+                          {isDryRun ? 'Test Upload' : 'Upload'}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Upload Results */}
+              {uploadResult && (
+                <div className={`mt-4 p-4 border rounded-lg ${darkMode ? 'bg-dark-secondary border-dark-border' : 'bg-white border-gray-200'}`}>
+                  <h4 className="text-lg font-semibold mb-2">Upload {isDryRun ? 'Test ' : ''}Results</h4>
+                  <div className={`p-3 rounded-md ${darkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'}`}>
+                    <p>{uploadResult.summary.message || 'Data processed successfully.'}</p>
+                    {isDryRun && (
+                      <p className="mt-2 font-medium">This was a dry run. No changes were made to the database.</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </>

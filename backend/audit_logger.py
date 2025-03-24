@@ -131,3 +131,28 @@ def log_key_result_action(
         entity_id=key_result_id,
         details=details
     )
+    
+def log_data_upload(
+    db: Session,
+    user_id: int,
+    data_type: str,
+    is_dry_run: bool,
+    sheet_name: Optional[str] = None,
+    details: Optional[str] = None
+):
+    """Log a data upload action"""
+    if details is None:
+        details = f"Uploaded {data_type} data"
+        if sheet_name:
+            details += f" from sheet '{sheet_name}'"
+        if is_dry_run:
+            details += " (DRY RUN)"
+
+    user_auth.log_user_action(
+        db=db,
+        user_id=user_id,
+        action="UPLOAD",
+        entity_type="Data",
+        entity_id=None,
+        details=details
+    )

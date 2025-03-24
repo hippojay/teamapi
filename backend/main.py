@@ -1,8 +1,8 @@
-from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from typing import List, Optional, Union, Dict, Any
+from typing import List, Optional, Union, Dict, Any, Literal
 import uvicorn
 from datetime import timedelta, datetime
 import sys
@@ -17,6 +17,11 @@ import user_crud
 import user_auth
 import auth
 import audit_logger
+import shutil
+import tempfile
+import io
+import pandas as pd
+import os
 from search_schemas import SearchResults, SearchResultItem
 
 # Import database initializer
@@ -245,6 +250,128 @@ def admin_update_user(user_id: int, user_update: schemas.UserUpdate, current_use
         raise HTTPException(status_code=404, detail="User not found")
 
     return updated_user
+
+# Data Upload endpoints
+@app.post("/admin/get-excel-sheets")
+async def get_excel_sheets(
+    file: UploadFile = File(...),
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Get the list of sheet names from an Excel file"""
+    # Check if the user is an admin
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to upload data")
+    
+    # Check file extension
+    if not file.filename.endswith(('.xlsx', '.xlsb', '.xlsm', '.xls')):
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid file format. Please upload an Excel file (.xlsx, .xlsb, .xlsm, .xls)"
+        )
+    
+    # Create a temporary file to save the uploaded content
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_file:
+            # Read the uploaded file and save it to a temporary file
+            shutil.copyfileobj(file.file, temp_file)
+            temp_file_path = temp_file.name
+
+        # Get the sheet names
+        try:
+            # Use pandas to read Excel file and get sheet names
+            excel_file = pd.ExcelFile(temp_file_path)
+            sheet_names = excel_file.sheet_names
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error reading Excel file: {str(e)}")
+        
+        # Clean up temporary file
+        os.unlink(temp_file_path)
+        
+        return {"sheets": sheet_names}
+    
+    except Exception as e:
+        # Ensure temp file is cleaned up even if an error occurs
+        if 'temp_file_path' in locals():
+            os.unlink(temp_file_path)
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
+@app.post("/admin/upload-data")
+async def upload_data(
+    file: UploadFile = File(...),
+    data_type: str = Form(...),
+    sheet_name: str = Form(None),
+    dry_run: bool = Form(False),
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Upload organizational data from Excel file"""
+    # Check if the user is an admin
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to upload data")
+    
+    # Check file extension
+    if not file.filename.endswith(('.xlsx', '.xlsb', '.xlsm', '.xls')):
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid file format. Please upload an Excel file (.xlsx, .xlsb, .xlsm, .xls)"
+        )
+    
+    # Create a temporary file to save the uploaded content
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_file:
+            # Read the uploaded file and save it to a temporary file
+            shutil.copyfileobj(file.file, temp_file)
+            temp_file_path = temp_file.name
+
+        # Process the Excel file based on data_type
+        summary = {}
+        if data_type == "organization":
+            # For organization structure (areas, tribes, squads, team members)
+            try:
+                from load_prod_data import load_data_from_excel
+                db_session = db
+                # Use the provided sheet_name or default to "Sheet1"
+                selected_sheet = sheet_name or "Sheet1"
+                # Process the file with append_mode=True to update existing data
+                load_data_from_excel(temp_file_path, db_session, append_mode=True, sheet_name=selected_sheet)
+                summary = {"message": f"Organization data processed successfully from sheet '{selected_sheet}'."}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error processing organization data: {str(e)}")
+        elif data_type == "services":
+            # For services data
+            try:
+                from load_prod_data import load_services_data
+                db_session = db
+                # Use the provided sheet_name or default to "Services"
+                selected_sheet = sheet_name or "Services"
+                # Process the file with append_mode=True to update existing data
+                load_services_data(temp_file_path, db_session, append_mode=True, sheet_name=selected_sheet)
+                summary = {"message": f"Services data processed successfully from sheet '{selected_sheet}'."}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error processing services data: {str(e)}")
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported data type: {data_type}")
+        
+        # Log the data upload action
+        audit_logger.log_data_upload(
+            db=db, 
+            user_id=current_user.id, 
+            data_type=data_type, 
+            is_dry_run=dry_run, 
+            sheet_name=sheet_name
+        )
+        
+        # Clean up temporary file
+        os.unlink(temp_file_path)
+        
+        return {"success": True, "summary": summary}
+    
+    except Exception as e:
+        # Ensure temp file is cleaned up even if an error occurs
+        if 'temp_file_path' in locals():
+            os.unlink(temp_file_path)
+        raise HTTPException(status_code=500, detail=f"Error processing upload: {str(e)}")
 
 # Admin settings endpoints
 @app.get("/admin/settings", response_model=List[schemas.AdminSetting])

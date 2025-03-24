@@ -261,6 +261,51 @@ const api = {
     return response.json();
   },
   
+  getExcelSheets: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch(`${API_URL}/admin/get-excel-sheets`, {
+      method: 'POST',
+      headers: {
+        'Authorization': getToken() ? `Bearer ${getToken()}` : ''
+      },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to get Excel sheets');
+    }
+    
+    return response.json();
+  },
+  
+  uploadData: async (file, dataType, sheetName = null, dryRun = false) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('data_type', dataType);
+    if (sheetName) {
+      formData.append('sheet_name', sheetName);
+    }
+    formData.append('dry_run', dryRun);
+    
+    const response = await fetch(`${API_URL}/admin/upload-data`, {
+      method: 'POST',
+      headers: {
+        'Authorization': getToken() ? `Bearer ${getToken()}` : ''
+      },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to upload data');
+    }
+    
+    return response.json();
+  },
+  
   // Description editing
   getDescription: async (entityType, entityId) => {
     const response = await fetch(`${API_URL}/descriptions/${entityType}/${entityId}`);
