@@ -1,0 +1,20 @@
+# Default gitleaks configuration
+title = "Gitleaks Configuration for Who What Where Portal"
+
+[allowlist]
+description = "Allowed paths and patterns"
+paths = [
+    '''.*\.md$''',
+    '''(.*?)(jpg|jpeg|png|gif|svg)$''',
+    '''(.*?)(\.html|\.css)$''',
+    '''node_modules''',
+    '''__pycache__''',
+    '''venv'''
+]
+
+# Known false positive patterns can be added here
+# regexes = [
+#   '''some-false-positive-pattern'''
+# ]
+
+# You can customize the rules below or leave the default rules
