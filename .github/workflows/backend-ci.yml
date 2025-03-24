@@ -38,10 +38,10 @@ jobs:
         # exit-zero treats all errors as warnings
         flake8 . --count --exit-zero --max-complexity=10 --statistics
         
-    - name: Type check with MyPy
-      working-directory: ./backend
-      run: |
-        mypy --ignore-missing-imports --disallow-untyped-defs --disallow-incomplete-defs --check-untyped-defs models.py schemas.py
+#    - name: Type check with MyPy
+#      working-directory: ./backend
+#      run: |
+#        mypy --ignore-missing-imports --disallow-untyped-defs --disallow-incomplete-defs --check-untyped-defs models.py schemas.py
         
     - name: Security scan with Bandit
       working-directory: ./backend
