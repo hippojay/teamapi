@@ -11,6 +11,7 @@ const useQuery = () => {
 
 const PasswordResetPage = () => {
   const { darkMode } = useTheme();
+  // eslint-disable-next-line no-unused-vars
   const navigate = useNavigate();
   const query = useQuery();
   

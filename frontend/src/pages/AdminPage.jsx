@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Check, X, Edit, Search, User, Settings, History, Shield, Plus, Save } from 'lucide-react';
+import { Check, X, Edit, Search, User, Settings, History, Plus, Save } from 'lucide-react';
 import { isAdmin, formatRole, getRoleBadgeClasses } from '../utils/roleUtils';
 import api from '../api';
 
@@ -39,17 +39,7 @@ const AdminPage = () => {
   });
   const [showAddSettingModal, setShowAddSettingModal] = useState(false);
 
-  useEffect(() => {
-    // Check if user is admin
-    if (user && !isAdmin(user)) {
-      navigate('/');
-      return;
-    }
-    
-    loadData();
-  }, [user, navigate, activeTab]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     setError('');
     
@@ -70,7 +60,19 @@ const AdminPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeTab]);
+
+  useEffect(() => {
+    // Check if user is admin
+    if (user && !isAdmin(user)) {
+      navigate('/');
+      return;
+    }
+    
+    loadData();
+  }, [user, navigate, activeTab, loadData]);
+
+  // loadData function moved above useEffect to fix 'no-use-before-define' error
   
   const handleEditUser = (user) => {
     setEditingUser({...user});

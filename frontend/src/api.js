@@ -78,7 +78,7 @@ const api = {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw { response: { data: errorData } };
+      throw new Error(JSON.stringify({ response: { data: errorData } }));
     }
     
     return response.json();
@@ -89,7 +89,7 @@ const api = {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw { response: { data: errorData } };
+      throw new Error(JSON.stringify({ response: { data: errorData } }));
     }
     
     return response.json();
@@ -106,7 +106,7 @@ const api = {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw { response: { data: errorData } };
+      throw new Error(JSON.stringify({ response: { data: errorData } }));
     }
     
     return response.json();
@@ -123,7 +123,7 @@ const api = {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw { response: { data: errorData } };
+      throw new Error(JSON.stringify({ response: { data: errorData } }));
     }
     
     return response.json();
@@ -140,7 +140,7 @@ const api = {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw { response: { data: errorData } };
+      throw new Error(JSON.stringify({ response: { data: errorData } }));
     }
     
     return response.json();
@@ -156,7 +156,7 @@ const api = {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw { response: { data: errorData } };
+      throw new Error(JSON.stringify({ response: { data: errorData } }));
     }
     
     return response.json();
@@ -173,7 +173,7 @@ const api = {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw { response: { data: errorData } };
+      throw new Error(JSON.stringify({ response: { data: errorData } }));
     }
     
     return response.json();
@@ -201,7 +201,7 @@ const api = {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw { response: { data: errorData } };
+      throw new Error(JSON.stringify({ response: { data: errorData } }));
     }
     
     return response.json();
@@ -216,7 +216,7 @@ const api = {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw { response: { data: errorData } };
+      throw new Error(JSON.stringify({ response: { data: errorData } }));
     }
     
     return response.json();
@@ -243,7 +243,7 @@ const api = {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw { response: { data: errorData } };
+      throw new Error(JSON.stringify({ response: { data: errorData } }));
     }
     
     return response.json();

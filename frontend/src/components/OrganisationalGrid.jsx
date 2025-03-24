@@ -3,7 +3,8 @@ import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 
 const OrganisationalGrid = () => {
-  const [selectedBox, setSelectedBox] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+const [selectedBox, setSelectedBox] = useState(null);
   const navigate = useNavigate();
   const { darkMode } = useTheme();
   

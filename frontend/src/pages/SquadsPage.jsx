@@ -16,30 +16,7 @@ const SquadsPage = () => {
   const [teamTypeFilter, setTeamTypeFilter] = useState('all');
   const { darkMode } = useTheme();
 
-  // Helper function to get color based on capacity
-  const getCapacityColor = (capacity) => {
-    if (darkMode) {
-      if (capacity > 1.0) {
-        return "text-red-400"; // Over capacity (red)
-      } else if (capacity >= 0.8) {
-        return "text-green-400"; // Good capacity (green)
-      } else if (capacity >= 0.5) {
-        return "text-yellow-400"; // Medium capacity (yellow/amber)
-      } else {
-        return "text-gray-400"; // Low capacity (default gray)
-      }
-    } else {
-      if (capacity > 1.0) {
-        return "text-red-600"; // Over capacity (red)
-      } else if (capacity >= 0.8) {
-        return "text-green-600"; // Good capacity (green)
-      } else if (capacity >= 0.5) {
-        return "text-yellow-600"; // Medium capacity (yellow/amber)
-      } else {
-        return "text-gray-600"; // Low capacity (default gray)
-      }
-    }
-  };
+  // Removed unused getCapacityColor function
 
   // Filter squads by team type whenever squads or teamTypeFilter changes
   useEffect(() => {

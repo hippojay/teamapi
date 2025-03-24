@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import CompactTeamCompositionBar from '../components/CompactTeamCompositionBar';
 import DescriptionEditor from '../components/DescriptionEditor';
 import AreaTribeLabel from '../components/AreaTribeLabel';
@@ -16,7 +16,8 @@ const AreaDetailPage = () => {
   const [error, setError] = useState(null);
   const { darkMode } = useTheme();
   
-  // Helper function to get color based on capacity
+  // getCapacityColor function commented out since it's not used
+  /* 
   const getCapacityColor = (capacity) => {
     if (darkMode) {
       if (capacity > 1.0) {
@@ -40,6 +41,7 @@ const AreaDetailPage = () => {
       }
     }
   };
+  */
 
   useEffect(() => {
     const fetchData = async () => {

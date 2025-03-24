@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Database, GitBranch, Clock } from 'lucide-react';
+import { Users, Database, GitBranch } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import OrganisationalGrid from '../components/OrganisationalGrid';
@@ -19,18 +19,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Helper function to get color based on capacity
-  const getCapacityColor = (capacity) => {
-    if (capacity > 1.0) {
-      return "text-red-600"; // Over capacity (red)
-    } else if (capacity >= 0.8) {
-      return "text-green-600"; // Good capacity (green)
-    } else if (capacity >= 0.5) {
-      return "text-yellow-600"; // Medium capacity (yellow/amber)
-    } else {
-      return "text-gray-600"; // Low capacity (default gray)
-    }
-  };
+  // Removed unused getCapacityColor function
 
   useEffect(() => {
     const fetchData = async () => {

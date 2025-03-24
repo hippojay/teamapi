@@ -48,6 +48,7 @@ const OKRsPage = () => {
     };
 
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch objectives based on filters

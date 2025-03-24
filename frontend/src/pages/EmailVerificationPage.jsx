@@ -11,6 +11,7 @@ const useQuery = () => {
 
 const EmailVerificationPage = () => {
   const { darkMode } = useTheme();
+  // eslint-disable-next-line no-unused-vars
   const navigate = useNavigate();
   const query = useQuery();
   
@@ -46,6 +47,7 @@ const EmailVerificationPage = () => {
     };
     
     verifyWithToken();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, email]);
 
   const verifyEmail = async (emailToVerify, tokenToUse) => {
