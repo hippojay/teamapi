@@ -35,24 +35,24 @@ def log_logout(db: Session, user_id: int, username: str):
     )
 
 def log_label_update(
-    db: Session, 
-    user_id: int, 
-    entity_type: str, 
-    entity_id: int, 
-    old_label: Optional[str], 
+    db: Session,
+    user_id: int,
+    entity_type: str,
+    entity_id: int,
+    old_label: Optional[str],
     new_label: Optional[str]
 ):
     """Log a label update for an area or tribe"""
     if old_label is None and new_label is None:
         return  # No change
-    
+
     if old_label is None:
         details = f"Added {entity_type} label: {new_label}"
     elif new_label is None:
         details = f"Removed {entity_type} label: {old_label}"
     else:
         details = f"Changed {entity_type} label from '{old_label}' to '{new_label}'"
-    
+
     user_auth.log_user_action(
         db=db,
         user_id=user_id,
@@ -63,9 +63,9 @@ def log_label_update(
     )
 
 def log_description_update(
-    db: Session, 
-    user_id: int, 
-    entity_type: str, 
+    db: Session,
+    user_id: int,
+    entity_type: str,
     entity_id: int
 ):
     """Log a description update"""
@@ -74,9 +74,9 @@ def log_description_update(
         "tribe": "Tribe",
         "squad": "Squad"
     }
-    
+
     mapped_type = entity_type_map.get(entity_type, entity_type.capitalize())
-    
+
     user_auth.log_user_action(
         db=db,
         user_id=user_id,
@@ -87,10 +87,10 @@ def log_description_update(
     )
 
 def log_objective_action(
-    db: Session, 
-    user_id: int, 
-    action: str, 
-    objective_id: int, 
+    db: Session,
+    user_id: int,
+    action: str,
+    objective_id: int,
     entity_type: Optional[str] = None,
     entity_id: Optional[int] = None,
     details: Optional[str] = None
@@ -98,10 +98,10 @@ def log_objective_action(
     """Log an objective-related action"""
     if details is None:
         details = f"{action.capitalize()} objective"
-        
+
         if entity_type and entity_id:
             details += f" for {entity_type} #{entity_id}"
-    
+
     user_auth.log_user_action(
         db=db,
         user_id=user_id,
@@ -112,17 +112,17 @@ def log_objective_action(
     )
 
 def log_key_result_action(
-    db: Session, 
-    user_id: int, 
-    action: str, 
-    key_result_id: int, 
+    db: Session,
+    user_id: int,
+    action: str,
+    key_result_id: int,
     objective_id: int,
     details: Optional[str] = None
 ):
     """Log a key result-related action"""
     if details is None:
         details = f"{action.capitalize()} key result for objective #{objective_id}"
-    
+
     user_auth.log_user_action(
         db=db,
         user_id=user_id,

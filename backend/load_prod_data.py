@@ -13,7 +13,7 @@ Base.metadata.create_all(bind=engine)
 def load_services_data(file_path: str, db: Session, append_mode: bool = False, sheet_name: str = "Services"):
     """
     Load services data from Excel file into the database
-    
+
     Parameters:
     - file_path: Path to the Excel file
     - db: Database session
@@ -21,7 +21,7 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
     - sheet_name: Name of the Excel sheet to load (default: "Services")
     """
     print(f"Loading services data from {file_path}, sheet: {sheet_name}")
-    
+
     # Read the Excel file
     try:
         df = pd.read_excel(file_path, sheet_name=sheet_name)
@@ -29,32 +29,32 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
     except Exception as e:
         print(f"Error reading Excel file or sheet '{sheet_name}': {e}")
         return
-    
+
     # Get existing squads by name for reference
     squads_by_name = {squad.name: squad for squad in db.query(models.Squad).all()}
-    
+
     # Get existing services if in append mode
     existing_services = {}
     if append_mode:
         for service in db.query(models.Service).all():
             key = f"{service.name}_{service.squad_id}"
             existing_services[key] = service
-    
+
     # Process each service
     for _, row in df.iterrows():
         # Skip rows with missing required fields
         if pd.isna(row['Service Name']) or pd.isna(row['Squad Name']):
             print(f"Skipping row with missing required fields: {row}")
             continue
-        
+
         # Get the squad_id from the squad name
         squad_name = row['Squad Name']
         if squad_name not in squads_by_name:
             print(f"Warning: Squad '{squad_name}' not found for service '{row['Service Name']}'. Skipping.")
             continue
-        
+
         squad_id = squads_by_name[squad_name].id
-        
+
         # Determine service type from the Type column
         service_type = ServiceType.API  # Default
         if 'Type' in row and not pd.isna(row['Type']):
@@ -69,7 +69,7 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
                 service_type = ServiceType.WEBPAGE
             elif 'app' in type_str or 'module' in type_str:
                 service_type = ServiceType.APP_MODULE
-        
+
         # Check if this service already exists
         service_key = f"{row['Service Name']}_{squad_id}"
         if append_mode and service_key in existing_services:
@@ -80,7 +80,7 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
             service.url = row['URL'] if 'URL' in row and not pd.isna(row['URL']) else service.url
             service.version = row['Version'] if 'Version' in row and not pd.isna(row['Version']) else service.version
             service.status = ServiceStatus.HEALTHY  # Default to healthy
-            
+
             print(f"Updated existing service: {service.name} (ID: {service.id})")
         else:
             # Create new service
@@ -96,7 +96,7 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
             )
             db.add(service)
             print(f"Created new service: {service.name} (Type: {service.service_type.value})")
-    
+
     # Commit all changes
     db.commit()
     print(f"Services data successfully loaded from {file_path}!")
@@ -104,7 +104,7 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
 def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False, sheet_name: str = "Sheet1"):
     """
     Load production data from Excel file into the database
-    
+
     Parameters:
     - file_path: Path to the Excel file
     - db: Database session
@@ -112,7 +112,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
     - sheet_name: Name of the Excel sheet to load (default: "Squad List")
     """
     print(f"Loading production data from {file_path}, sheet: {sheet_name}")
-    
+
     # Read the Excel file
     try:
         df = pd.read_excel(file_path, sheet_name=sheet_name)
@@ -120,70 +120,70 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
     except Exception as e:
         print(f"Error reading Excel file: {e}")
         return
-    
+
     # Extract unique areas, tribes, and squads
     areas = df['Area'].dropna().unique()
     print(f"Found {len(areas)} areas")
-    
+
     area_objects = {}
     tribe_objects = {}
     squad_objects = {}
-    
+
     # Get existing data if in append mode
     if append_mode:
         # Cache existing areas
         existing_areas = {area.name: area for area in db.query(models.Area).all()}
         area_objects.update(existing_areas)
-        
+
         # Cache existing tribes
         existing_tribes = {tribe.name: tribe for tribe in db.query(models.Tribe).all()}
         tribe_objects.update(existing_tribes)
-        
+
         # Cache existing squads
         existing_squads = {squad.name: squad for squad in db.query(models.Squad).all()}
         squad_objects.update(existing_squads)
-        
+
         # Cache existing members by email
         existing_members = {member.email: member for member in db.query(models.TeamMember).all()}
         members_by_email = existing_members.copy()
         members_by_name = {member.name: member for member in existing_members.values()}
-        
+
         print(f"Operating in append mode. Found {len(existing_areas)} existing areas, {len(existing_tribes)} existing tribes, {len(existing_squads)} existing squads, and {len(existing_members)} existing team members.")
     else:
         members_by_email = {}
         members_by_name = {}
-    
+
     # Create Areas (or use existing in append mode)
     for area_name in areas:
         if append_mode and area_name in area_objects:
             # Area already exists
             print(f"Using existing area: {area_name} (ID: {area_objects[area_name].id})")
             continue
-            
+
         area = models.Area(
-            name=area_name, 
+            name=area_name,
             description=""  # Empty description as per requirements
         )
         db.add(area)
         db.flush()  # Flush to get the ID
         area_objects[area_name] = area
         print(f"Created area: {area_name} (ID: {area.id})")
-    
+
     # Create Tribes (or use existing in append mode)
     tribes_data = df[['Area', 'Tribe']].dropna().drop_duplicates()
     for _, row in tribes_data.iterrows():
         area_name = row['Area']
         tribe_name = row['Tribe']
-        
+
         if area_name not in area_objects:
             print(f"Warning: Area '{area_name}' not found for tribe '{tribe_name}'. Skipping.")
             continue
-            
+
         if append_mode and tribe_name in tribe_objects:
             # Tribe already exists
             print(f"Using existing tribe: {tribe_name} (ID: {tribe_objects[tribe_name].id})")
             continue
-        
+
         tribe = models.Tribe(
             name=tribe_name,
             description="",  # Empty description as per requirements
@@ -193,22 +193,22 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         db.flush()
         tribe_objects[tribe_name] = tribe
         print(f"Created tribe: {tribe_name} (ID: {tribe.id})")
-    
+
     # Create Squads (or use existing in append mode)
     squads_data = df[['Tribe', 'Squad']].dropna().drop_duplicates()
     for _, row in squads_data.iterrows():
         tribe_name = row['Tribe']
         squad_name = row['Squad']
-        
+
         if tribe_name not in tribe_objects:
             print(f"Warning: Tribe '{tribe_name}' not found for squad '{squad_name}'. Skipping.")
             continue
-            
+
         if append_mode and squad_name in squad_objects:
             # Squad already exists
             print(f"Using existing squad: {squad_name} (ID: {squad_objects[squad_name].id})")
             continue
-        
+
         squad = models.Squad(
             name=squad_name,
             description="",  # Empty description as per requirements
@@ -221,14 +221,14 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         db.flush()
         squad_objects[squad_name] = squad
         print(f"Created squad: {squad_name} (ID: {squad.id})")
-    
+
     # Dictionary to track supervisors
     supervisors_by_name = {}
-    
+
     # Create Team Members
-    members_data = df[['Squad', 'Name', 'Business Email Address', 'Position', 'Current Phasing', 
+    members_data = df[['Squad', 'Name', 'Business Email Address', 'Position', 'Current Phasing',
                        'Work Geography', 'Work City', 'Regular / Temporary', 'Supervisor Name', 'Vendor Name', 'Function']].dropna(subset=['Squad', 'Name'])
-    
+
     # Initialize tracking dictionaries for counts and capacities
     squad_member_counts = {squad_name: 0 for squad_name in squad_objects}
     squad_capacity_totals = {squad_name: 0.0 for squad_name in squad_objects}
@@ -236,45 +236,45 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
     squad_core_capacity = {squad_name: 0.0 for squad_name in squad_objects}
     squad_subcon_counts = {squad_name: 0 for squad_name in squad_objects}
     squad_subcon_capacity = {squad_name: 0.0 for squad_name in squad_objects}
-    
+
     # If in append mode, get current counts from database
     if append_mode:
         for squad_name, squad in squad_objects.items():
             # Get current squad member count
             member_count_query = db.query(models.squad_members).filter_by(squad_id=squad.id).count()
             squad_member_counts[squad_name] = member_count_query
-            
+
             # Keep existing values for capacities
             squad_capacity_totals[squad_name] = squad.total_capacity or 0.0
             squad_core_counts[squad_name] = squad.core_count or 0
             squad_core_capacity[squad_name] = squad.core_capacity or 0.0
             squad_subcon_counts[squad_name] = squad.subcon_count or 0
             squad_subcon_capacity[squad_name] = squad.subcon_capacity or 0.0
-    
+
     # Process supervisors first - Create unique supervisors who aren't already team members
     supervisor_names = set()
     for _, row in members_data.iterrows():
         if not pd.isna(row['Supervisor Name']):
             supervisor_names.add(row['Supervisor Name'])
-    
+
     # Process team members
     for _, row in members_data.iterrows():
         squad_name = row['Squad']
         if pd.isna(squad_name) or squad_name not in squad_objects:
             continue
-            
+
         # Extract capacity from Current Phasing
         capacity = 1.0  # Default to 100% if not specified
         if 'Current Phasing' in row and not pd.isna(row['Current Phasing']):
             capacity = float(row['Current Phasing'])
-        
+
         # Get name
         name = row['Name']
-        
+
         # Check if this is a vacancy or has missing email
         is_vacancy = name == 'Vacancy'
         has_email = not pd.isna(row['Business Email Address'])
-            
+
         print(f"Processing {name}")
 
         # Determine employment type and update counts only for non-vacancies
@@ -295,33 +295,33 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
             # For vacancies, don't update counts but set default values
             employment_type = None  # Default for vacancies
             vendor_name = None
-                
+
         # No random image URL generation for production data
         image_url = None
-        
+
         # Check if this is a vacancy already detected earlier
         # is_vacancy was already set above
-        
+
         # Generate email for vacancies or members with missing email
         if is_vacancy or not has_email:
             # Set email to None for vacancies and any entry missing an email
             email = None  # Don't generate dummy emails for any entries
         else:
             # Normal case - use provided email only when it exists
-            email = row['Business Email Address']            
+            email = row['Business Email Address']
         # Check if member exists in database already
         if email in members_by_email and not is_vacancy:
             # Member already exists
             member = members_by_email[email]
-            
+
             # Check if they're already in this squad
             existing_membership_query = db.query(models.squad_members).filter_by(
                 member_id=member.id,
                 squad_id=squad_objects[squad_name].id
             )
-            
+
             existing_membership = existing_membership_query.first()
-            
+
             if existing_membership:
                 # Member is already in this squad, update capacity if different
                 if abs(existing_membership.capacity - capacity) > 0.01:  # Allow small floating point differences
@@ -342,7 +342,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
                     )
                 )
                 print(f"Added existing member {member.name} to additional squad {squad_name} with capacity {capacity}")
-                
+
                 # Update counts only for non-vacancies
                 if not is_vacancy:
                     # Update counts
@@ -352,7 +352,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
                     else:
                         squad_subcon_counts[squad_name] += 1
                         squad_subcon_capacity[squad_name] += capacity
-                        
+
                     squad_member_counts[squad_name] += 1
                     squad_capacity_totals[squad_name] += capacity
         else:
@@ -372,7 +372,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
             )
             db.add(member)
             db.flush()  # Flush to get the member ID
-            
+
             # Add to squad_members table
             db.execute(
                 models.squad_members.insert().values(
@@ -382,12 +382,12 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
                     role=member.role
                 )
             )
-            
+
             # Store in dictionaries for reference
             members_by_email[email] = member
             members_by_name[name] = member
             print(f"Created new member {member.name} in squad {squad_name} with capacity {capacity}")
-            
+
             # Update counts only for non-vacancies
             if not is_vacancy:
                 if employment_type == "core":
@@ -396,33 +396,33 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
                 else:
                     squad_subcon_counts[squad_name] += 1
                     squad_subcon_capacity[squad_name] += capacity
-                    
+
                 squad_member_counts[squad_name] += 1
                 squad_capacity_totals[squad_name] += capacity
-    
+
     # Make sure to commit team members before adding supervisors
     db.flush()
-    
+
     # Cache existing supervisors in append mode
     if append_mode:
         for team_member in db.query(models.TeamMember).filter_by(role="Supervisor", is_external=True).all():
             supervisors_by_name[team_member.name] = team_member
-    
+
     # Now create supervisors who aren't already team members
     for supervisor_name in supervisor_names:
         # Skip if this supervisor is already a team member
         if supervisor_name in members_by_name:
             supervisors_by_name[supervisor_name] = members_by_name[supervisor_name]
             continue
-            
+
         # Skip if supervisor already exists in append mode
         if append_mode and supervisor_name in supervisors_by_name:
             continue
-            
+
         # Create a placeholder email for the supervisor
         email_prefix = supervisor_name.lower().replace(' ', '.')
         supervisor_email = f"{email_prefix}@example.com"
-        
+
         # Create external supervisor
         supervisor = models.TeamMember(
             name=supervisor_name,
@@ -432,22 +432,22 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         )
         db.add(supervisor)
         db.flush()  # Flush to get the ID
-        
+
         supervisors_by_name[supervisor_name] = supervisor
         print(f"Created external supervisor: {supervisor_name}")
-    
+
     # Now set supervisor relationships based on the Supervisor Name field
     for _, row in members_data.iterrows():
         if pd.isna(row['Supervisor Name']):
             continue
-            
+
         name = row['Name']
         supervisor_name = row['Supervisor Name']
-        
+
         # Skip vacancies for supervisor relationships
         if name == 'Vacancy':
             continue
-            
+
         # Handle members that might have auto-generated emails
         has_email = not pd.isna(row['Business Email Address'])
         if has_email:
@@ -455,7 +455,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
             if member_email in members_by_email and supervisor_name in supervisors_by_name:
                 member = members_by_email[member_email]
                 supervisor = supervisors_by_name[supervisor_name]
-                
+
                 # Set the supervisor relationship if different
                 if member.supervisor_id != supervisor.id:
                     member.supervisor_id = supervisor.id
@@ -465,12 +465,12 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
             if name in members_by_name and supervisor_name in supervisors_by_name:
                 member = members_by_name[name]
                 supervisor = supervisors_by_name[supervisor_name]
-                
+
                 # Set the supervisor relationship if different
                 if member.supervisor_id != supervisor.id:
                     member.supervisor_id = supervisor.id
                     print(f"Set supervisor for {member.name}: {supervisor.name}")
-    
+
     # Update member counts and total capacity directly
     for squad_name, squad in squad_objects.items():
         if squad_name in squad_member_counts:
@@ -481,7 +481,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
             squad.subcon_count = squad_subcon_counts[squad_name]
             squad.subcon_capacity = round(squad_subcon_capacity[squad_name], 2)
             print(f"Updated squad '{squad_name}' with {squad.member_count} members (Core: {squad.core_count}, Subcon: {squad.subcon_count}) and total capacity of {squad.total_capacity:.2f} FTE (Core: {squad.core_capacity:.2f}, Subcon: {squad.subcon_capacity:.2f})")
-    
+
     # Update tribe and area counts and capacities
     if append_mode:
         # Recalculate all tribe and area counts to ensure correctness
@@ -489,7 +489,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
     else:
         # Calculate tribe totals for just the tribes in this file
         calculate_tribe_and_area_counts(db, list(tribe_objects.values()))
-    
+
     # Commit all changes
     db.commit()
     print(f"Database successfully updated with data from {file_path}!")
@@ -503,7 +503,7 @@ def calculate_tribe_and_area_counts(db: Session, tribes_to_update):
     area_core_capacity = {}
     area_subcon_counts = {}
     area_subcon_capacity = {}
-    
+
     # Update tribes
     for tribe in tribes_to_update:
         tribe_squads = db.query(models.Squad).filter_by(tribe_id=tribe.id).all()
@@ -513,20 +513,20 @@ def calculate_tribe_and_area_counts(db: Session, tribes_to_update):
         core_capacity = sum([squad.core_capacity for squad in tribe_squads])
         subcon_count = sum([squad.subcon_count for squad in tribe_squads])
         subcon_capacity = sum([squad.subcon_capacity for squad in tribe_squads])
-        
+
         tribe.member_count = member_count
         tribe.total_capacity = round(capacity, 2)
         tribe.core_count = core_count
         tribe.core_capacity = round(core_capacity, 2)
         tribe.subcon_count = subcon_count
         tribe.subcon_capacity = round(subcon_capacity, 2)
-        
+
         print(f"Updated tribe '{tribe.name}' with {member_count} members (Core: {core_count}, Subcon: {subcon_count}) and total capacity of {capacity:.2f} FTE (Core: {core_capacity:.2f}, Subcon: {subcon_capacity:.2f})")
-        
+
         # Add to area counts
         area = db.query(models.Area).filter_by(id=tribe.area_id).first()
         area_name = area.name
-        
+
         if area_name not in area_member_counts:
             area_member_counts[area_name] = 0
             area_capacity_totals[area_name] = 0.0
@@ -534,14 +534,14 @@ def calculate_tribe_and_area_counts(db: Session, tribes_to_update):
             area_core_capacity[area_name] = 0.0
             area_subcon_counts[area_name] = 0
             area_subcon_capacity[area_name] = 0.0
-        
+
         area_member_counts[area_name] += member_count
         area_capacity_totals[area_name] += capacity
         area_core_counts[area_name] += core_count
         area_core_capacity[area_name] += core_capacity
         area_subcon_counts[area_name] += subcon_count
         area_subcon_capacity[area_name] += subcon_capacity
-    
+
     # Update areas
     for area_name, count in area_member_counts.items():
         area = db.query(models.Area).filter_by(name=area_name).first()
@@ -552,13 +552,13 @@ def calculate_tribe_and_area_counts(db: Session, tribes_to_update):
             area.core_capacity = round(area_core_capacity[area_name], 2)
             area.subcon_count = area_subcon_counts[area_name]
             area.subcon_capacity = round(area_subcon_capacity[area_name], 2)
-            
+
             print(f"Updated area '{area_name}' with {count} members (Core: {area.core_count}, Subcon: {area.subcon_count}) and total capacity of {area.total_capacity:.2f} FTE (Core: {area.core_capacity:.2f}, Subcon: {area.subcon_capacity:.2f})")
 
 def update_all_tribe_and_area_counts(db: Session):
     """Recalculate all tribe and area counts from squad data"""
     print("Recalculating all tribe and area counts...")
-    
+
     # Initialize area counts
     areas = {area.id: area for area in db.query(models.Area).all()}
     area_counts = {area_id: {
@@ -569,7 +569,7 @@ def update_all_tribe_and_area_counts(db: Session):
         'subcon_count': 0,
         'subcon_capacity': 0.0
     } for area_id in areas}
-    
+
     # Initialize tribe counts
     tribes = {tribe.id: tribe for tribe in db.query(models.Tribe).all()}
     tribe_counts = {tribe_id: {
@@ -581,10 +581,10 @@ def update_all_tribe_and_area_counts(db: Session):
         'subcon_capacity': 0.0,
         'area_id': tribes[tribe_id].area_id
     } for tribe_id in tribes}
-    
+
     # Get all squads with their counts
     squads = db.query(models.Squad).all()
-    
+
     # Sum up squad counts to tribes
     for squad in squads:
         if squad.tribe_id in tribe_counts:
@@ -594,7 +594,7 @@ def update_all_tribe_and_area_counts(db: Session):
             tribe_counts[squad.tribe_id]['core_capacity'] += squad.core_capacity
             tribe_counts[squad.tribe_id]['subcon_count'] += squad.subcon_count
             tribe_counts[squad.tribe_id]['subcon_capacity'] += squad.subcon_capacity
-    
+
     # Update tribe records and sum to areas
     for tribe_id, counts in tribe_counts.items():
         # Update tribe
@@ -605,7 +605,7 @@ def update_all_tribe_and_area_counts(db: Session):
         tribe.core_capacity = round(counts['core_capacity'], 2)
         tribe.subcon_count = counts['subcon_count']
         tribe.subcon_capacity = round(counts['subcon_capacity'], 2)
-        
+
         # Add to area counts
         area_id = counts['area_id']
         if area_id in area_counts:
@@ -615,7 +615,7 @@ def update_all_tribe_and_area_counts(db: Session):
             area_counts[area_id]['core_capacity'] += counts['core_capacity']
             area_counts[area_id]['subcon_count'] += counts['subcon_count']
             area_counts[area_id]['subcon_capacity'] += counts['subcon_capacity']
-    
+
     # Update area records
     for area_id, counts in area_counts.items():
         area = areas[area_id]
@@ -625,7 +625,7 @@ def update_all_tribe_and_area_counts(db: Session):
         area.core_capacity = round(counts['core_capacity'], 2)
         area.subcon_count = counts['subcon_count']
         area.subcon_capacity = round(counts['subcon_capacity'], 2)
-    
+
     print("All tribe and area counts have been recalculated.")
 
 def parse_args():
@@ -634,18 +634,18 @@ def parse_args():
     parser.add_argument('--file', '-f', type=str, help='Path to the Excel file to load')
     parser.add_argument('--append', '-a', action='store_true', help='Append to existing data instead of replacing')
     parser.add_argument('--files', nargs='+', help='Multiple files to load (space-separated)')
-    parser.add_argument('--sheet', '-s', type=str, dest='sheet_name', default="Sheet1", 
+    parser.add_argument('--sheet', '-s', type=str, dest='sheet_name', default="Sheet1",
                         help='Name of the Excel sheet to load (default: "Sheet1")')
     parser.add_argument('--services', action='store_true', help='Load services data from the Excel file')
-    
+
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = parse_args()
-    
+
     # Handle multiple files or single file
     files_to_process = []
-    
+
     if args.files:
         files_to_process = args.files
     elif args.file:
@@ -659,13 +659,13 @@ if __name__ == "__main__":
             print(f"Error: Default file not found: {default_file}")
             print("Please specify a file with --file or multiple files with --files")
             exit(1)
-    
+
     # Check if files exist
     for file_path in files_to_process:
         if not os.path.exists(file_path):
             print(f"Error: File not found: {file_path}")
             exit(1)
-    
+
     # Get DB session
     db = SessionLocal()
     try:
@@ -673,7 +673,7 @@ if __name__ == "__main__":
             # First file uses append mode only if specified
             # Subsequent files always use append mode
             should_append = args.append or i > 0
-            
+
             if args.services:
                 # Load services data
                 service_sheet = "Sheet1" if args.sheet_name == "Sheet1" else args.sheet_name

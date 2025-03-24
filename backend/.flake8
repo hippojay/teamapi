@@ -5,5 +5,4 @@ exclude =
     .git,
     __pycache__,
     venv,
-    models_typed_example.py,
     tests/*

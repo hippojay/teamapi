@@ -64,10 +64,10 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = auth.create_access_token(
         data={"sub": subject}, expires_delta=access_token_expires
     )
-    
+
     # Log the login event
     audit_logger.log_login(db, user.id, user.username or user.email)
-    
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/users/me", response_model=schemas.User)
@@ -79,20 +79,20 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), current
     # Only admins can create users directly
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to create users")
-        
+
     db_user = user_auth.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-        
+
     if user.username:
         db_user = user_auth.get_user_by_username(db, username=user.username)
         if db_user:
             raise HTTPException(status_code=400, detail="Username already registered")
-    
+
     # Validate email domain
     if not user_auth.is_email_allowed(user.email, db):
         raise HTTPException(status_code=403, detail="Email domain not allowed for registration")
-    
+
     # Create user with full details (use email as username if not provided)
     username = user.username if user.username else user.email
     hashed_password = auth.get_password_hash(user.password)
@@ -106,14 +106,14 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), current
         is_active=True,  # Admins can create pre-verified users
         is_admin=user.is_admin
     )
-    
+
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    
+
     # Log the user creation
     user_auth.log_user_action(db, current_user.id, "CREATE", "User", db_user.id, f"User created by admin: {user.email}")
-    
+
     return db_user
 
 @app.post("/register", response_model=Dict[str, Any])
@@ -121,19 +121,19 @@ def register_user(user: schemas.UserRegister, background_tasks: BackgroundTasks,
     # Validate password complexity
     if not user_auth.validate_password(user.password):
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Password must be at least 8 characters and include uppercase, lowercase, digit, and special character"
         )
-    
+
     try:
         db_user = user_auth.register_user(db, user)
-        
+
         # Create verification token
         token = user_auth.create_verification_token(db, user.email, db_user.id)
-        
+
         # Send verification email asynchronously
         background_tasks.add_task(user_auth.send_verification_email, user.email, token)
-        
+
         return {
             "message": "Registration successful. Please check your email for verification instructions.",
             "user_id": db_user.id,
@@ -154,14 +154,14 @@ def get_token_info(token: str, db: Session = Depends(get_db)):
     db_token = db.query(models.ValidationToken).filter(
         models.ValidationToken.token == token
     ).first()
-    
+
     if not db_token:
         raise HTTPException(status_code=404, detail="Token not found")
-    
+
     # Check if the token is expired
     if db_token.expires_at < datetime.utcnow():
         raise HTTPException(status_code=400, detail="Token expired")
-    
+
     # Return the email associated with the token
     return {"email": db_token.email, "token_type": db_token.token_type}
 
@@ -179,7 +179,7 @@ def request_password_reset(request: schemas.PasswordResetRequest, background_tas
     if user:
         token = user_auth.create_password_reset_token(db, request.email, user.id)
         background_tasks.add_task(user_auth.send_password_reset_email, request.email, token)
-    
+
     return {"message": "If your email is registered, you will receive password reset instructions."}
 
 @app.post("/reset-password", response_model=Dict[str, str])
@@ -187,10 +187,10 @@ def reset_password(reset: schemas.PasswordReset, db: Session = Depends(get_db)):
     # Validate password complexity
     if not user_auth.validate_password(reset.new_password):
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Password must be at least 8 characters and include uppercase, lowercase, digit, and special character"
         )
-    
+
     if user_auth.reset_password(db, reset):
         return {"message": "Password reset successful. You can now log in with your new password."}
     else:
@@ -207,12 +207,12 @@ def update_user_profile(user_update: schemas.UserUpdate, current_user: schemas.U
     if user_update.role is not None or user_update.is_active is not None:
         if not user_auth.is_admin(current_user):
             raise HTTPException(status_code=403, detail="Not authorized to change role or active status")
-    
+
     # Update the user profile
     updated_user = user_auth.update_user(db, current_user.id, user_update)
     if not updated_user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     return updated_user
 
 # Admin-only user management endpoints
@@ -220,7 +220,7 @@ def update_user_profile(user_update: schemas.UserUpdate, current_user: schemas.U
 def get_all_users(skip: int = 0, limit: int = 100, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to access user management")
-    
+
     users = user_auth.get_all_users(db, skip, limit)
     return users
 
@@ -228,22 +228,22 @@ def get_all_users(skip: int = 0, limit: int = 100, current_user: schemas.User = 
 def get_user(user_id: int, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to access user management")
-    
+
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     return user
 
 @app.put("/admin/users/{user_id}", response_model=schemas.User)
 def admin_update_user(user_id: int, user_update: schemas.UserUpdate, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to update users")
-    
+
     updated_user = user_auth.update_user(db, user_id, user_update)
     if not updated_user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     return updated_user
 
 # Admin settings endpoints
@@ -251,7 +251,7 @@ def admin_update_user(user_id: int, user_update: schemas.UserUpdate, current_use
 def get_admin_settings(current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to access admin settings")
-    
+
     settings = user_auth.get_admin_settings(db)
     return settings
 
@@ -259,18 +259,18 @@ def get_admin_settings(current_user: schemas.User = Depends(auth.get_current_act
 def get_admin_setting(key: str, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to access admin settings")
-    
+
     setting = user_auth.get_admin_setting(db, key)
     if not setting:
         raise HTTPException(status_code=404, detail=f"Setting with key '{key}' not found")
-    
+
     return setting
 
 @app.put("/admin/settings/{key}", response_model=schemas.AdminSetting)
 def update_admin_setting(key: str, setting: schemas.AdminSettingUpdate, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to update admin settings")
-    
+
     updated_setting = user_auth.update_admin_setting(db, setting, key, current_user.id)
     return updated_setting
 
@@ -279,7 +279,7 @@ def update_admin_setting(key: str, setting: schemas.AdminSettingUpdate, current_
 def get_audit_logs(skip: int = 0, limit: int = 100, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to access audit logs")
-    
+
     logs = user_auth.get_audit_logs(db, skip, limit)
     return logs
 
@@ -294,11 +294,11 @@ def get_system_info(current_user: schemas.User = Depends(auth.get_current_active
     """Get system information including database version and initialization status"""
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to access system information")
-    
+
     system_info = db.query(models.SystemInfo).first()
     if not system_info:
         raise HTTPException(status_code=404, detail="System information not found")
-    
+
     return system_info
 
 # Squad team type endpoints
@@ -327,10 +327,10 @@ def update_area_label(
     area = crud.get_area(db, area_id)
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
-    
+
     # Get the current label for logging
     old_label = area.label.name if area.label else None
-    
+
     if label:
         try:
             # Use lowercase labels now
@@ -338,20 +338,20 @@ def update_area_label(
         except KeyError:
             valid_labels = [l.name for l in models.AreaLabel]
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Invalid label. Valid options are: {', '.join(valid_labels)}"
             )
     else:
         # If label is None or empty string, remove the current label
         area.label = None
-        
+
     db.commit()
     db.refresh(area)
-    
+
     # Log the label update
     new_label = area.label.name if area.label else None
     audit_logger.log_label_update(db, current_user.id, "area", area_id, old_label, new_label)
-    
+
     return {"message": f"Area label updated to {label if label else 'None'}", "label": label}
 
 # Tribe label endpoint
@@ -366,10 +366,10 @@ def update_tribe_label(
     tribe = crud.get_tribe(db, tribe_id)
     if not tribe:
         raise HTTPException(status_code=404, detail="Tribe not found")
-    
+
     # Get the current label for logging
     old_label = tribe.label.name if tribe.label else None
-    
+
     if label:
         try:
             # Use lowercase labels now
@@ -377,20 +377,20 @@ def update_tribe_label(
         except KeyError:
             valid_labels = [l.name for l in models.TribeLabel]
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Invalid label. Valid options are: {', '.join(valid_labels)}"
             )
     else:
         # If label is None or empty string, remove the current label
         tribe.label = None
-        
+
     db.commit()
     db.refresh(tribe)
-    
+
     # Log the label update
     new_label = tribe.label.name if tribe.label else None
     audit_logger.log_label_update(db, current_user.id, "tribe", tribe_id, old_label, new_label)
-    
+
     return {"message": f"Tribe label updated to {label if label else 'None'}", "label": label}
 
 # Squad contact info and documentation links endpoint
@@ -405,17 +405,17 @@ def update_squad_contact_info(
     squad = crud.get_squad(db, squad_id)
     if not squad:
         raise HTTPException(status_code=404, detail="Squad not found")
-    
+
     # Update only contact and documentation fields
     squad.teams_channel = contact_info.teams_channel
     squad.slack_channel = contact_info.slack_channel
     squad.email_contact = contact_info.email_contact
     squad.documentation_url = contact_info.documentation_url
     squad.jira_board_url = contact_info.jira_board_url
-    
+
     db.commit()
     db.refresh(squad)
-    
+
     return squad
 
 # Description editing endpoints
@@ -423,51 +423,51 @@ def update_squad_contact_info(
 def get_description(entity_type: str, entity_id: int, db: Session = Depends(get_db)):
     if entity_type not in ["area", "tribe", "squad"]:
         raise HTTPException(status_code=400, detail="Invalid entity type")
-    
+
     description = user_crud.get_entity_description(db, entity_type, entity_id)
     if description is None:
         raise HTTPException(status_code=404, detail=f"{entity_type.capitalize()} not found")
-    
+
     return {"description": description}
 
 @app.put("/descriptions/{entity_type}/{entity_id}", response_model=schemas.DescriptionEdit)
 def update_description(
-    entity_type: str, 
-    entity_id: int, 
-    description_update: schemas.DescriptionUpdate, 
+    entity_type: str,
+    entity_id: int,
+    description_update: schemas.DescriptionUpdate,
     current_user: schemas.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
 ):
     if entity_type not in ["area", "tribe", "squad"]:
         raise HTTPException(status_code=400, detail="Invalid entity type")
-    
+
     # Update the description
     edit = user_crud.update_entity_description(
-        db, 
-        entity_type, 
-        entity_id, 
-        description_update.description, 
+        db,
+        entity_type,
+        entity_id,
+        description_update.description,
         current_user.id
     )
-    
+
     if edit is None:
         raise HTTPException(status_code=404, detail=f"{entity_type.capitalize()} not found")
-    
+
     # Log the description update
     audit_logger.log_description_update(db, current_user.id, entity_type, entity_id)
-    
+
     return edit
 
 @app.get("/descriptions/{entity_type}/{entity_id}/history", response_model=List[schemas.DescriptionEdit])
 def get_description_history(
-    entity_type: str, 
-    entity_id: int, 
+    entity_type: str,
+    entity_id: int,
     current_user: schemas.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
 ):
     if entity_type not in ["area", "tribe", "squad"]:
         raise HTTPException(status_code=400, detail="Invalid entity type")
-    
+
     history = user_crud.get_description_edit_history(db, entity_type, entity_id)
     return history
 
@@ -475,7 +475,7 @@ def get_description_history(
 @app.get("/areas", response_model=List[schemas.Area])
 def get_areas(db: Session = Depends(get_db)):
     areas = crud.get_areas(db)
-    
+
     # Convert enum values to strings for all areas
     for area in areas:
         if area.label:
@@ -483,7 +483,7 @@ def get_areas(db: Session = Depends(get_db)):
                 area.label_str = area.label.name
         else:
             area.label_str = None
-    
+
     return areas
 
 @app.get("/areas/{area_id}", response_model=schemas.AreaDetail)
@@ -491,7 +491,7 @@ def get_area(area_id: int, db: Session = Depends(get_db)):
     area = crud.get_area(db, area_id)
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
-    
+
     # Manually convert area.label to string if it's an enum
     if area.label:
         print(f"Area label in database: {area.label} (type: {type(area.label)})")
@@ -501,7 +501,7 @@ def get_area(area_id: int, db: Session = Depends(get_db)):
     else:
         area.label_str = None
         print("No area label found in database")
-    
+
     return area
 
 # Tribes
@@ -511,7 +511,7 @@ def get_tribes(area_id: Optional[int] = None, db: Session = Depends(get_db)):
         tribes = crud.get_tribes_by_area(db, area_id)
     else:
         tribes = crud.get_tribes(db)
-        
+
     # Convert enum values to strings for all tribes
     for tribe in tribes:
         if tribe.label:
@@ -519,7 +519,7 @@ def get_tribes(area_id: Optional[int] = None, db: Session = Depends(get_db)):
                 tribe.label_str = tribe.label.name
         else:
             tribe.label_str = None
-            
+
     return tribes
 
 @app.get("/tribes/{tribe_id}", response_model=schemas.TribeDetail)
@@ -527,7 +527,7 @@ def get_tribe(tribe_id: int, db: Session = Depends(get_db)):
     tribe = crud.get_tribe(db, tribe_id)
     if not tribe:
         raise HTTPException(status_code=404, detail="Tribe not found")
-        
+
     # Manually convert tribe.label to string if it's an enum
     if tribe.label:
         print(f"Tribe label in database: {tribe.label} (type: {type(tribe.label)})")
@@ -537,7 +537,7 @@ def get_tribe(tribe_id: int, db: Session = Depends(get_db)):
     else:
         tribe.label_str = None
         print("No tribe label found in database")
-        
+
     return tribe
 
 # Squads
@@ -571,7 +571,7 @@ def get_team_member(member_id: int, db: Session = Depends(get_db)):
     member = crud.get_team_member(db, member_id)
     if not member:
         raise HTTPException(status_code=404, detail="Team member not found")
-        
+
     # Create a response model with explicit model conversion to avoid validation errors
     return schemas.TeamMemberDetail.from_orm(member)
 
@@ -593,7 +593,7 @@ def get_service(service_id: int, db: Session = Depends(get_db)):
 
 @app.post("/services", response_model=schemas.Service, status_code=201)
 def create_service(
-    service: schemas.ServiceCreate, 
+    service: schemas.ServiceCreate,
     current_user: schemas.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
 ):
@@ -601,12 +601,12 @@ def create_service(
     squad = crud.get_squad(db, service.squad_id)
     if not squad:
         raise HTTPException(status_code=404, detail="Squad not found")
-        
+
     return crud.create_service(db, service)
 
 @app.put("/services/{service_id}", response_model=schemas.Service)
 def update_service(
-    service_id: int, 
+    service_id: int,
     service_update: schemas.ServiceUpdate,
     current_user: schemas.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
@@ -640,7 +640,7 @@ def get_all_dependencies(db: Session = Depends(get_db)):
 
 @app.post("/dependencies", response_model=schemas.Dependency, status_code=201)
 def create_dependency(
-    dependency: schemas.DependencyBase, 
+    dependency: schemas.DependencyBase,
     dependent_id: int,
     dependency_id: int,
     current_user: schemas.User = Depends(auth.get_current_active_user),
@@ -649,15 +649,15 @@ def create_dependency(
     # Verify both squads exist
     dependent_squad = crud.get_squad(db, dependent_id)
     dependency_squad = crud.get_squad(db, dependency_id)
-    
+
     if not dependent_squad or not dependency_squad:
         raise HTTPException(status_code=404, detail="One or both squads not found")
-        
+
     return crud.create_dependency(db, dependent_id, dependency_id, dependency)
 
 @app.put("/dependencies/{dependency_id}", response_model=schemas.Dependency)
 def update_dependency(
-    dependency_id: int, 
+    dependency_id: int,
     dependency_update: schemas.DependencyBase,
     current_user: schemas.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
@@ -689,9 +689,9 @@ def get_on_call(squad_id: int, db: Session = Depends(get_db)):
 # OKR endpoints
 @app.get("/objectives", response_model=List[schemas.Objective])
 def get_objectives(
-    area_id: Optional[int] = None, 
-    tribe_id: Optional[int] = None, 
-    squad_id: Optional[int] = None, 
+    area_id: Optional[int] = None,
+    tribe_id: Optional[int] = None,
+    squad_id: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
     objectives = crud.get_objectives(db, area_id, tribe_id, squad_id)
@@ -713,28 +713,28 @@ def create_objective(
     # Check that at least one of area_id, tribe_id, or squad_id is provided
     if not any([objective.area_id, objective.tribe_id, objective.squad_id]):
         raise HTTPException(status_code=400, detail="At least one of area_id, tribe_id, or squad_id must be provided")
-    
+
     # If area_id is provided, verify it exists
     if objective.area_id:
         area = crud.get_area(db, objective.area_id)
         if not area:
             raise HTTPException(status_code=404, detail="Area not found")
-    
+
     # If tribe_id is provided, verify it exists
     if objective.tribe_id:
         tribe = crud.get_tribe(db, objective.tribe_id)
         if not tribe:
             raise HTTPException(status_code=404, detail="Tribe not found")
-    
+
     # If squad_id is provided, verify it exists
     if objective.squad_id:
         squad = crud.get_squad(db, objective.squad_id)
         if not squad:
             raise HTTPException(status_code=404, detail="Squad not found")
-    
+
     # Create the objective
     new_objective = crud.create_objective(db, objective)
-    
+
     # Log the objective creation
     entity_type = None
     entity_id = None
@@ -747,7 +747,7 @@ def create_objective(
     elif objective.squad_id:
         entity_type = "squad"
         entity_id = objective.squad_id
-    
+
     audit_logger.log_objective_action(
         db=db,
         user_id=current_user.id,
@@ -756,7 +756,7 @@ def create_objective(
         entity_type=entity_type,
         entity_id=entity_id
     )
-    
+
     return new_objective
 
 @app.put("/objectives/{objective_id}", response_model=schemas.Objective)
@@ -769,7 +769,7 @@ def update_objective(
     updated_objective = crud.update_objective(db, objective_id, objective)
     if not updated_objective:
         raise HTTPException(status_code=404, detail="Objective not found")
-    
+
     # Log the objective update
     audit_logger.log_objective_action(
         db=db,
@@ -777,7 +777,7 @@ def update_objective(
         action="update",
         objective_id=objective_id
     )
-    
+
     return updated_objective
 
 @app.delete("/objectives/{objective_id}", status_code=204)
@@ -790,12 +790,12 @@ def delete_objective(
     objective = crud.get_objective(db, objective_id)
     if not objective:
         raise HTTPException(status_code=404, detail="Objective not found")
-    
+
     # Delete the objective
     success = crud.delete_objective(db, objective_id)
     if not success:
         raise HTTPException(status_code=404, detail="Objective not found")
-    
+
     # Log the objective deletion
     entity_type = None
     entity_id = None
@@ -808,7 +808,7 @@ def delete_objective(
     elif objective.squad_id:
         entity_type = "squad"
         entity_id = objective.squad_id
-        
+
     audit_logger.log_objective_action(
         db=db,
         user_id=current_user.id,
@@ -817,7 +817,7 @@ def delete_objective(
         entity_type=entity_type,
         entity_id=entity_id
     )
-    
+
     return None
 
 @app.get("/key-results", response_model=List[schemas.KeyResult])
@@ -842,10 +842,10 @@ def create_key_result(
     objective = crud.get_objective(db, key_result.objective_id)
     if not objective:
         raise HTTPException(status_code=404, detail="Objective not found")
-    
+
     # Create the key result
     new_key_result = crud.create_key_result(db, key_result)
-    
+
     # Log the key result creation
     audit_logger.log_key_result_action(
         db=db,
@@ -854,7 +854,7 @@ def create_key_result(
         key_result_id=new_key_result.id,
         objective_id=key_result.objective_id
     )
-    
+
     return new_key_result
 
 @app.put("/key-results/{key_result_id}", response_model=schemas.KeyResult)
@@ -867,7 +867,7 @@ def update_key_result(
     updated_key_result = crud.update_key_result(db, key_result_id, key_result)
     if not updated_key_result:
         raise HTTPException(status_code=404, detail="Key Result not found")
-    
+
     # Log the key result update
     audit_logger.log_key_result_action(
         db=db,
@@ -876,7 +876,7 @@ def update_key_result(
         key_result_id=key_result_id,
         objective_id=updated_key_result.objective_id
     )
-    
+
     return updated_key_result
 
 @app.delete("/key-results/{key_result_id}", status_code=204)
@@ -889,15 +889,15 @@ def delete_key_result(
     key_result = crud.get_key_result(db, key_result_id)
     if not key_result:
         raise HTTPException(status_code=404, detail="Key Result not found")
-    
+
     # Store the objective_id for logging
     objective_id = key_result.objective_id
-    
+
     # Delete the key result
     success = crud.delete_key_result(db, key_result_id)
     if not success:
         raise HTTPException(status_code=404, detail="Key Result not found")
-    
+
     # Log the key result deletion
     audit_logger.log_key_result_action(
         db=db,
@@ -906,7 +906,7 @@ def delete_key_result(
         key_result_id=key_result_id,
         objective_id=objective_id
     )
-    
+
     return None
 
 # Search
@@ -920,7 +920,7 @@ def search(q: str, limit: int = 20, db: Session = Depends(get_db)):
     search_query = q.strip()
     if len(search_query) < 3:
         return SearchResults(results=[], total=0)
-    
+
     # Execute the search
     results = search_crud.search_all(db, search_query, limit)
     return SearchResults(results=results, total=len(results))
@@ -934,7 +934,7 @@ if __name__ == "__main__":
     parser.add_argument("--admin-username", default="admin", help="Admin username for initialization (default: admin)")
     parser.add_argument("--admin-email", default="admin@example.com", help="Admin email for initialization (default: admin@example.com)")
     args = parser.parse_args()
-    
+
     # Handle force initialization if requested
     if args.force_initdb:
         print("\033[93mForcing database initialization...\033[0m")
@@ -947,6 +947,6 @@ if __name__ == "__main__":
         else:
             print("\033[91mDatabase initialization failed. Check the logs for details.\033[0m")
             sys.exit(1)
-            
+
     # Start the server
     uvicorn.run("main:app", host=args.host, port=args.port, reload=True)

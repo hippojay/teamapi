@@ -13,7 +13,7 @@ Base.metadata.create_all(bind=engine)
 def load_data_from_excel(file_path: str, db: Session):
     """Load data from Excel file into the database"""
     print(f"Loading data from {file_path}")
-    
+
     # Read the Excel file
     try:
         df = pd.read_excel(file_path)
@@ -21,15 +21,15 @@ def load_data_from_excel(file_path: str, db: Session):
     except Exception as e:
         print(f"Error reading Excel file: {e}")
         return
-    
+
     # Extract unique areas, tribes, and squads
     areas = df['Area'].dropna().unique()
     print(f"Found {len(areas)} areas")
-    
+
     area_objects = {}
     tribe_objects = {}
     squad_objects = {}
-    
+
     # Create Areas
     for area_name in areas:
         area = models.Area(name=area_name, description=f"Area responsible for {area_name}")
@@ -37,13 +37,13 @@ def load_data_from_excel(file_path: str, db: Session):
         db.flush()  # Flush to get the ID
         area_objects[area_name] = area
         print(f"Created area: {area_name} (ID: {area.id})")
-    
+
     # Create Tribes
     tribes_data = df[['Area', 'Tribe']].dropna().drop_duplicates()
     for _, row in tribes_data.iterrows():
         area_name = row['Area']
         tribe_name = row['Tribe']
-        
+
         if area_name in area_objects and tribe_name not in tribe_objects:
             tribe = models.Tribe(
                 name=tribe_name,
@@ -54,18 +54,18 @@ def load_data_from_excel(file_path: str, db: Session):
             db.flush()
             tribe_objects[tribe_name] = tribe
             print(f"Created tribe: {tribe_name} (ID: {tribe.id})")
-    
+
     # Create Squads
     squads_data = df[['Tribe', 'Squad']].dropna().drop_duplicates()
     for _, row in squads_data.iterrows():
         tribe_name = row['Tribe']
         squad_name = row['Squad']
-        
+
         if tribe_name in tribe_objects and squad_name not in squad_objects:
             # Generate a random timezone
             timezones = ["UTC", "CET", "EST", "PST", "IST", "JST"]
             status_options = ["Active", "Forming", "Disbanded"]
-            
+
             squad = models.Squad(
                 name=squad_name,
                 description=f"Squad working on {squad_name}",
@@ -78,16 +78,16 @@ def load_data_from_excel(file_path: str, db: Session):
             db.flush()
             squad_objects[squad_name] = squad
             print(f"Created squad: {squad_name} (ID: {squad.id})")
-    
+
     # Create dictionaries to track team members and supervisors
     members_by_email = {}
     members_by_name = {}
     supervisors_by_name = {}
-    
+
     # Create Team Members
-    members_data = df[['Squad', 'Name', 'Business Email Address', 'template', 'Current Months Allocation', 
+    members_data = df[['Squad', 'Name', 'Business Email Address', 'template', 'Current Months Allocation',
                        'Work Geography', 'Work City', 'Regular / Temporary', 'Supervisor Name', 'Vendor Name', 'Function']].dropna(subset=['Squad', 'Name'])
-    
+
     # Initialize tracking dictionaries for counts and capacities
     squad_member_counts = {}
     squad_capacity_totals = {}
@@ -95,21 +95,21 @@ def load_data_from_excel(file_path: str, db: Session):
     squad_core_capacity = {}
     squad_subcon_counts = {}
     squad_subcon_capacity = {}
-    
+
     # Process supervisors first - Create unique supervisors who aren't already team members
     supervisor_names = set()
     for _, row in members_data.iterrows():
         if not pd.isna(row['Supervisor Name']):
             supervisor_names.add(row['Supervisor Name'])
-    
+
     # We'll create these supervisors after processing team members
-    
+
     # Process team members
     for _, row in members_data.iterrows():
         squad_name = row['Squad']
         if pd.isna(squad_name) or squad_name not in squad_objects:
             continue
-            
+
         # Initialize count and capacity for this squad if not already done
         if squad_name not in squad_member_counts:
             squad_member_counts[squad_name] = 0
@@ -118,15 +118,15 @@ def load_data_from_excel(file_path: str, db: Session):
             squad_core_capacity[squad_name] = 0.0
             squad_subcon_counts[squad_name] = 0
             squad_subcon_capacity[squad_name] = 0.0
-            
+
         # Extract capacity from Current Months Allocation
         capacity = 1.0  # Default to 100% if not specified
         if 'Current Months Allocation' in row and not pd.isna(row['Current Months Allocation']):
             capacity = float(row['Current Months Allocation'])
-        
+
         # Check if this is a vacancy
         is_vacancy = row['Name'] == 'Vacancy'
-            
+
         # If not a vacancy, update the counts
         if not is_vacancy:
             # Determine employment type based on 'Regular / Temporary' field
@@ -140,7 +140,7 @@ def load_data_from_excel(file_path: str, db: Session):
                     employment_type = "subcon"
                     squad_subcon_counts[squad_name] += 1
                     squad_subcon_capacity[squad_name] += capacity
-                    
+
                     # For contractors, check if there's a vendor name provided
                     vendor_name = None
                     if 'Vendor Name' in row and not pd.isna(row['Vendor Name']):
@@ -149,24 +149,24 @@ def load_data_from_excel(file_path: str, db: Session):
             # For vacancies, don't update counts or capacities
             employment_type = "core"  # Default for vacancies
             vendor_name = None
-            
+
         # Create a user avatar URL for some users (randomly)
         image_url = None
         if random.random() < 0.3:  # 30% chance of having an avatar
             gender = random.choice(['men', 'women'])
             avatar_id = random.randint(1, 99)
             image_url = f"https://randomuser.me/api/portraits/{gender}/{avatar_id}.jpg"
-            
+
         # Increment counter and total capacity
         squad_member_counts[squad_name] += 1
         squad_capacity_totals[squad_name] += capacity
-        
+
         name = row['Name']
-        
+
         # Handle vacancy or null email specially
         is_vacancy = name == 'Vacancy'
         has_email = not pd.isna(row['Business Email Address'])
-        
+
         # For vacancies or team members with null email, generate a unique email
         if is_vacancy or not has_email:
             role_part = row['template'] if not pd.isna(row['template']) else "role"
@@ -181,13 +181,13 @@ def load_data_from_excel(file_path: str, db: Session):
         else:
             # Normal case - use provided email
             email = row['Business Email Address']
-        
+
         # The is_vacancy flag is already set above and email is already handled
-            
+
         if email in members_by_email and not is_vacancy:
             # Member already exists, add them to the squad through squad_members table
             member = members_by_email[email]
-            
+
             # Add to squad_members table with provided capacity
             db.execute(
                 models.squad_members.insert().values(
@@ -215,7 +215,7 @@ def load_data_from_excel(file_path: str, db: Session):
             )
             db.add(member)
             db.flush()  # Flush to get the member ID
-            
+
             # Add to squad_members table
             db.execute(
                 models.squad_members.insert().values(
@@ -225,26 +225,26 @@ def load_data_from_excel(file_path: str, db: Session):
                     role=member.role
                 )
             )
-            
+
             # Store in dictionaries for reference
             members_by_email[email] = member
             members_by_name[name] = member
             print(f"Created new member {member.name} in squad {squad_name} with capacity {capacity}")
-    
+
     # Make sure to commit team members before adding supervisors
     db.flush()
-    
+
     # Now create supervisors who aren't already team members
     for supervisor_name in supervisor_names:
         # Skip if this supervisor is already a team member
         if supervisor_name in members_by_name:
             supervisors_by_name[supervisor_name] = members_by_name[supervisor_name]
             continue
-            
+
         # Create a placeholder email for the supervisor
         email_prefix = supervisor_name.lower().replace(' ', '.')
         supervisor_email = f"{email_prefix}@example.com"
-        
+
         # Create external supervisor
         supervisor = models.TeamMember(
             name=supervisor_name,
@@ -254,26 +254,26 @@ def load_data_from_excel(file_path: str, db: Session):
         )
         db.add(supervisor)
         db.flush()  # Flush to get the ID
-        
+
         supervisors_by_name[supervisor_name] = supervisor
         print(f"Created external supervisor: {supervisor_name}")
-    
+
     # Now set supervisor relationships based on the Supervisor Name field
     for _, row in members_data.iterrows():
         if pd.isna(row['Supervisor Name']):
             continue
-            
+
         member_email = row['Business Email Address']
         supervisor_name = row['Supervisor Name']
-        
+
         if member_email in members_by_email and supervisor_name in supervisors_by_name:
             member = members_by_email[member_email]
             supervisor = supervisors_by_name[supervisor_name]
-            
+
             # Set the supervisor relationship
             member.supervisor_id = supervisor.id
             print(f"Set supervisor for {member.name}: {supervisor.name}")
-    
+
     # Update member counts and total capacity directly
     for squad_name, count in squad_member_counts.items():
         squad = squad_objects[squad_name]
@@ -284,7 +284,7 @@ def load_data_from_excel(file_path: str, db: Session):
         squad.subcon_count = squad_subcon_counts.get(squad_name, 0)
         squad.subcon_capacity = round(squad_subcon_capacity.get(squad_name, 0.0), 2)
         print(f"Updated squad '{squad_name}' with {count} members (Core: {squad.core_count}, Subcon: {squad.subcon_count}) and total capacity of {squad.total_capacity:.2f} FTE (Core: {squad.core_capacity:.2f}, Subcon: {squad.subcon_capacity:.2f})")
-    
+
     # Update tribe and area counts and capacities
     tribe_member_counts = {}
     tribe_capacity_totals = {}
@@ -292,14 +292,14 @@ def load_data_from_excel(file_path: str, db: Session):
     tribe_core_capacity = {}
     tribe_subcon_counts = {}
     tribe_subcon_capacity = {}
-    
+
     area_member_counts = {}
     area_capacity_totals = {}
     area_core_counts = {}
     area_core_capacity = {}
     area_subcon_counts = {}
     area_subcon_capacity = {}
-    
+
     # Calculate tribe totals
     for tribe_name, tribe in tribe_objects.items():
         tribe_squads = db.query(models.Squad).filter_by(tribe_id=tribe.id).all()
@@ -309,23 +309,23 @@ def load_data_from_excel(file_path: str, db: Session):
         core_capacity = sum([squad.core_capacity for squad in tribe_squads])
         subcon_count = sum([squad.subcon_count for squad in tribe_squads])
         subcon_capacity = sum([squad.subcon_capacity for squad in tribe_squads])
-        
+
         tribe.member_count = member_count
         tribe.total_capacity = round(capacity, 2)
         tribe.core_count = core_count
         tribe.core_capacity = round(core_capacity, 2)
         tribe.subcon_count = subcon_count
         tribe.subcon_capacity = round(subcon_capacity, 2)
-        
+
         tribe_member_counts[tribe_name] = member_count
         tribe_capacity_totals[tribe_name] = capacity
         tribe_core_counts[tribe_name] = core_count
         tribe_core_capacity[tribe_name] = core_capacity
         tribe_subcon_counts[tribe_name] = subcon_count
         tribe_subcon_capacity[tribe_name] = subcon_capacity
-        
+
         print(f"Updated tribe '{tribe_name}' with {member_count} members (Core: {core_count}, Subcon: {subcon_count}) and total capacity of {capacity:.2f} FTE (Core: {core_capacity:.2f}, Subcon: {subcon_capacity:.2f})")
-        
+
         # Add to area counts
         area_name = area_objects[tribe.area.name].name
         if area_name not in area_member_counts:
@@ -335,14 +335,14 @@ def load_data_from_excel(file_path: str, db: Session):
             area_core_capacity[area_name] = 0.0
             area_subcon_counts[area_name] = 0
             area_subcon_capacity[area_name] = 0.0
-        
+
         area_member_counts[area_name] += member_count
         area_capacity_totals[area_name] += capacity
         area_core_counts[area_name] += core_count
         area_core_capacity[area_name] += core_capacity
         area_subcon_counts[area_name] += subcon_count
         area_subcon_capacity[area_name] += subcon_capacity
-    
+
     # Update area counts
     for area_name, area in area_objects.items():
         area.member_count = area_member_counts.get(area_name, 0)
@@ -351,9 +351,9 @@ def load_data_from_excel(file_path: str, db: Session):
         area.core_capacity = round(area_core_capacity.get(area_name, 0.0), 2)
         area.subcon_count = area_subcon_counts.get(area_name, 0)
         area.subcon_capacity = round(area_subcon_capacity.get(area_name, 0.0), 2)
-        
+
         print(f"Updated area '{area_name}' with {area.member_count} members (Core: {area.core_count}, Subcon: {area.subcon_count}) and total capacity of {area.total_capacity:.2f} FTE (Core: {area.core_capacity:.2f}, Subcon: {area.subcon_capacity:.2f})")
-    
+
     # Generate Services (sample data)
     for squad_name, squad in squad_objects.items():
         # Create 1-3 services per squad
@@ -361,7 +361,7 @@ def load_data_from_excel(file_path: str, db: Session):
             service_name = f"{squad_name.replace(' ', '')}Service{i+1}"
             status_options = [ServiceStatus.HEALTHY, ServiceStatus.DEGRADED, ServiceStatus.DOWN]
             weights = [0.7, 0.25, 0.05]  # 70% healthy, 25% degraded, 5% down
-            
+
             service = models.Service(
                 name=service_name,
                 description=f"Service for {service_name}",
@@ -372,7 +372,7 @@ def load_data_from_excel(file_path: str, db: Session):
                 squad_id=squad.id
             )
             db.add(service)
-    
+
     # Generate Dependencies (sample data)
     all_squads = list(squad_objects.values())
     for squad in all_squads:
@@ -390,22 +390,22 @@ def load_data_from_excel(file_path: str, db: Session):
                     interaction_frequency=random.choice(["Regular", "As needed", "Scheduled", None])
                 )
                 db.add(dependency)
-    
+
     # Generate On-Call Rosters (sample data)
     for squad in all_squads:
         # Get team members for this squad using squad_members association
         members_query = text("""
-            SELECT m.id, m.name, m.email 
+            SELECT m.id, m.name, m.email
             FROM team_members m
             JOIN squad_members sm ON m.id = sm.member_id
             WHERE sm.squad_id = :squad_id
         """)
         squad_members = db.execute(members_query, {"squad_id": squad.id}).fetchall()
-        
+
         if len(squad_members) >= 2:
             primary = random.choice(squad_members)
             secondary = random.choice([m for m in squad_members if m[0] != primary[0]])
-            
+
             on_call = models.OnCallRoster(
                 squad_id=squad.id,
                 primary_name=primary[1],
@@ -414,7 +414,7 @@ def load_data_from_excel(file_path: str, db: Session):
                 secondary_contact=secondary[2]
             )
             db.add(on_call)
-    
+
     # Commit all changes
     db.commit()
     print("Database populated successfully!")

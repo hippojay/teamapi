@@ -50,11 +50,11 @@ def authenticate_user(db: Session, username: str, password: str):
         return False
     if not verify_password(password, user.hashed_password):
         return False
-    
+
     # Update last login time
     user.last_login = datetime.utcnow()
     db.commit()
-    
+
     return user
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -81,16 +81,16 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         token_data = schemas.TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    
+
     # Try to find the user by username or email
     user = db.query(models.User).filter(
-        (models.User.username == token_data.username) | 
+        (models.User.username == token_data.username) |
         (models.User.email == token_data.username)
     ).first()
-    
+
     if user is None:
         raise credentials_exception
-    
+
     return user
 
 def get_current_active_user(current_user: schemas.User = Depends(get_current_user)):
