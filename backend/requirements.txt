@@ -10,3 +10,10 @@ xlrd
 python-jose[cryptography]
 passlib[bcrypt]
 email-validator
+
+# Development dependencies
+mypy>=1.6.0
+types-sqlalchemy
+types-python-jose
+types-passlib
+bandit>=1.7.5

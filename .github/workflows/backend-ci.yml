@@ -27,7 +27,7 @@ jobs:
       working-directory: ./backend
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest pytest-cov
+        pip install flake8 pytest pytest-cov mypy types-sqlalchemy bandit
         pip install -r requirements.txt
     
     - name: Lint with flake8
@@ -37,6 +37,17 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        
+    - name: Type check with MyPy
+      working-directory: ./backend
+      run: |
+        mypy --ignore-missing-imports --disallow-untyped-defs --disallow-incomplete-defs --check-untyped-defs models schemas routes
+        
+    - name: Security scan with Bandit
+      working-directory: ./backend
+      run: |
+        bandit -r . -x ./tests,./venv -f json -o bandit-results.json || true
+        bandit -r . -x ./tests,./venv --severity-level medium -f screen
     
     # We'll create a basic test directory and setup file if none exists
     - name: Setup test directory if it doesn't exist
