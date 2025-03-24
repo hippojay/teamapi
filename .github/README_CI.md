@@ -116,3 +116,12 @@ Future enhancements planned for the CI/CD pipeline:
 - Look for dependency issues in package.json or requirements.txt
 - Check for syntax errors in code
 - Verify that all required environment variables are set
+
+### npm Cache and package-lock.json
+
+- We now track package-lock.json in git for better CI performance (removed from .gitignore)
+- This enables GitHub Actions to properly cache npm dependencies between workflow runs
+- If you encounter the error "Some specified paths were not resolved, unable to cache dependencies", it's likely because package-lock.json isn't committed
+- Generate package-lock.json with `npm install` in the frontend directory
+- Always commit package-lock.json when making changes to package.json
+- Our workflows include a fallback (`npm install`) if `npm ci` fails
