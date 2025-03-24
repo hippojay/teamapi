@@ -75,7 +75,7 @@ class User(Base):
     email: Mapped[str] = Column(String, unique=True, index=True)
 ```
 
-See `models_typed_example.py` for more examples.
+See `models_typed_example.py` for more examples. Note that this is an example file for documentation purposes only and is not used in production code.
 
 ### Pydantic Schema Types
 

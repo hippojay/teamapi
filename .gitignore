@@ -8,3 +8,6 @@ launch.json
 *.xlsb
 *.xlsm
 credentials/*
+
+# Example files
+backend/models_typed_example.py

@@ -29,3 +29,4 @@
 8. Need documentation on security best practices for Python development
 9. Need automated security scanning as part of the CI pipeline
 10. Need regular reporting on security issues found in the codebase
+11. Need to properly exclude example and documentation files from CI checks

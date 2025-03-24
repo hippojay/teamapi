@@ -1,0 +1,8 @@
+[flake8]
+max-line-length = 127
+exclude = 
+    .git,
+    __pycache__,
+    venv,
+    models_typed_example.py,
+    tests/*

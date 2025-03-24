@@ -1,8 +1,15 @@
 """
 Example file showing how to add type annotations to models.py
 This is a template for adding type annotations to the Who What Where models.
+
+IMPORTANT: This file is for documentation/example purposes only.
+It is not used in production and is excluded from flake8 checks.
 """
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Mapped
+    from datetime import datetime
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Text, Enum, Table, DateTime, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship, Mapped, RelationshipProperty
@@ -24,7 +31,7 @@ class Objective(Base):
     created_at: Mapped[datetime] = Column(DateTime, default=func.now())
     updated_at: Mapped[datetime] = Column(DateTime, default=func.now(), onupdate=func.now())
     
-    # Relationships
+    # Relationships with forward references using string literals
     area: Mapped[Optional["Area"]] = relationship("Area", back_populates="objectives")
     tribe: Mapped[Optional["Tribe"]] = relationship("Tribe", back_populates="objectives")
     squad: Mapped[Optional["Squad"]] = relationship("Squad", back_populates="objectives")
