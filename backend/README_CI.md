@@ -36,7 +36,7 @@ You can run the same checks locally that are run in CI:
 flake8 .
 
 # Type check with MyPy
-mypy --config-file mypy.ini models schemas
+mypy --config-file mypy.ini models.py schemas.py
 
 # Security scan with Bandit
 bandit -r . -x ./tests,./venv --severity-level medium

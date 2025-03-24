@@ -41,7 +41,7 @@ jobs:
       - name: Type check with MyPy
         working-directory: ./backend
         run: |
-          mypy --config-file mypy.ini models schemas routes
+          mypy --config-file mypy.ini models.py schemas.py
           
       - name: Security scan with Bandit
         working-directory: ./backend

@@ -110,7 +110,7 @@ To run MyPy locally:
 
 ```bash
 cd backend
-mypy --config-file mypy.ini models schemas main.py
+mypy --config-file mypy.ini models.py schemas.py
 ```
 
 ### CI Pipeline

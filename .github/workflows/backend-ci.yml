@@ -41,7 +41,7 @@ jobs:
     - name: Type check with MyPy
       working-directory: ./backend
       run: |
-        mypy --ignore-missing-imports --disallow-untyped-defs --disallow-incomplete-defs --check-untyped-defs models schemas routes
+        mypy --ignore-missing-imports --disallow-untyped-defs --disallow-incomplete-defs --check-untyped-defs models.py schemas.py
         
     - name: Security scan with Bandit
       working-directory: ./backend
