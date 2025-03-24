@@ -69,9 +69,22 @@ npm test
 
 Add new test files in the `backend/tests` directory following the naming pattern `test_*.py`.
 
+When creating model tests, make sure you include all required fields from the schema. Common issues include:
+- Missing required fields (status, timezone, member_count, total_capacity)
+- Incorrect field types
+- Case-sensitive enum values
+
 ### Frontend
 
 Add new test files alongside your React components following the naming pattern `*.test.js` or in the `src/__tests__` directory.
+
+## Schema Testing Guidelines
+
+1. Always check the schema definition before writing tests
+2. Include all required fields
+3. Test validation rules
+4. For enums, ensure correct case sensitivity
+5. Test with both valid and invalid data
 
 ## Security Best Practices
 
@@ -89,3 +102,17 @@ Future enhancements planned for the CI/CD pipeline:
 - End-to-end testing
 - Docker container scanning
 - Infrastructure-as-code validation
+
+## Troubleshooting Common CI Issues
+
+### Test Failures
+
+- Check that your schema tests include all required fields
+- Verify enum values match exactly (including case)
+- Ensure database migrations are properly tested
+
+### Build Failures
+
+- Look for dependency issues in package.json or requirements.txt
+- Check for syntax errors in code
+- Verify that all required environment variables are set
