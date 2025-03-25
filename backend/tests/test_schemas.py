@@ -1,6 +1,5 @@
 import sys
 import os
-import pytest
 
 # Add the parent directory to the path so we can import the backend modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -22,7 +21,7 @@ def test_squad_schema():
         "core_capacity": 3.0,
         "subcon_capacity": 1.5
     }
-    
+
     squad = SquadBase(**squad_data)
     assert squad.name == "Test Squad"
     assert squad.description == "A test squad"
@@ -39,7 +38,7 @@ def test_dependency_schema():
         "interaction_mode": InteractionMode.X_AS_A_SERVICE.value,
         "interaction_frequency": "Daily"
     }
-    
+
     dependency = DependencyBase(**dependency_data)
     assert dependency.dependency_name == "API Integration"
     assert dependency.interaction_mode == InteractionMode.X_AS_A_SERVICE.value

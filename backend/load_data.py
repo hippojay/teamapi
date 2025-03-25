@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import random
 from sqlalchemy.orm import Session
-from sqlalchemy import text, inspect
+from sqlalchemy import text
 from database import SessionLocal, engine, Base
 import models
 from models import ServiceStatus, DependencyType, InteractionMode
@@ -352,7 +352,11 @@ def load_data_from_excel(file_path: str, db: Session):
         area.subcon_count = area_subcon_counts.get(area_name, 0)
         area.subcon_capacity = round(area_subcon_capacity.get(area_name, 0.0), 2)
 
-        print(f"Updated area '{area_name}' with {area.member_count} members (Core: {area.core_count}, Subcon: {area.subcon_count}) and total capacity of {area.total_capacity:.2f} FTE (Core: {area.core_capacity:.2f}, Subcon: {area.subcon_capacity:.2f})")
+        print(f"Updated area '{area_name}' with {area.member_count} members"
+              f"(Core: {area.core_count}, Subcon: {area.subcon_count})"
+              f"and total capacity of {area.total_capacity:.2f}"
+              f"FTE (Core: {area.core_capacity:.2f},"
+              f"Subcon: {area.subcon_capacity:.2f})")
 
     # Generate Services (sample data)
     for squad_name, squad in squad_objects.items():

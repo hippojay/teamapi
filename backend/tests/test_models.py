@@ -1,6 +1,5 @@
 import sys
 import os
-import pytest
 
 # Add the parent directory to the path so we can import the backend modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,7 +12,7 @@ def test_team_type_enum():
     assert TeamType.PLATFORM.value == "platform"
     assert TeamType.ENABLING.value == "enabling"
     assert TeamType.COMPLICATED_SUBSYSTEM.value == "complicated_subsystem"
-    
+
 def test_interaction_mode_enum():
     """Test that InteractionMode enum has all expected values."""
     assert InteractionMode.COLLABORATION.value == "collaboration"
