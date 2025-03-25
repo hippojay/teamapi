@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Key, UserPlus } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -89,7 +89,6 @@ const LoginPage = () => {
             className={`w-full py-2 px-4 rounded-md text-white font-medium flex items-center justify-center
               ${isLoading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
           >
-            <Key className="h-4 w-4 mr-2" />
             {isLoading ? 'Logging in...' : 'Log In'}
           </button>
         </form>
