@@ -726,7 +726,6 @@ def get_area(area_id: int, db: Session = Depends(get_db)):
             area.label_str = area.label.name
     else:
         area.label_str = None
-        print("No area label found in database")
 
     return area
 
@@ -1155,7 +1154,7 @@ if __name__ == "__main__":
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Who What Where Portal Backend")
     parser.add_argument("--force-initdb", action="store_true", help="Force database initialisation")
-    parser.add_argument("--host", default="0.0.0.0", help="Host to bind the server to (default: 0.0.0.0)")
+    parser.add_argument("--host", default="127.0.0.1", help="Host to bind the server to (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=8000, help="Port to bind the server to (default: 8000)")
     parser.add_argument("--admin-username", default="admin", help="Admin username (default: admin)")
     parser.add_argument("--admin-email", default="admin@example.com", help="Admin email (default: admin@example.com)")
