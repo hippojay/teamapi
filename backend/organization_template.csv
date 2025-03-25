@@ -1,0 +1,14 @@
+Area,Tribe,Squad,Name,Business Email Address,Position,Current Phasing,Work Geography,Work City,Regular / Temporary,Supervisor Name,Vendor Name,Function
+Technology,Core Platform,API Squad,John Smith,john.smith@example.com,Engineer,1.0,EMEA,London,Regular,Sarah Johnson,,Engineering
+Technology,Core Platform,API Squad,Jane Doe,jane.doe@example.com,Lead Engineer,1.0,EMEA,London,Regular,Sarah Johnson,,Engineering
+Technology,Core Platform,Database Squad,Michael Brown,michael.brown@example.com,Database Engineer,1.0,AMEA,Singapore,Regular,David Lee,,Engineering
+Technology,Core Platform,Platform Squad,Emily Jones,emily.jones@example.com,DevOps Engineer,0.8,EMEA,Paris,Regular,David Lee,,Operations
+Product,Digital,UI Squad,Robert Wilson,robert.wilson@example.com,Frontend Developer,1.0,US,New York,Regular,Karen Chen,,Engineering
+Product,Digital,UI Squad,Lisa Kumar,lisa.kumar@example.com,UX Designer,1.0,EMEA,Berlin,Regular,Karen Chen,,Design
+Product,Digital,Design Squad,Thomas Wright,thomas.wright@example.com,Senior Designer,1.0,US,San Francisco,Regular,Karen Chen,,Design
+Product,Mobile,Mobile Squad,Sophia Rodriguez,sophia.rodriguez@example.com,Mobile Developer,1.0,US,Chicago,Regular,Kevin Taylor,,Engineering
+Product,Mobile,Mobile Squad,James Lee,james.lee@example.com,QA Engineer,1.0,AMEA,Sydney,Regular,Kevin Taylor,,QA
+Operations,Analytics,Analytics Squad,Olivia Chen,olivia.chen@example.com,Data Scientist,1.0,EMEA,Amsterdam,Regular,Alex Zhang,,Data
+Operations,Analytics,Analytics Squad,Daniel Smith,daniel.smith@example.com,Data Engineer,1.0,US,Boston,Regular,Alex Zhang,,Engineering
+Operations,DevOps,DevOps Squad,Emma Wilson,emma.wilson@example.com,DevOps Engineer,1.0,EMEA,London,Regular,David Lee,,Operations
+Operations,DevOps,Vacancy,Vacancy,,DevOps Engineer,1.0,EMEA,London,Regular,David Lee,,Operations

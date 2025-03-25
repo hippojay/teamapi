@@ -79,8 +79,18 @@ const AdminPage = () => {
     const file = event.target.files[0];
     if (file) {
       // Check file extension
-      const validExtensions = ['.xlsx', '.xlsb', '.xlsm', '.xls'];
+      const validExtensions = ['.xlsx', '.xlsb', '.xlsm', '.xls', '.csv'];
       const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+      const isCSV = fileExtension === '.csv';
+      
+      // For dependencies, only allow CSV format
+      if (dataType === 'dependencies' && !isCSV) {
+        setFileError('Dependencies data must be uploaded in CSV format');
+        setUploadFile(null);
+        setWorksheets([]);
+        setSelectedWorksheet('');
+        return;
+      }
       
       if (validExtensions.includes(fileExtension)) {
         setUploadFile(file);
@@ -91,35 +101,42 @@ const AdminPage = () => {
         setWorksheets([]);
         setSelectedWorksheet('');
         
-        // Get sheet names from the file
-        setIsLoadingSheets(true);
-        try {
-          const result = await api.getExcelSheets(file);
-          if (result.sheets && result.sheets.length > 0) {
-            setWorksheets(result.sheets);
-            // Default to first sheet if only one, or default sheet based on data type
-            if (result.sheets.length === 1) {
-              setSelectedWorksheet(result.sheets[0]);
-            } else {
-              // Try to find default sheets based on data type
-              if (dataType === 'services' && result.sheets.includes('Services')) {
-                setSelectedWorksheet('Services');
-              } else if (result.sheets.includes('Sheet1')) {
-                setSelectedWorksheet('Sheet1');
-              } else {
+        // For CSV files or dependencies, we don't need to get worksheets
+        if (fileExtension === '.csv' || dataType === 'dependencies') {
+          // For CSV files, use a special 'data' sheet name
+          setWorksheets(['data']);
+          setSelectedWorksheet('data');
+        } else {
+          // Get sheet names from the file for Excel files
+          setIsLoadingSheets(true);
+          try {
+            const result = await api.getExcelSheets(file);
+            if (result.sheets && result.sheets.length > 0) {
+              setWorksheets(result.sheets);
+              // Default to first sheet if only one, or default sheet based on data type
+              if (result.sheets.length === 1) {
                 setSelectedWorksheet(result.sheets[0]);
+              } else {
+                // Try to find default sheets based on data type
+                if (dataType === 'services' && result.sheets.includes('Services')) {
+                  setSelectedWorksheet('Services');
+                } else if (result.sheets.includes('Sheet1')) {
+                  setSelectedWorksheet('Sheet1');
+                } else {
+                  setSelectedWorksheet(result.sheets[0]);
+                }
               }
             }
+          } catch (error) {
+            console.error('Error getting sheet names:', error);
+            setFileError('Error reading Excel file: ' + (error.message || 'Unknown error'));
+            setUploadFile(null);
+          } finally {
+            setIsLoadingSheets(false);
           }
-        } catch (error) {
-          console.error('Error getting sheet names:', error);
-          setFileError('Error reading Excel file: ' + (error.message || 'Unknown error'));
-          setUploadFile(null);
-        } finally {
-          setIsLoadingSheets(false);
         }
       } else {
-        setFileError('Invalid file format. Please upload an Excel file (.xlsx, .xlsb, .xlsm, .xls)');
+        setFileError('Invalid file format. Please upload an Excel file (.xlsx, .xlsb, .xlsm, .xls) or CSV file (.csv)');
         setUploadFile(null);
         setWorksheets([]);
         setSelectedWorksheet('');
@@ -134,7 +151,9 @@ const AdminPage = () => {
       return;
     }
     
-    if (!selectedWorksheet) {
+    // For Excel files, we need a selected worksheet (except for CSV files or dependencies data type)
+    const isCSV = uploadFile.name.toLowerCase().endsWith('.csv');
+    if (!isCSV && dataType !== 'dependencies' && !selectedWorksheet) {
       setFileError('Please select a worksheet from the Excel file');
       return;
     }
@@ -144,7 +163,9 @@ const AdminPage = () => {
     setUploadResult(null);
     
     try {
-      const result = await api.uploadData(uploadFile, dataType, selectedWorksheet, isDryRun);
+      // For dependencies or CSV files, we don't need to specify a worksheet
+      const worksheetToUse = isCSV || dataType === 'dependencies' ? null : selectedWorksheet;
+      const result = await api.uploadData(uploadFile, dataType, worksheetToUse, isDryRun);
       setUploadResult(result);
       // Reset file input
       document.getElementById('file-upload').value = '';
@@ -951,7 +972,7 @@ const AdminPage = () => {
                 <div className={`p-6 rounded-lg ${darkMode ? 'bg-dark-secondary border border-dark-border' : 'bg-white border border-gray-200 shadow-sm'}`}>
                   <div className="mb-4">
                     <label className="block text-sm font-medium mb-2">Data Type</label>
-                    <div className="flex space-x-4">
+                    <div className="flex flex-wrap space-x-4 space-y-2">
                       <label className="inline-flex items-center">
                         <input
                           type="radio"
@@ -974,7 +995,69 @@ const AdminPage = () => {
                         />
                         <span>Services</span>
                       </label>
+                      <label className="inline-flex items-center">
+                        <input
+                          type="radio"
+                          name="dataType"
+                          value="dependencies"
+                          checked={dataType === 'dependencies'}
+                          onChange={() => {
+                            setDataType('dependencies');
+                            // For dependencies, only support CSV
+                            const file = document.getElementById('file-upload').files[0];
+                            if (file && !file.name.toLowerCase().endsWith('.csv')) {
+                              setFileError('Dependencies data must be uploaded in CSV format');
+                              setUploadFile(null);
+                              document.getElementById('file-upload').value = '';
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <span>Dependencies</span>
+                      </label>
                     </div>
+                    {dataType === 'organization' && (
+                      <div className="mt-2 text-sm text-gray-500">
+                        Upload organization structure data (areas, tribes, squads, team members).
+                        <a
+                          href="http://localhost:8000/organization_template.csv"
+                          download
+                          className="ml-1 text-blue-500 hover:text-blue-700 hover:underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Download template
+                        </a>
+                      </div>
+                    )}
+                    {dataType === 'services' && (
+                      <div className="mt-2 text-sm text-gray-500">
+                        Upload services data for squads.
+                        <a
+                          href="http://localhost:8000/services_template.csv"
+                          download
+                          className="ml-1 text-blue-500 hover:text-blue-700 hover:underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Download template
+                        </a>
+                      </div>
+                    )}
+                    {dataType === 'dependencies' && (
+                      <div className="mt-2 text-sm text-gray-500">
+                        Note: Dependencies must be uploaded as a CSV file following the template format.
+                        <a
+                          href="http://localhost:8000/dependencies_template.csv"
+                          download
+                          className="ml-1 text-blue-500 hover:text-blue-700 hover:underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Download template
+                        </a>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="mb-4">
@@ -983,7 +1066,7 @@ const AdminPage = () => {
                       <input
                         id="file-upload"
                         type="file"
-                        accept=".xlsx,.xlsb,.xlsm,.xls"
+                        accept=".xlsx,.xlsb,.xlsm,.xls,.csv"
                         onChange={handleFileChange}
                         className="hidden"
                       />
@@ -1021,7 +1104,7 @@ const AdminPage = () => {
                             Browse for file
                           </label>
                           <p className="mt-2 text-sm text-gray-500">
-                            Supported formats: .xlsx, .xlsb, .xlsm, .xls
+                            Supported formats: .xlsx, .xlsb, .xlsm, .xls, .csv
                           </p>
                         </div>
                       )}
@@ -1030,8 +1113,8 @@ const AdminPage = () => {
                     {isLoadingSheets && <p className="text-blue-500 mt-2 text-sm">Loading sheet names...</p>}
                   </div>
                   
-                  {/* Worksheet selection dropdown */}
-                  {worksheets.length > 0 && (
+                  {/* Worksheet selection dropdown - only show for Excel files and not dependencies */}
+                  {worksheets.length > 0 && dataType !== 'dependencies' && !uploadFile?.name?.toLowerCase().endsWith('.csv') && (
                     <div className="mb-4">
                       <label className="block text-sm font-medium mb-2">Select Worksheet</label>
                       <select

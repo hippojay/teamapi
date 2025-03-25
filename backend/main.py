@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks, File, UploadFile, Form, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import List, Optional, Union, Dict, Any, Literal
 import uvicorn
@@ -43,6 +44,11 @@ else:
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Team API Portal")
+
+# Mount static files directory
+import os
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Configure CORS for frontend
 app.add_middleware(
@@ -264,24 +270,33 @@ async def get_excel_sheets(
         raise HTTPException(status_code=403, detail="Not authorized to upload data")
     
     # Check file extension
-    if not file.filename.endswith(('.xlsx', '.xlsb', '.xlsm', '.xls')):
+    file_extension = os.path.splitext(file.filename)[1].lower()
+    is_csv = file_extension == '.csv'
+    is_excel = file_extension in ('.xlsx', '.xlsb', '.xlsm', '.xls')
+    
+    if not (is_csv or is_excel):
         raise HTTPException(
             status_code=400, 
-            detail="Invalid file format. Please upload an Excel file (.xlsx, .xlsb, .xlsm, .xls)"
+            detail="Invalid file format. Please upload an Excel file (.xlsx, .xlsb, .xlsm, .xls) or CSV file (.csv)"
         )
     
     # Create a temporary file to save the uploaded content
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_file:
+        suffix = '.csv' if is_csv else '.xlsx'
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
             # Read the uploaded file and save it to a temporary file
             shutil.copyfileobj(file.file, temp_file)
             temp_file_path = temp_file.name
 
         # Get the sheet names
         try:
-            # Use pandas to read Excel file and get sheet names
-            excel_file = pd.ExcelFile(temp_file_path)
-            sheet_names = excel_file.sheet_names
+            if is_csv:
+                # CSV files only have one "sheet"
+                sheet_names = ["data"]
+            else:
+                # Use pandas to read Excel file and get sheet names
+                excel_file = pd.ExcelFile(temp_file_path)
+                sheet_names = excel_file.sheet_names
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error reading Excel file: {str(e)}")
         
@@ -311,15 +326,20 @@ async def upload_data(
         raise HTTPException(status_code=403, detail="Not authorized to upload data")
     
     # Check file extension
-    if not file.filename.endswith(('.xlsx', '.xlsb', '.xlsm', '.xls')):
+    file_extension = os.path.splitext(file.filename)[1].lower()
+    is_csv = file_extension == '.csv'
+    is_excel = file_extension in ('.xlsx', '.xlsb', '.xlsm', '.xls')
+    
+    if not (is_csv or is_excel):
         raise HTTPException(
             status_code=400, 
-            detail="Invalid file format. Please upload an Excel file (.xlsx, .xlsb, .xlsm, .xls)"
+            detail="Invalid file format. Please upload an Excel file (.xlsx, .xlsb, .xlsm, .xls) or CSV file (.csv)"
         )
     
     # Create a temporary file to save the uploaded content
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_file:
+        suffix = '.csv' if is_csv else '.xlsx'
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
             # Read the uploaded file and save it to a temporary file
             shutil.copyfileobj(file.file, temp_file)
             temp_file_path = temp_file.name
@@ -335,7 +355,8 @@ async def upload_data(
                 selected_sheet = sheet_name or "Sheet1"
                 # Process the file with append_mode=True to update existing data
                 load_data_from_excel(temp_file_path, db_session, append_mode=True, sheet_name=selected_sheet)
-                summary = {"message": f"Organization data processed successfully from sheet '{selected_sheet}'."}
+                sheet_info = f" from sheet '{selected_sheet}'" if not is_csv else ""
+                summary = {"message": f"Organization data processed successfully{sheet_info}."}
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error processing organization data: {str(e)}")
         elif data_type == "services":
@@ -347,9 +368,22 @@ async def upload_data(
                 selected_sheet = sheet_name or "Services"
                 # Process the file with append_mode=True to update existing data
                 load_services_data(temp_file_path, db_session, append_mode=True, sheet_name=selected_sheet)
-                summary = {"message": f"Services data processed successfully from sheet '{selected_sheet}'."}
+                sheet_info = f" from sheet '{selected_sheet}'" if not is_csv else ""
+                summary = {"message": f"Services data processed successfully{sheet_info}."}
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error processing services data: {str(e)}")
+        elif data_type == "dependencies":
+            # For dependencies data (only supported in CSV format)
+            if not is_csv:
+                raise HTTPException(status_code=400, detail="Dependencies data must be uploaded in CSV format")
+            try:
+                from load_dependencies_data import load_dependencies_from_csv
+                db_session = db
+                # Process the file with append_mode=True to update existing data
+                load_dependencies_from_csv(temp_file_path, db_session, append_mode=True)
+                summary = {"message": "Dependencies data processed successfully."}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error processing dependencies data: {str(e)}")
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported data type: {data_type}")
         
@@ -414,6 +448,52 @@ def get_audit_logs(skip: int = 0, limit: int = 100, current_user: schemas.User =
 @app.get("/")
 def read_root():
     return {"message": "Team API Portal Backend"}
+
+# Serve template CSV files directly
+@app.get("/dependencies_template.csv")
+async def get_dependencies_template():
+    # Read the template file
+    template_path = os.path.join(os.path.dirname(__file__), "dependencies_template.csv")
+    with open(template_path, "r") as f:
+        content = f.read()
+    # Return with appropriate headers
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=dependencies_template.csv"
+        }
+    )
+
+@app.get("/organization_template.csv")
+async def get_organization_template():
+    # Read the template file
+    template_path = os.path.join(os.path.dirname(__file__), "organization_template.csv")
+    with open(template_path, "r") as f:
+        content = f.read()
+    # Return with appropriate headers
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=organization_template.csv"
+        }
+    )
+
+@app.get("/services_template.csv")
+async def get_services_template():
+    # Read the template file
+    template_path = os.path.join(os.path.dirname(__file__), "services_template.csv")
+    with open(template_path, "r") as f:
+        content = f.read()
+    # Return with appropriate headers
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=services_template.csv"
+        }
+    )
 
 # System information endpoint
 @app.get("/system/info", response_model=schemas.SystemInfo)

@@ -12,22 +12,34 @@ Base.metadata.create_all(bind=engine)
 
 def load_services_data(file_path: str, db: Session, append_mode: bool = False, sheet_name: str = "Services"):
     """
-    Load services data from Excel file into the database
+    Load services data from Excel or CSV file into the database
 
     Parameters:
-    - file_path: Path to the Excel file
+    - file_path: Path to the Excel or CSV file
     - db: Database session
     - append_mode: If True, will update existing records rather than creating duplicates
-    - sheet_name: Name of the Excel sheet to load (default: "Services")
+    - sheet_name: Name of the Excel sheet to load (default: "Services") - not used for CSV
     """
-    print(f"Loading services data from {file_path}, sheet: {sheet_name}")
-
-    # Read the Excel file
+    print(f"Loading services data from {file_path}")
+    
+    # Determine if file is CSV based on extension
+    is_csv = file_path.lower().endswith('.csv')
+    
+    # Read the file
     try:
-        df = pd.read_excel(file_path, sheet_name=sheet_name)
-        print(f"Successfully read Excel file with {len(df)} rows")
+        if is_csv:
+            # For CSV files, sheet_name is ignored
+            df = pd.read_csv(file_path)
+            print(f"Successfully read CSV file with {len(df)} rows")
+        else:
+            # For Excel files, use the specified sheet
+            df = pd.read_excel(file_path, sheet_name=sheet_name)
+            print(f"Successfully read Excel file with {len(df)} rows, sheet: {sheet_name}")
     except Exception as e:
-        print(f"Error reading Excel file or sheet '{sheet_name}': {e}")
+        if is_csv:
+            print(f"Error reading CSV file: {e}")
+        else:
+            print(f"Error reading Excel file or sheet '{sheet_name}': {e}")
         return
 
     # Get existing squads by name for reference
@@ -103,22 +115,37 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
 
 def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False, sheet_name: str = "Sheet1"):
     """
-    Load production data from Excel file into the database
+    Load production data from Excel or CSV file into the database
 
     Parameters:
-    - file_path: Path to the Excel file
+    - file_path: Path to the Excel or CSV file
     - db: Database session
     - append_mode: If True, will update existing records rather than creating duplicates
-    - sheet_name: Name of the Excel sheet to load (default: "Squad List")
+    - sheet_name: Name of the Excel sheet to load (default: "Sheet1") - not used for CSV
     """
-    print(f"Loading production data from {file_path}, sheet: {sheet_name}")
+    # Determine if file is CSV based on extension
+    is_csv = file_path.lower().endswith('.csv')
+    
+    if is_csv:
+        print(f"Loading production data from {file_path} (CSV)")
+    else:
+        print(f"Loading production data from {file_path}, sheet: {sheet_name}")
 
-    # Read the Excel file
+    # Read the file
     try:
-        df = pd.read_excel(file_path, sheet_name=sheet_name)
-        print(f"Successfully read Excel file with {len(df)} rows")
+        if is_csv:
+            # For CSV files, sheet_name is ignored
+            df = pd.read_csv(file_path)
+            print(f"Successfully read CSV file with {len(df)} rows")
+        else:
+            # For Excel files, use the specified sheet
+            df = pd.read_excel(file_path, sheet_name=sheet_name)
+            print(f"Successfully read Excel file with {len(df)} rows")
     except Exception as e:
-        print(f"Error reading Excel file: {e}")
+        if is_csv:
+            print(f"Error reading CSV file: {e}")
+        else:
+            print(f"Error reading Excel file: {e}")
         return
 
     # Extract unique areas, tribes, and squads

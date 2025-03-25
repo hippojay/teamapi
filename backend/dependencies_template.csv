@@ -1,0 +1,10 @@
+Dependent Squad,Dependency Squad,Dependency Name,Interaction Mode,Interaction Frequency
+API Squad,Database Squad,Database Access,x_as_a_service,Regular
+API Squad,DevOps Squad,CI/CD Pipeline,collaboration,Scheduled
+UI Squad,API Squad,Backend Services,x_as_a_service,Regular
+UI Squad,Design Squad,Design System,x_as_a_service,As needed
+Mobile Squad,API Squad,Backend Services,x_as_a_service,Regular
+Mobile Squad,UI Squad,Design Components,collaboration,Regular
+DevOps Squad,Platform Squad,Cloud Infrastructure,x_as_a_service,Regular
+Analytics Squad,Database Squad,Data Access,x_as_a_service,Regular
+Analytics Squad,API Squad,Event Tracking,facilitating,Scheduled

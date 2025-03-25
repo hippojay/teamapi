@@ -1,0 +1,13 @@
+Service Name,Squad Name,Description,Type,URL,Version
+Authentication API,API Squad,Centralized authentication service,API,https://auth-api.example.com,2.1.0
+User Management API,API Squad,User profile and permissions management,API,https://users-api.example.com,1.5.2
+Products API,API Squad,Product catalog and inventory management,API,https://products-api.example.com,3.0.1
+Customer Database,Database Squad,Primary customer data store,PLATFORM,https://customer-db.example.com,4.2.0
+Analytics Database,Database Squad,Data warehouse for analytics,PLATFORM,https://analytics-db.example.com,2.0.0
+Frontend Web Portal,UI Squad,Main customer-facing web application,WEBPAGE,https://www.example.com,5.1.3
+Admin Dashboard,UI Squad,Internal administration portal,WEBPAGE,https://admin.example.com,2.4.0
+iOS Mobile App,Mobile Squad,Native iOS application,APP_MODULE,https://apps.apple.com/example,3.2.1
+Android Mobile App,Mobile Squad,Native Android application,APP_MODULE,https://play.google.com/store/example,3.2.0
+CI/CD Pipeline,DevOps Squad,Automated build and deployment system,PLATFORM,https://jenkins.example.com,1.0.0
+Data Processing Service,Analytics Squad,Real-time data processing pipeline,API,https://data-processing.example.com,2.3.5
+Design System,Design Squad,Component library and design guidelines,REPO,https://github.com/example/design-system,1.4.2
