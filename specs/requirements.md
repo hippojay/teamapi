@@ -1,58 +1,82 @@
-# "Who What Where" Portal Requirements
+# Who What Where - Project Requirements
 
-This document captures user needs identified from our conversations:
+## Identified User Needs
 
-1. **Organizational Structure Management**
-   - Users need to view and maintain the organization hierarchy (Areas, Tribes, Squads)
-   - Data import from Excel/spreadsheet files
-   - Tracking of team members, their roles, and affiliations
-   - Support for CSV file import for organizational data
+1. **Security Enhancements**
+   - Update vulnerable npm dependencies to latest versions
+   - Address security issues in frontend libraries
+   - Ensure secure data handling in application
 
-2. **Services Management**
-   - Ability to track services provided by each squad
-   - Import service data from Excel/CSV files
-   - Link services to the squads that own them
-   - Track service metadata (URLs, descriptions, status)
+2. **Dependency Management**
+   - Create process for managing frontend dependencies
+   - Implement strategy for testing after dependency updates
+   - Document migration paths for major version upgrades
 
-3. **Dependencies Tracking**
-   - Track dependencies between squads
-   - Import dependencies from CSV files
-   - Specify dependency types and interaction modes
-   - Visualize dependencies to identify relationships
+3. **Codebase Maintenance**
+   - Identify and eliminate unused dependencies
+   - Improve code modularity and maintainability
+   - Implement standard practices for dependency updates
 
-4. **User Management and Security**
-   - Role-based access control
-   - User registration and verification
-   - Admin controls for user management
-   - Secure authentication and authorization
+4. **Feature Requirements** (From Feature to-do list)
+   - Add support for other databases beyond current SQLite
+   - Extract duplicated UI code into reusable React components
+   - Scan and locate security issues in the codebase
+   - Add TLS and authentication to API calls
+   - Enable management of organizational structures (areas, tribes, squads)
+   - Provide customization options for structure naming
+   - Support multi-layered organizational approach
+   - Add key people information into Area and Tribe views
+   - Include cost information for areas/tribe run rates
+   - Create historical views of organizational structure
+   - Implement future capacity planning for team members
+   - Add analytics views for various organizational metrics
+   - Implement Team topologies analytics (dependencies, architecture hotspots)
+   - Support gathering dependency data from repository contributions
 
-5. **Data Administration**
-   - Admin interface for data management
-   - Bulk data import functionality
-   - Support for Excel and CSV file formats
-   - Validation and error reporting for data imports
+5. **Performance Requirements**
+   - Ensure application remains responsive after dependency updates
+   - Maintain or improve current load times and rendering performance
+   - Optimize data fetching and state management
 
-6. **Search and Discoverability**
-   - Search functionality across all entity types
-   - Quick access to frequently used information
-   - Filtering capabilities for large datasets
+6. **Testing Requirements**
+   - Ensure comprehensive test coverage for critical components
+   - Update testing libraries to compatible versions
+   - Implement tests for new features and refactored components
 
-7. **UI/UX Requirements**
-   - Responsive design for different devices
-   - Consistent theming and styling
-   - Accessible interface following best practices
-   - Intuitive navigation and information architecture
+7. **Documentation Requirements**
+   - Document migration steps for major library updates
+   - Maintain up-to-date dependency documentation
+   - Create guides for common development tasks
 
-8. **Technical Requirements**
-   - Modern software engineering methods
-   - Modular and maintainable codebase
-   - Security best practices implementation
-   - Data privacy considerations
+8. **Operational Requirements**
+   - Implement automation for dependency updating
+   - Create procedures for handling breaking changes
+   - Establish monitoring for security vulnerabilities
 
-9. **Future Expansion Capabilities**
-   - Add support for other databases
-   - Refactor UI code into reusable components
-   - Add security features like TLS and API auth
-   - Support for organization-specific terminology and structures
-   - Add historical views and capacity planning
-   - Analytics for organizational data
+## Priority Matrix
+
+| Requirement | Priority | Complexity | Timeline |
+|-------------|----------|------------|----------|
+| Security Dependency Updates | High | Medium | Immediate |
+| Database Support Expansion | Medium | High | Q3 2023 |
+| UI Component Refactoring | Medium | Medium | Q2 2023 |
+| TLS and Auth for API | High | Medium | Q2 2023 |
+| Organizational Structure Features | Medium | High | Q3-Q4 2023 |
+| Analytics Views | Low | High | Q4 2023 |
+| Repository Integration | Low | Medium | Q1 2024 |
+
+## Acceptance Criteria
+
+1. **For Dependency Updates**
+   - All specified dependencies successfully updated
+   - No regressions in existing functionality
+   - All tests pass with updated dependencies
+   - No new security vulnerabilities introduced
+   - Application performance remains at or above current levels
+
+2. **For Feature Implementation**
+   - Each feature meets the specific requirements defined in feature documents
+   - Code quality maintained or improved
+   - Tests written for new features
+   - Documentation updated to reflect new features
+   - No negative impact on existing functionality
