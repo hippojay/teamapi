@@ -2,10 +2,8 @@
 """
 Script to initialize the allowed email domains setting if it doesn't exist
 """
-from sqlalchemy.orm import Session
 from database import SessionLocal
 import models
-from datetime import datetime
 
 def initialize_email_domains():
     """Initialize the allowed_email_domains setting if it doesn't exist"""
@@ -13,7 +11,7 @@ def initialize_email_domains():
     try:
         # Check if the setting already exists
         setting = db.query(models.AdminSetting).filter(models.AdminSetting.key == "allowed_email_domains").first()
-        
+
         if not setting:
             # Create the setting with some default domains
             setting = models.AdminSetting(
@@ -26,7 +24,7 @@ def initialize_email_domains():
             print("Initialized allowed_email_domains setting")
         else:
             print("allowed_email_domains setting already exists")
-            
+
     finally:
         db.close()
 

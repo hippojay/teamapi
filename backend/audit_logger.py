@@ -4,8 +4,7 @@ This module provides consistent audit logging for key user actions.
 """
 
 from sqlalchemy.orm import Session
-from typing import Optional, Dict, Any, Union
-import models
+from typing import Optional
 import user_auth
 
 def log_login(db: Session, user_id: int, username: str):
@@ -131,7 +130,7 @@ def log_key_result_action(
         entity_id=key_result_id,
         details=details
     )
-    
+
 def log_data_upload(
     db: Session,
     user_id: int,

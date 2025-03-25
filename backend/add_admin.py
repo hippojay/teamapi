@@ -5,8 +5,7 @@ This script allows adding an admin without resetting the database.
 
 import sys
 import getpass
-from sqlalchemy.orm import Session
-from database import SessionLocal, Base, engine
+from database import SessionLocal
 import models
 from auth import get_password_hash
 
@@ -27,7 +26,7 @@ def add_admin_user(username: str, email: str, password: str = None):
         if (len(password) < 8 or not any(c.isupper() for c in password) or
             not any(c.islower() for c in password) or not any(c.isdigit() for c in password) or
             not any(c in "!@#$%^&*(),.?\":{}|<>" for c in password)):
-            print("Password must be at least 8 characters long and include uppercase, lowercase, digit, and special character!")
+            print("Password must be at least 8 characters long and include uppercase, lowercase, digit and special character!")
             return False
 
     db = SessionLocal()

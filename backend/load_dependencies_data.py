@@ -12,7 +12,7 @@ Base.metadata.create_all(bind=engine)
 def load_dependencies_from_csv(file_path: str, db: Session, append_mode: bool = False):
     """
     Load dependency data from CSV file into the database
-    
+
     Parameters:
     - file_path: Path to the CSV file
     - db: Database session
@@ -55,7 +55,7 @@ def load_dependencies_from_csv(file_path: str, db: Session, append_mode: bool = 
 
     for _, row in df.iterrows():
         # Skip rows with missing required fields
-        if (pd.isna(row['Dependent Squad']) or pd.isna(row['Dependency Squad']) or 
+        if (pd.isna(row['Dependent Squad']) or pd.isna(row['Dependency Squad']) or
             pd.isna(row['Dependency Name']) or pd.isna(row['Interaction Mode'])):
             print(f"Skipping row with missing required fields: {row}")
             dependencies_skipped += 1
@@ -80,14 +80,14 @@ def load_dependencies_from_csv(file_path: str, db: Session, append_mode: bool = 
 
         # Determine interaction mode
         interaction_mode_str = row['Interaction Mode'].lower() if not pd.isna(row['Interaction Mode']) else "x_as_a_service"
-        
+
         # Map interaction mode strings to enum values
         interaction_mode_mapping = {
             'x_as_a_service': InteractionMode.X_AS_A_SERVICE,
             'collaboration': InteractionMode.COLLABORATION,
             'facilitating': InteractionMode.FACILITATING
         }
-        
+
         # Use the mapped value or default to X_AS_A_SERVICE
         interaction_mode = interaction_mode_mapping.get(interaction_mode_str, InteractionMode.X_AS_A_SERVICE)
 
@@ -102,7 +102,7 @@ def load_dependencies_from_csv(file_path: str, db: Session, append_mode: bool = 
             dependency.dependency_name = row['Dependency Name']
             dependency.interaction_mode = interaction_mode
             dependency.interaction_frequency = interaction_frequency
-            
+
             print(f"Updated existing dependency: {dependent_squad_name} -> {dependency_squad_name}")
             dependencies_updated += 1
         else:

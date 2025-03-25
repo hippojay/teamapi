@@ -47,10 +47,10 @@ def get_entity_description(db: Session, entity_type: str, entity_id: int) -> Opt
         models.DescriptionEdit.entity_type == entity_type,
         models.DescriptionEdit.entity_id == entity_id
     ).order_by(models.DescriptionEdit.edited_at.desc()).first()
-    
+
     if latest_edit:
         return latest_edit.description
-    
+
     # If no custom description, get the original description from the entity's table
     if entity_type == "area":
         entity = db.query(models.Area).filter(models.Area.id == entity_id).first()
@@ -60,14 +60,14 @@ def get_entity_description(db: Session, entity_type: str, entity_id: int) -> Opt
         entity = db.query(models.Squad).filter(models.Squad.id == entity_id).first()
     else:
         return None
-    
+
     return entity.description if entity else None
 
 def update_entity_description(
-    db: Session, 
-    entity_type: str, 
-    entity_id: int, 
-    description: str, 
+    db: Session,
+    entity_type: str,
+    entity_id: int,
+    description: str,
     user_id: int
 ) -> models.DescriptionEdit:
     """Create a new description edit for an entity"""
@@ -80,10 +80,10 @@ def update_entity_description(
         entity = db.query(models.Squad).filter(models.Squad.id == entity_id).first()
     else:
         return None
-    
+
     if not entity:
         return None
-    
+
     # Create new description edit
     db_edit = models.DescriptionEdit(
         entity_type=entity_type,
@@ -91,15 +91,15 @@ def update_entity_description(
         description=description,
         edited_by=user_id
     )
-    
+
     db.add(db_edit)
     db.commit()
     db.refresh(db_edit)
     return db_edit
 
 def get_description_edit_history(
-    db: Session, 
-    entity_type: str, 
+    db: Session,
+    entity_type: str,
     entity_id: int
 ) -> List[models.DescriptionEdit]:
     """Get edit history for an entity's description"""
@@ -114,17 +114,17 @@ def update_squad_team_type(db: Session, squad_id: int, team_type: str, user_id: 
     squad = db.query(models.Squad).filter(models.Squad.id == squad_id).first()
     if not squad:
         return None
-        
+
     # Validate team_type
     try:
         team_type_enum = models.TeamType[team_type.upper()]
     except (KeyError, AttributeError):
         # Default to STREAM_ALIGNED if invalid
         team_type_enum = models.TeamType.STREAM_ALIGNED
-    
+
     # Update the team_type
     squad.team_type = team_type_enum
-    
+
     # Create an edit record
     edit = models.DescriptionEdit(
         entity_type="squad_team_type",
@@ -132,10 +132,10 @@ def update_squad_team_type(db: Session, squad_id: int, team_type: str, user_id: 
         description=f"Updated team type to {team_type}",
         edited_by=user_id
     )
-    
+
     db.add(edit)
     db.commit()
     db.refresh(squad)
     db.refresh(edit)
-    
+
     return squad

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field, EmailStr, validator
+from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import List, Optional
 from enum import Enum
 
@@ -9,7 +9,7 @@ class ServiceStatus(str, Enum):
     HEALTHY = "HEALTHY"
     DEGRADED = "DEGRADED"
     DOWN = "DOWN"
-    
+
 class ServiceType(str, Enum):
     API = "API"
     REPO = "REPO"
@@ -29,12 +29,12 @@ class TeamType(str, Enum):
     PLATFORM = "platform"
     ENABLING = "enabling"
     COMPLICATED_SUBSYSTEM = "complicated_subsystem"
-    
+
 class AreaLabel(str, Enum):
     CFU_ALIGNED = "cfu_aligned"
     PLATFORM_GROUP = "platform_group"
     DIGITAL = "digital"
-    
+
 class TribeLabel(str, Enum):
     CFU_ALIGNED = "cfu_aligned"
     PLATFORM_GROUP = "platform_group"
@@ -68,12 +68,12 @@ class SquadMembership(BaseModel):
     squad_name: str
     capacity: Optional[float] = 1.0
     role: Optional[str] = None
-    
+
     model_config = ConfigDict(from_attributes=True)
-        
+
 class TeamMemberDetail(TeamMember):
     squads: List[SquadMembership] = []
-    
+
     # Completely override the model_from_orm method
     # This ensures we don't try to convert Squad objects directly
     @classmethod
@@ -83,10 +83,10 @@ class TeamMemberDetail(TeamMember):
         for field in cls.__fields__:
             if field != "squads" and hasattr(obj, field):
                 obj_data[field] = getattr(obj, field)
-        
+
         # Create instance without squads first
         instance = cls(**obj_data)
-        
+
         # Handle squad memberships separately
         if hasattr(obj, 'squad_memberships'):
             # Convert the squad_memberships dictionary items to SquadMembership objects
@@ -94,7 +94,7 @@ class TeamMemberDetail(TeamMember):
         else:
             # If squad_memberships is not available, ensure we have an empty list
             instance.squads = []
-            
+
         return instance
 
 class ServiceBase(BaseModel):
@@ -196,7 +196,7 @@ class SquadDetail(Squad):
     team_members: List[TeamMemberWithCapacity] = []
     services: List[Service] = []
     on_call: Optional[OnCallRoster] = None
-    
+
     # Override the model_from_orm method to handle team members with capacity
     @classmethod
     def from_orm(cls, obj):
@@ -205,37 +205,37 @@ class SquadDetail(Squad):
         for field in cls.__fields__:
             if field != "team_members" and hasattr(obj, field):
                 obj_data[field] = getattr(obj, field)
-        
+
         # Create instance without team_members first
         instance = cls(**obj_data)
-        
+
         # Process team members with their capacity information
         member_metadata = getattr(obj, 'member_metadata', {})
-        
+
         if hasattr(obj, 'team_members'):
             enhanced_members = []
-            
+
             for member in obj.team_members:
                 # Create a base team member from the model
                 member_dict = {}
                 for key, value in member.__dict__.items():
                     if not key.startswith('_'):
                         member_dict[key] = value
-                
+
                 # Add capacity and role from metadata if available
                 if member.id in member_metadata:
                     member_dict['capacity'] = member_metadata[member.id]['capacity']
                     if member_metadata[member.id]['squad_role']:
                         member_dict['squad_role'] = member_metadata[member.id]['squad_role']
                         member_dict['role'] = member_metadata[member.id]['squad_role']
-                
+
                 # Preserve the is_vacancy flag
                 member_dict['is_vacancy'] = getattr(member, 'is_vacancy', False)
-                
+
                 enhanced_members.append(TeamMemberWithCapacity(**member_dict))
-            
+
             instance.team_members = enhanced_members
-        
+
         return instance
 
 # Tribe models
@@ -315,7 +315,7 @@ class User(UserBase):
     last_login: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
-    
+
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     first_name: Optional[str] = None
@@ -347,7 +347,7 @@ class DescriptionEdit(BaseModel):
     editor: User
 
     model_config = ConfigDict(from_attributes=True)
-    
+
 # Admin Settings schemas
 class AdminSettingBase(BaseModel):
     key: str
@@ -431,15 +431,15 @@ class KeyResult(KeyResultBase):
     objective_id: int
     created_at: datetime
     updated_at: datetime
-    
+
     @property
     def progress(self) -> float:
         if self.target_value == 0:
             return 0
         return (self.current_value / self.target_value) * 100
-        
+
     model_config = ConfigDict(from_attributes=True)
-        
+
 class ObjectiveBase(BaseModel):
     content: str
     cascade: bool = False
@@ -461,15 +461,15 @@ class Objective(ObjectiveBase):
     created_at: datetime
     updated_at: datetime
     key_results: List[KeyResult] = []
-    
+
     model_config = ConfigDict(from_attributes=True)
-    
+
 # System information schemas
 class SystemInfoBase(BaseModel):
     version: str
     initialized: bool = True
     schema_version: int = 1
-    
+
 class SystemInfo(SystemInfoBase):
     id: int
     initialized_at: Optional[datetime] = None
@@ -477,5 +477,5 @@ class SystemInfo(SystemInfoBase):
     migrations_applied: Optional[str] = None  # JSON string
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)

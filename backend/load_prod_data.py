@@ -2,10 +2,9 @@ import pandas as pd
 import os
 import argparse
 from sqlalchemy.orm import Session
-from sqlalchemy import text
 from database import SessionLocal, engine, Base
 import models
-from models import ServiceStatus, Dependency, ServiceType, InteractionMode
+from models import ServiceStatus, ServiceType
 
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)
@@ -21,10 +20,10 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
     - sheet_name: Name of the Excel sheet to load (default: "Services") - not used for CSV
     """
     print(f"Loading services data from {file_path}")
-    
+
     # Determine if file is CSV based on extension
     is_csv = file_path.lower().endswith('.csv')
-    
+
     # Read the file
     try:
         if is_csv:
@@ -125,7 +124,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
     """
     # Determine if file is CSV based on extension
     is_csv = file_path.lower().endswith('.csv')
-    
+
     if is_csv:
         print(f"Loading production data from {file_path} (CSV)")
     else:

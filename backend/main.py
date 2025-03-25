@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from typing import List, Optional, Union, Dict, Any, Literal
+from typing import List, Optional, Dict, Any
 import uvicorn
 from datetime import timedelta, datetime
 import sys
@@ -20,10 +20,9 @@ import auth
 import audit_logger
 import shutil
 import tempfile
-import io
 import pandas as pd
 import os
-from search_schemas import SearchResults, SearchResultItem
+from search_schemas import SearchResults
 
 # Import database initializer
 import db_initializer
@@ -46,7 +45,6 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Team API Portal")
 
 # Mount static files directory
-import os
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
@@ -86,7 +84,10 @@ async def read_users_me(current_user: schemas.User = Depends(auth.get_current_ac
     return current_user
 
 @app.post("/users/", response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
+def create_user(user: schemas.UserCreate,
+                db: Session = Depends(get_db),
+                current_user: schemas.User = Depends(auth.get_current_active_user)):
+
     # Only admins can create users directly
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to create users")
@@ -184,7 +185,9 @@ def verify_email(verification: schemas.EmailVerification, db: Session = Depends(
         raise HTTPException(status_code=400, detail="Invalid or expired verification token")
 
 @app.post("/reset-password-request", response_model=Dict[str, str])
-def request_password_reset(request: schemas.PasswordResetRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def request_password_reset(request: schemas.PasswordResetRequest,
+                           background_tasks: BackgroundTasks,
+                           db: Session = Depends(get_db)):
     # Always return success even if email doesn't exist (security best practice)
     user = user_auth.get_user_by_email(db, request.email)
     if user:
@@ -213,7 +216,9 @@ def get_user_profile(current_user: schemas.User = Depends(auth.get_current_activ
     return current_user
 
 @app.put("/profile", response_model=schemas.User)
-def update_user_profile(user_update: schemas.UserUpdate, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+def update_user_profile(user_update: schemas.UserUpdate,
+                        current_user: schemas.User = Depends(auth.get_current_active_user),
+                        db: Session = Depends(get_db)):
     # Users can't update their own role or active status
     if user_update.role is not None or user_update.is_active is not None:
         if not user_auth.is_admin(current_user):
@@ -228,7 +233,10 @@ def update_user_profile(user_update: schemas.UserUpdate, current_user: schemas.U
 
 # Admin-only user management endpoints
 @app.get("/admin/users", response_model=List[schemas.User])
-def get_all_users(skip: int = 0, limit: int = 100, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+def get_all_users(skip: int = 0,
+                  limit: int = 100,
+                  current_user: schemas.User = Depends(auth.get_current_active_user),
+                  db: Session = Depends(get_db)):
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to access user management")
 
@@ -247,7 +255,10 @@ def get_user(user_id: int, current_user: schemas.User = Depends(auth.get_current
     return user
 
 @app.put("/admin/users/{user_id}", response_model=schemas.User)
-def admin_update_user(user_id: int, user_update: schemas.UserUpdate, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+def admin_update_user(user_id: int,
+                      user_update: schemas.UserUpdate,
+                      current_user: schemas.User = Depends(auth.get_current_active_user),
+                      db: Session = Depends(get_db)):
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to update users")
 
@@ -268,18 +279,18 @@ async def get_excel_sheets(
     # Check if the user is an admin
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to upload data")
-    
+
     # Check file extension
     file_extension = os.path.splitext(file.filename)[1].lower()
     is_csv = file_extension == '.csv'
     is_excel = file_extension in ('.xlsx', '.xlsb', '.xlsm', '.xls')
-    
+
     if not (is_csv or is_excel):
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Invalid file format. Please upload an Excel file (.xlsx, .xlsb, .xlsm, .xls) or CSV file (.csv)"
         )
-    
+
     # Create a temporary file to save the uploaded content
     try:
         suffix = '.csv' if is_csv else '.xlsx'
@@ -299,12 +310,12 @@ async def get_excel_sheets(
                 sheet_names = excel_file.sheet_names
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error reading Excel file: {str(e)}")
-        
+
         # Clean up temporary file
         os.unlink(temp_file_path)
-        
+
         return {"sheets": sheet_names}
-    
+
     except Exception as e:
         # Ensure temp file is cleaned up even if an error occurs
         if 'temp_file_path' in locals():
@@ -324,18 +335,18 @@ async def upload_data(
     # Check if the user is an admin
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to upload data")
-    
+
     # Check file extension
     file_extension = os.path.splitext(file.filename)[1].lower()
     is_csv = file_extension == '.csv'
     is_excel = file_extension in ('.xlsx', '.xlsb', '.xlsm', '.xls')
-    
+
     if not (is_csv or is_excel):
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Invalid file format. Please upload an Excel file (.xlsx, .xlsb, .xlsm, .xls) or CSV file (.csv)"
         )
-    
+
     # Create a temporary file to save the uploaded content
     try:
         suffix = '.csv' if is_csv else '.xlsx'
@@ -386,21 +397,21 @@ async def upload_data(
                 raise HTTPException(status_code=500, detail=f"Error processing dependencies data: {str(e)}")
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported data type: {data_type}")
-        
+
         # Log the data upload action
         audit_logger.log_data_upload(
-            db=db, 
-            user_id=current_user.id, 
-            data_type=data_type, 
-            is_dry_run=dry_run, 
+            db=db,
+            user_id=current_user.id,
+            data_type=data_type,
+            is_dry_run=dry_run,
             sheet_name=sheet_name
         )
-        
+
         # Clean up temporary file
         os.unlink(temp_file_path)
-        
+
         return {"success": True, "summary": summary}
-    
+
     except Exception as e:
         # Ensure temp file is cleaned up even if an error occurs
         if 'temp_file_path' in locals():
@@ -417,7 +428,9 @@ def get_admin_settings(current_user: schemas.User = Depends(auth.get_current_act
     return settings
 
 @app.get("/admin/settings/{key}", response_model=schemas.AdminSetting)
-def get_admin_setting(key: str, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+def get_admin_setting(key: str,
+                      current_user: schemas.User = Depends(auth.get_current_active_user),
+                      db: Session = Depends(get_db)):
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to access admin settings")
 
@@ -428,7 +441,10 @@ def get_admin_setting(key: str, current_user: schemas.User = Depends(auth.get_cu
     return setting
 
 @app.put("/admin/settings/{key}", response_model=schemas.AdminSetting)
-def update_admin_setting(key: str, setting: schemas.AdminSettingUpdate, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+def update_admin_setting(key: str,
+                         setting: schemas.AdminSettingUpdate,
+                         current_user: schemas.User = Depends(auth.get_current_active_user),
+                         db: Session = Depends(get_db)):
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to update admin settings")
 
@@ -437,7 +453,10 @@ def update_admin_setting(key: str, setting: schemas.AdminSettingUpdate, current_
 
 # Audit log endpoints
 @app.get("/admin/audit-logs", response_model=List[schemas.AuditLog])
-def get_audit_logs(skip: int = 0, limit: int = 100, current_user: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
+def get_audit_logs(skip: int = 0,
+                   limit: int = 100,
+                   current_user: schemas.User = Depends(auth.get_current_active_user),
+                   db: Session = Depends(get_db)):
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to access audit logs")
 
@@ -543,7 +562,7 @@ def update_area_label(
             # Use lowercase labels now
             area.label = models.AreaLabel[label]
         except KeyError:
-            valid_labels = [l.name for l in models.AreaLabel]
+            valid_labels = [label_iter.name for label_iter in models.AreaLabel]
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid label. Valid options are: {', '.join(valid_labels)}"
@@ -582,7 +601,7 @@ def update_tribe_label(
             # Use lowercase labels now
             tribe.label = models.TribeLabel[label]
         except KeyError:
-            valid_labels = [l.name for l in models.TribeLabel]
+            valid_labels = [lable_iter.name for lable_iter in models.TribeLabel]
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid label. Valid options are: {', '.join(valid_labels)}"
@@ -1135,11 +1154,11 @@ def search(q: str, limit: int = 20, db: Session = Depends(get_db)):
 if __name__ == "__main__":
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Who What Where Portal Backend")
-    parser.add_argument("--force-initdb", action="store_true", help="Force database initialization")
+    parser.add_argument("--force-initdb", action="store_true", help="Force database initialisation")
     parser.add_argument("--host", default="0.0.0.0", help="Host to bind the server to (default: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=8000, help="Port to bind the server to (default: 8000)")
-    parser.add_argument("--admin-username", default="admin", help="Admin username for initialization (default: admin)")
-    parser.add_argument("--admin-email", default="admin@example.com", help="Admin email for initialization (default: admin@example.com)")
+    parser.add_argument("--admin-username", default="admin", help="Admin username (default: admin)")
+    parser.add_argument("--admin-email", default="admin@example.com", help="Admin email (default: admin@example.com)")
     args = parser.parse_args()
 
     # Handle force initialization if requested

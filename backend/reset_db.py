@@ -14,6 +14,6 @@ if __name__ == "__main__":
     db_path = "team_portal.db"
     if os.path.exists(db_path):
         print(f"Found existing database: {db_path}")
-    
+
     # Reset the database
     reset_database()

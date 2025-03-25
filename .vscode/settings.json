@@ -1,5 +1,2 @@
 {
-    "flake8.args": [
-        "\"flake8.args\": [\"--disable=E402,E302,E305\", \"--max-line-length=120\"]"
-    ]
 }

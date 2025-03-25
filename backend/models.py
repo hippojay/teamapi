@@ -8,7 +8,7 @@ from database import Base
 # OKR classes
 class Objective(Base):
     __tablename__ = "objectives"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     content = Column(Text, nullable=False)
     area_id = Column(Integer, ForeignKey("areas.id"), nullable=True)
@@ -17,7 +17,7 @@ class Objective(Base):
     cascade = Column(Boolean, default=False)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    
+
     # Relationships
     area = relationship("Area", back_populates="objectives")
     tribe = relationship("Tribe", back_populates="objectives")
@@ -26,7 +26,7 @@ class Objective(Base):
 
 class KeyResult(Base):
     __tablename__ = "key_results"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     content = Column(Text, nullable=False)
     objective_id = Column(Integer, ForeignKey("objectives.id"))
@@ -35,14 +35,14 @@ class KeyResult(Base):
     position = Column(Integer, default=1)  # For ordering KR1, KR2, etc.
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    
+
     # Relationships
     objective = relationship("Objective", back_populates="key_results")
 
 # System information table for tracking database version and initialization status
 class SystemInfo(Base):
     __tablename__ = "system_info"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     version = Column(String, nullable=False)
     initialized = Column(Boolean, default=False)
@@ -112,13 +112,13 @@ class DescriptionEdit(Base):
     description = Column(Text)
     edited_by = Column(Integer, ForeignKey("users.id"))
     edited_at = Column(DateTime, default=func.now())
-    
+
     # Relationship to the user who made the edit
     editor = relationship("User")
 
 class ValidationToken(Base):
     __tablename__ = "validation_tokens"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     token = Column(String, unique=True, index=True)
     email = Column(String, index=True)
@@ -126,13 +126,13 @@ class ValidationToken(Base):
     token_type = Column(String, default="email_verification")  # email_verification, password_reset, etc.
     expires_at = Column(DateTime)
     created_at = Column(DateTime, default=func.now())
-    
+
     # Relationships
     user = relationship("User")
-    
+
 class AdminSetting(Base):
     __tablename__ = "admin_settings"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     key = Column(String, unique=True, index=True)
     value = Column(String)
@@ -142,7 +142,7 @@ class AdminSetting(Base):
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     action = Column(String)  # CREATE, UPDATE, DELETE, LOGIN, etc.
@@ -150,7 +150,7 @@ class AuditLog(Base):
     entity_id = Column(Integer, nullable=True)
     details = Column(String, nullable=True)
     created_at = Column(DateTime, default=func.now())
-    
+
     # Relationships
     user = relationship("User")
 
@@ -173,7 +173,7 @@ class Area(Base):
     core_capacity = Column(Float, default=0.0)  # Capacity of regular employees
     subcon_capacity = Column(Float, default=0.0)  # Capacity of contractors
     label = Column(Enum(AreaLabel), nullable=True)  # Area classification label
-    
+
     # Relationships
     tribes = relationship("Tribe", back_populates="area", cascade="all, delete-orphan")
     objectives = relationship("Objective", back_populates="area", cascade="all, delete-orphan")
@@ -197,7 +197,7 @@ class Tribe(Base):
     core_capacity = Column(Float, default=0.0)  # Capacity of regular employees
     subcon_capacity = Column(Float, default=0.0)  # Capacity of contractors
     label = Column(Enum(TribeLabel), nullable=True)  # Tribe classification label
-    
+
     # Relationships
     area = relationship("Area", back_populates="tribes")
     squads = relationship("Squad", back_populates="tribe", cascade="all, delete-orphan")
@@ -226,16 +226,16 @@ class Squad(Base):
     # Documentation links
     documentation_url = Column(String, nullable=True)  # Documentation URL
     jira_board_url = Column(String, nullable=True)  # Jira board URL
-    
+
     # Relationships
     tribe = relationship("Tribe", back_populates="squads")
     # Many-to-many relationship through squad_members association table
-    team_members = relationship("TeamMember", secondary=squad_members, 
-                              back_populates="squads")
+    team_members = relationship("TeamMember", secondary=squad_members,
+                                back_populates="squads")
     services = relationship("Service", back_populates="squad", cascade="all, delete-orphan")
-    dependencies = relationship("Dependency", 
-                              foreign_keys="[Dependency.dependent_squad_id]",
-                              back_populates="dependent_squad")
+    dependencies = relationship("Dependency",
+                                foreign_keys="[Dependency.dependent_squad_id]",
+                                back_populates="dependent_squad")
     on_call = relationship("OnCallRoster", back_populates="squad", uselist=False, cascade="all, delete-orphan")
     objectives = relationship("Objective", back_populates="squad", cascade="all, delete-orphan")
 
@@ -255,15 +255,15 @@ class TeamMember(Base):
     vendor_name = Column(String, nullable=True)  # Vendor name for contractors
     is_external = Column(Boolean, default=False)  # Flag for external supervisors not in the squad setup
     is_vacancy = Column(Boolean, default=False)  # Flag for vacancy positions
-    
+
     # Relationships
     # Many-to-many relationship through squad_members association table
-    squads = relationship("Squad", secondary=squad_members, 
-                        back_populates="team_members")
-    direct_reports = relationship("TeamMember", 
-                                foreign_keys=[supervisor_id],
-                                backref="supervisor",
-                                remote_side=[id])
+    squads = relationship("Squad", secondary=squad_members,
+                          back_populates="team_members")
+    direct_reports = relationship("TeamMember",
+                                  foreign_keys=[supervisor_id],
+                                  backref="supervisor",
+                                  remote_side=[id])
 
 class ServiceType(enum.Enum):
     API = "API"
@@ -285,7 +285,7 @@ class Service(Base):
     squad_id = Column(Integer, ForeignKey("squads.id"))
     service_type = Column(Enum(ServiceType), default=ServiceType.API)
     url = Column(String, nullable=True)  # Generic URL for any service type
-    
+
     # Relationships
     squad = relationship("Squad", back_populates="services")
 
@@ -299,13 +299,13 @@ class Dependency(Base):
     # Removed dependency_type field as per requirement
     interaction_mode = Column(Enum(InteractionMode), default=InteractionMode.X_AS_A_SERVICE)
     interaction_frequency = Column(String, nullable=True)  # "Regular", "As needed", "Scheduled"
-    
+
     # Relationships
-    dependent_squad = relationship("Squad", 
-                                 foreign_keys=[dependent_squad_id],
-                                 back_populates="dependencies")
-    dependency_squad = relationship("Squad", 
-                                 foreign_keys=[dependency_squad_id])
+    dependent_squad = relationship("Squad",
+                                   foreign_keys=[dependent_squad_id],
+                                   back_populates="dependencies")
+    dependency_squad = relationship("Squad",
+                                    foreign_keys=[dependency_squad_id])
 
 class OnCallRoster(Base):
     __tablename__ = "on_call_rosters"
@@ -316,6 +316,6 @@ class OnCallRoster(Base):
     primary_contact = Column(String, nullable=True)
     secondary_name = Column(String)
     secondary_contact = Column(String, nullable=True)
-    
+
     # Relationships
     squad = relationship("Squad", back_populates="on_call")
