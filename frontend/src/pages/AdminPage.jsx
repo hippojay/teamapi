@@ -13,6 +13,7 @@ import SettingsList from '../components/admin/SettingsList';
 import AddSettingModal from '../components/admin/AddSettingModal';
 import AuditLogsList from '../components/admin/AuditLogsList';
 import DataUpload from '../components/admin/DataUpload';
+import ManageOrganization from '../components/admin/entity/ManageOrganization';
 import ErrorAlert from '../components/admin/ErrorAlert';
 import LoadingIndicator from '../components/admin/LoadingIndicator';
 
@@ -83,7 +84,7 @@ const AdminPage = () => {
         const response = await api.getAuditLogs();
         setAuditLogs(response);
       }
-      // No data to load for upload tab
+      // No data to load for upload tab or organization tab
     } catch (error) {
       setError('Failed to load data. Please try again.');
       console.error('Error loading admin data:', error);
@@ -305,7 +306,7 @@ const AdminPage = () => {
       
       <ErrorAlert error={error} darkMode={darkMode} />
       
-      {isLoading ? (
+      {isLoading && activeTab !== 'organization' ? (
         <LoadingIndicator />
       ) : (
         <>
@@ -370,6 +371,11 @@ const AdminPage = () => {
               handleFileUpload={handleFileUpload}
               darkMode={darkMode}
             />
+          )}
+          
+          {/* Org Structure Tab */}
+          {activeTab === 'organization' && (
+            <ManageOrganization darkMode={darkMode} />
           )}
         </>
       )}

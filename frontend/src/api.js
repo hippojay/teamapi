@@ -384,6 +384,50 @@ const api = {
     }
     return response.json();
   },
+
+  createSquad: async (squadData, tribeId) => {
+    const response = await fetch(`${API_URL}/admin/squads?tribe_id=${tribeId}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(squadData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to create squad');
+    }
+    
+    return response.json();
+  },
+  
+  updateSquad: async (squadId, squadData) => {
+    const response = await fetch(`${API_URL}/admin/squads/${squadId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(squadData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update squad');
+    }
+    
+    return response.json();
+  },
+  
+  updateSquadTribe: async (squadId, tribeId) => {
+    const response = await fetch(`${API_URL}/admin/squads/${squadId}/tribe?tribe_id=${tribeId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to move squad to new tribe');
+    }
+    
+    return response.json();
+  },
   
   // Team Members
   getTeamMembers: async (squadId = null) => {

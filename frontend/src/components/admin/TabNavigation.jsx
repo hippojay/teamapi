@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Settings, History, Database } from 'lucide-react';
+import { User, Settings, History, Database, Building } from 'lucide-react';
 
 const TabNavigation = ({ activeTab, setActiveTab, darkMode }) => {
   const tabs = [
@@ -7,6 +7,7 @@ const TabNavigation = ({ activeTab, setActiveTab, darkMode }) => {
     { id: 'settings', label: 'Settings', icon: Settings },
     { id: 'audit', label: 'Audit Logs', icon: History },
     { id: 'upload', label: 'Upload Data', icon: Database },
+    { id: 'organization', label: 'Organization', icon: Building },
   ];
 
   return (

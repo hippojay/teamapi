@@ -13,6 +13,7 @@ from database import get_db, engine, Base
 import models
 import schemas
 import crud
+import entity_crud
 import search_crud
 import user_crud
 import user_auth
@@ -697,6 +698,40 @@ def get_description_history(
     history = user_crud.get_description_edit_history(db, entity_type, entity_id)
     return history
 
+# Areas Admin endpoints
+@app.post("/admin/areas", response_model=schemas.Area, status_code=201)
+def create_area(
+    area: schemas.AreaBase,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Check if user is admin
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to create areas")
+    
+    try:
+        return entity_crud.create_area(db, area, current_user.id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error creating area: {str(e)}")
+
+@app.put("/admin/areas/{area_id}", response_model=schemas.Area)
+def update_area(
+    area_id: int,
+    area: schemas.AreaBase,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Check if user is admin
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to update areas")
+    
+    # Update the area
+    updated_area = entity_crud.update_area(db, area_id, area, current_user.id)
+    if not updated_area:
+        raise HTTPException(status_code=404, detail="Area not found")
+    
+    return updated_area
+
 # Areas
 @app.get("/areas", response_model=List[schemas.Area])
 def get_areas(db: Session = Depends(get_db)):
@@ -728,6 +763,69 @@ def get_area(area_id: int, db: Session = Depends(get_db)):
         area.label_str = None
 
     return area
+
+# Tribes Admin endpoints
+@app.post("/admin/tribes", response_model=schemas.Tribe, status_code=201)
+def create_tribe(
+    tribe: schemas.TribeBase,
+    area_id: int,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Check if user is admin
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to create tribes")
+    
+    # Check if the area exists
+    area = crud.get_area(db, area_id)
+    if not area:
+        raise HTTPException(status_code=404, detail="Area not found")
+    
+    try:
+        return entity_crud.create_tribe(db, tribe, area_id, current_user.id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error creating tribe: {str(e)}")
+
+@app.put("/admin/tribes/{tribe_id}", response_model=schemas.Tribe)
+def update_tribe(
+    tribe_id: int,
+    tribe: schemas.TribeBase,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Check if user is admin
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to update tribes")
+    
+    # Update the tribe
+    updated_tribe = entity_crud.update_tribe(db, tribe_id, tribe, current_user.id)
+    if not updated_tribe:
+        raise HTTPException(status_code=404, detail="Tribe not found")
+    
+    return updated_tribe
+
+@app.put("/admin/tribes/{tribe_id}/area", response_model=schemas.Tribe)
+def update_tribe_area(
+    tribe_id: int,
+    area_id: int,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Check if user is admin
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to update tribes")
+    
+    # Check if the area exists
+    area = crud.get_area(db, area_id)
+    if not area:
+        raise HTTPException(status_code=404, detail="Area not found")
+    
+    # Move the tribe to the new area
+    updated_tribe = entity_crud.update_tribe_area(db, tribe_id, area_id, current_user.id)
+    if not updated_tribe:
+        raise HTTPException(status_code=404, detail="Tribe not found")
+    
+    return updated_tribe
 
 # Tribes
 @app.get("/tribes", response_model=List[schemas.Tribe])
@@ -764,6 +862,69 @@ def get_tribe(tribe_id: int, db: Session = Depends(get_db)):
         print("No tribe label found in database")
 
     return tribe
+
+# Squads Admin endpoints
+@app.post("/admin/squads", response_model=schemas.Squad, status_code=201)
+def create_squad(
+    squad: schemas.SquadBase,
+    tribe_id: int,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Check if user is admin
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to create squads")
+    
+    # Check if the tribe exists
+    tribe = crud.get_tribe(db, tribe_id)
+    if not tribe:
+        raise HTTPException(status_code=404, detail="Tribe not found")
+    
+    try:
+        return entity_crud.create_squad(db, squad, tribe_id, current_user.id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error creating squad: {str(e)}")
+
+@app.put("/admin/squads/{squad_id}", response_model=schemas.Squad)
+def update_squad(
+    squad_id: int,
+    squad: schemas.SquadBase,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Check if user is admin
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to update squads")
+    
+    # Update the squad
+    updated_squad = entity_crud.update_squad(db, squad_id, squad, current_user.id)
+    if not updated_squad:
+        raise HTTPException(status_code=404, detail="Squad not found")
+    
+    return updated_squad
+
+@app.put("/admin/squads/{squad_id}/tribe", response_model=schemas.Squad)
+def update_squad_tribe(
+    squad_id: int,
+    tribe_id: int,
+    current_user: schemas.User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    # Check if user is admin
+    if not user_auth.is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to update squads")
+    
+    # Check if the tribe exists
+    tribe = crud.get_tribe(db, tribe_id)
+    if not tribe:
+        raise HTTPException(status_code=404, detail="Tribe not found")
+    
+    # Move the squad to the new tribe
+    updated_squad = entity_crud.update_squad_tribe(db, squad_id, tribe_id, current_user.id)
+    if not updated_squad:
+        raise HTTPException(status_code=404, detail="Squad not found")
+    
+    return updated_squad
 
 # Squads
 @app.get("/squads", response_model=List[schemas.Squad])
