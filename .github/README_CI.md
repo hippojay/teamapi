@@ -6,19 +6,25 @@ This document outlines the CI/CD workflows configured for the Who What Where Por
 
 The repository uses GitHub Actions to automate testing, code quality checks, and security scanning. The following workflows are available:
 
-### 1. Backend CI (`backend-ci.yml`)
+### 1. CI/CD Pipeline (`combined-checks.yml`)
 
-This workflow runs when changes are made to the backend Python code.
+Our primary workflow that runs a comprehensive set of checks in parallel. This is triggered on all pushes and pull requests to the main branch.
 
 Features:
-- Python setup with dependencies installation
-- Code linting with Flake8
-- Unit testing with pytest
-- Code coverage reporting
+- Runs multiple jobs in parallel to provide faster feedback
+- Each job runs independently, so failures in one step don't block other checks
+- Provides a complete overview of all testing and quality aspects
+
+Parallel jobs include:
+- **Backend Linting**: Flake8 and MyPy checks
+- **Backend Security**: Bandit security scanning
+- **Backend Tests**: Pytest with coverage reporting
+- **Frontend Checks**: ESLint, Tests, and Build verification
+- **Security Analysis**: CodeQL scanning for vulnerabilities
 
 ### 2. Frontend CI (`frontend-ci.yml`)
 
-This workflow runs when changes are made to the frontend React code.
+This workflow runs when changes are made to the frontend React code only.
 
 Features:
 - Node.js setup with npm dependencies installation
@@ -35,10 +41,6 @@ Features:
 - Runs on push to main and pull requests
 - Detects security vulnerabilities and coding errors
 - Supports Python and JavaScript analysis
-
-### 4. Combined Checks (`combined-checks.yml`)
-
-A comprehensive workflow that runs all of the above checks in a single workflow.
 
 ### 5. Dependabot Configuration
 

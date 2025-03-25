@@ -1,32 +1,28 @@
-# CI Implementation Requirements
+# CI/CD Pipeline Requirements
 
-## MyPy Static Type Checking
+This document captures the requirements for the CI/CD pipeline based on user needs:
 
-- Integrate MyPy into the CI pipeline to perform static type checking on Python code
-- Configure MyPy to check models, schemas, and routes with appropriate strictness levels
-- Set up MyPy to fail the build on critical type errors
-- Provide clear documentation on how to use type annotations in the codebase
-- Create an example of properly typed models to guide developers
+1. Single comprehensive workflow instead of multiple overlapping workflows
+   - Removed redundant backend-ci.yml in favor of a single combined-checks.yml
+   - Renamed combined-checks.yml to reflect its purpose as the primary CI/CD pipeline
 
-## Bandit Security Scanning
+2. Independent job execution to prevent cascading failures
+   - Parallelized jobs to run independently
+   - Linting errors should not prevent security checks or other tests from running
+   - All jobs should complete regardless of failures in other jobs
+   - Added a summary job that depends on all other jobs completing
 
-- Integrate Bandit into the CI pipeline to perform security scanning on Python code
-- Configure Bandit to identify common security vulnerabilities
-- Generate reports in JSON format for record keeping and in screen format for immediate feedback
-- Exclude test files and virtual environments from scanning
-- Provide clear documentation on how to address common security issues
-- Focus on medium and high severity issues in CI output
+3. Improved developer feedback
+   - Continue-on-error for non-critical checks (ESLint, MyPy)
+   - Clearer job names and organization
+   - Better error reporting with specific error messages
 
-## User Needs Identified
+4. Security-focused pipeline
+   - Dedicated security scanning jobs
+   - Code quality analysis with CodeQL
+   - Maintain all existing security checks
 
-1. Need to enforce type safety in Python code to catch errors before they reach production
-2. Need to maintain a consistent approach to type annotations across the codebase
-3. Need automated verification of type correctness during CI builds
-4. Need to gradually introduce typing to the existing codebase without breaking functionality
-5. Need clear guidance for developers on how to properly add type annotations
-6. Need to identify security vulnerabilities in Python code early in the development process
-7. Need to prevent common security anti-patterns from being introduced into the codebase
-8. Need documentation on security best practices for Python development
-9. Need automated security scanning as part of the CI pipeline
-10. Need regular reporting on security issues found in the codebase
-11. Need to properly exclude example and documentation files from CI checks
+5. Efficiency considerations
+   - Proper dependency caching
+   - Optimized installation steps
+   - Appropriate permissions for each job
