@@ -19,7 +19,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 # Use a try-except block to handle bcrypt version compatibility issues
 try:
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-except Exception as e:
+except Exception:
     # Fallback to a specific bcrypt variant that works without version check
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__ident="2b")
 
@@ -29,7 +29,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 def verify_password(plain_password, hashed_password):
     try:
         return pwd_context.verify(plain_password, hashed_password)
-    except Exception as e:
+    except Exception:
         # Fallback direct verification if CryptContext fails
         try:
             from passlib.hash import bcrypt
@@ -84,8 +84,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
     # Try to find the user by username or email
     user = db.query(models.User).filter(
-        (models.User.username == token_data.username) |
-        (models.User.email == token_data.username)
+        (models.User.username == token_data.username) | (models.User.email == token_data.username)
     ).first()
 
     if user is None:
