@@ -4,7 +4,8 @@ exclude_dirs: tests,venv,__pycache__
 
 # Skip verification of SSL certificates
 # That's handled differently in our app (B501,B503)
-skips: B501,B503,B404
+# Skip hardcoded default of all interfaces (B104)
+skips: B501,B503,B404,B104
 
 # Examine all files, not just Python files
 ini_file_blacklist_enabled: false
