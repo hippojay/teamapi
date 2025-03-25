@@ -596,7 +596,10 @@ def get_on_call(db: Session, squad_id: int) -> Optional[models.OnCallRoster]:
 # OKR CRUD operations
 
 # Objective operations
-def get_objectives(db: Session, area_id: Optional[int] = None, tribe_id: Optional[int] = None, squad_id: Optional[int] = None) -> List[models.Objective]:
+def get_objectives(db: Session,
+                   area_id: Optional[int] = None,
+                   tribe_id: Optional[int] = None,
+                   squad_id: Optional[int] = None) -> List[models.Objective]:
 
     # Step 1: Get direct objectives for the specified entity
     query = db.query(models.Objective)
@@ -629,7 +632,7 @@ def get_objectives(db: Session, area_id: Optional[int] = None, tribe_id: Optiona
                 # Get cascaded objectives from the parent area
                 cascaded_from_area = db.query(models.Objective).filter(
                     models.Objective.area_id == tribe.area_id,
-                    models.Objective.cascade == True
+                    models.Objective.cascade
                 ).all()
                 cascaded_objectives.extend(cascaded_from_area)
 
@@ -642,7 +645,7 @@ def get_objectives(db: Session, area_id: Optional[int] = None, tribe_id: Optiona
                 if squad.tribe_id:
                     cascaded_from_tribe = db.query(models.Objective).filter(
                         models.Objective.tribe_id == squad.tribe_id,
-                        models.Objective.cascade == True
+                        models.Objective.cascade
                     ).all()
                     cascaded_objectives.extend(cascaded_from_tribe)
 
@@ -653,7 +656,7 @@ def get_objectives(db: Session, area_id: Optional[int] = None, tribe_id: Optiona
                         # Get cascaded objectives from the grandparent area
                         cascaded_from_area = db.query(models.Objective).filter(
                             models.Objective.area_id == tribe.area_id,
-                            models.Objective.cascade == True
+                            models.Objective.cascade
                         ).all()
                         cascaded_objectives.extend(cascaded_from_area)
 

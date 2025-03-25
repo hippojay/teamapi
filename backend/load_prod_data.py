@@ -506,8 +506,10 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
             squad.core_capacity = round(squad_core_capacity[squad_name], 2)
             squad.subcon_count = squad_subcon_counts[squad_name]
             squad.subcon_capacity = round(squad_subcon_capacity[squad_name], 2)
-            print(f"Updated squad '{squad_name}' with {squad.member_count} members (Core: {squad.core_count}, Subcon: {squad.subcon_count}) and total capacity of {squad.total_capacity:.2f} FTE (Core: {squad.core_capacity:.2f}, Subcon: {squad.subcon_capacity:.2f})")
-
+            print(f"Updated squad '{squad_name}' with {squad.member_count} members "
+                  f"(Core: {squad.core_count}, Subcon: {squad.subcon_count}) "
+                  f"and total capacity of {squad.total_capacity:.2f} FTE "
+                  f"(Core: {squad.core_capacity:.2f}, Subcon: {squad.subcon_capacity:.2f})")
     # Update tribe and area counts and capacities
     if append_mode:
         # Recalculate all tribe and area counts to ensure correctness

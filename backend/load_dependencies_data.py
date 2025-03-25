@@ -55,8 +55,8 @@ def load_dependencies_from_csv(file_path: str, db: Session, append_mode: bool = 
 
     for _, row in df.iterrows():
         # Skip rows with missing required fields
-        if (pd.isna(row['Dependent Squad']) or pd.isna(row['Dependency Squad']) or
-            pd.isna(row['Dependency Name']) or pd.isna(row['Interaction Mode'])):
+        if (pd.isna(row['Dependent Squad']) or pd.isna(row['Dependency Squad'])
+                or pd.isna(row['Dependency Name']) or pd.isna(row['Interaction Mode'])):
             print(f"Skipping row with missing required fields: {row}")
             dependencies_skipped += 1
             continue

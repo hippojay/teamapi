@@ -23,9 +23,9 @@ def add_admin_user(username: str, email: str, password: str = None):
             return False
 
         # Check password complexity
-        if (len(password) < 8 or not any(c.isupper() for c in password) or
-            not any(c.islower() for c in password) or not any(c.isdigit() for c in password) or
-            not any(c in "!@#$%^&*(),.?\":{}|<>" for c in password)):
+        if (len(password) < 8 or not any(c.isupper() for c in password)
+                or not any(c.islower() for c in password) or not any(c.isdigit() for c in password)
+                or not any(c in "!@#$%^&*(),.?\":{}|<>" for c in password)):
             print("Password must be at least 8 characters long and include uppercase, lowercase, digit and special character!")
             return False
 

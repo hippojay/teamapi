@@ -10,7 +10,7 @@ def run_migration():
     Remove the dependency_type column from the dependencies table
     """
     engine = create_engine(SQLALCHEMY_DATABASE_URL)
-    
+
     with engine.connect() as connection:
         # Create a temporary table without the dependency_type column
         connection.execute(text("""
@@ -25,22 +25,22 @@ def run_migration():
             FOREIGN KEY (dependency_squad_id) REFERENCES squads (id)
         )
         """))
-        
+
         # Copy data to the new table, excluding the dependency_type column
         connection.execute(text("""
         INSERT INTO dependencies_new (id, dependent_squad_id, dependency_squad_id, dependency_name, interaction_mode, interaction_frequency)
         SELECT id, dependent_squad_id, dependency_squad_id, dependency_name, interaction_mode, interaction_frequency FROM dependencies
         """))
-        
+
         # Drop the old table
         connection.execute(text("DROP TABLE dependencies"))
-        
+
         # Rename the new table to the original name
         connection.execute(text("ALTER TABLE dependencies_new RENAME TO dependencies"))
-        
+
         # Commit the transaction
         connection.commit()
-    
+
     print("Migration completed: Removed dependency_type column from dependencies table")
 
 if __name__ == "__main__":

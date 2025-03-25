@@ -118,8 +118,7 @@ def initialize_database(admin_username="admin", admin_email="admin@example.com",
 
             # Create admin user if it doesn't exist
             existing_admin = db.query(models.User).filter(
-                (models.User.username == admin_username) |
-                (models.User.email == admin_email)
+                (models.User.username == admin_username) | (models.User.email == admin_email)
             ).first()
 
             if not existing_admin:
