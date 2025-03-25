@@ -354,6 +354,36 @@ const api = {
     }
     return response.json();
   },
+
+  createArea: async (areaData) => {
+    const response = await fetch(`${API_URL}/admin/areas`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(areaData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to create area');
+    }
+    
+    return response.json();
+  },
+  
+  updateArea: async (areaId, areaData) => {
+    const response = await fetch(`${API_URL}/admin/areas/${areaId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(areaData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update area');
+    }
+    
+    return response.json();
+  },
   
   // Tribes
   getTribes: async (areaId = null) => {
@@ -367,6 +397,50 @@ const api = {
     if (!response.ok) {
       throw new Error('Tribe not found');
     }
+    return response.json();
+  },
+
+  createTribe: async (tribeData, areaId) => {
+    const response = await fetch(`${API_URL}/admin/tribes?area_id=${areaId}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(tribeData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to create tribe');
+    }
+    
+    return response.json();
+  },
+  
+  updateTribe: async (tribeId, tribeData) => {
+    const response = await fetch(`${API_URL}/admin/tribes/${tribeId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(tribeData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update tribe');
+    }
+    
+    return response.json();
+  },
+  
+  updateTribeArea: async (tribeId, areaId) => {
+    const response = await fetch(`${API_URL}/admin/tribes/${tribeId}/area?area_id=${areaId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to move tribe to new area');
+    }
+    
     return response.json();
   },
   
