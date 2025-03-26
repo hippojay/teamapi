@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from datetime import datetime
 import models
 import schemas
 import user_auth
@@ -26,7 +25,7 @@ def create_area(db: Session, area_data: schemas.AreaBase, user_id: int) -> model
                 label_value = models.AreaLabel.DIGITAL
         else:
             label_value = label_str
-    
+
     # Create area with the provided data
     db_area = models.Area(
         name=area_data.name,
@@ -39,11 +38,11 @@ def create_area(db: Session, area_data: schemas.AreaBase, user_id: int) -> model
         subcon_capacity=area_data.subcon_capacity,
         label=label_value
     )
-    
+
     db.add(db_area)
     db.commit()
     db.refresh(db_area)
-    
+
     # Log the area creation
     user_auth.log_user_action(
         db=db,
@@ -53,7 +52,7 @@ def create_area(db: Session, area_data: schemas.AreaBase, user_id: int) -> model
         entity_id=db_area.id,
         details=f"Created new area: {area_data.name}"
     )
-    
+
     return db_area
 
 
@@ -62,14 +61,14 @@ def update_area(db: Session, area_id: int, area_data: schemas.AreaBase, user_id:
     db_area = db.query(models.Area).filter(models.Area.id == area_id).first()
     if not db_area:
         return None
-    
+
     # Store original name for audit log
     original_name = db_area.name
-    
+
     # Handle AreaLabel enum case sensitivity issues
     label_value = None
     update_data = area_data.dict(exclude_unset=True)
-    
+
     if 'label' in update_data:
         label_str = update_data['label']
         if isinstance(label_str, str):
@@ -84,26 +83,26 @@ def update_area(db: Session, area_id: int, area_data: schemas.AreaBase, user_id:
                 label_value = None
         else:
             label_value = label_str
-        
+
         # Remove label from update_data to handle separately
         del update_data['label']
-    
+
     # Update all other fields
     for key, value in update_data.items():
         setattr(db_area, key, value)
-    
+
     # Update label separately
     if label_value is not None or 'label' in area_data.dict(exclude_unset=True):
         db_area.label = label_value
-    
+
     db.commit()
     db.refresh(db_area)
-    
+
     # Log the area update
     details = f"Updated area: {original_name}"
     if original_name != db_area.name:
         details += f" (renamed to {db_area.name})"
-        
+
     user_auth.log_user_action(
         db=db,
         user_id=user_id,
@@ -112,7 +111,7 @@ def update_area(db: Session, area_id: int, area_data: schemas.AreaBase, user_id:
         entity_id=area_id,
         details=details
     )
-    
+
     return db_area
 
 
@@ -139,7 +138,7 @@ def create_tribe(db: Session, tribe_data: schemas.TribeBase, area_id: int, user_
                 label_value = models.TribeLabel.DIGITAL
         else:
             label_value = label_str
-    
+
     # Create tribe with the provided data
     db_tribe = models.Tribe(
         name=tribe_data.name,
@@ -153,11 +152,11 @@ def create_tribe(db: Session, tribe_data: schemas.TribeBase, area_id: int, user_
         subcon_capacity=tribe_data.subcon_capacity,
         label=label_value
     )
-    
+
     db.add(db_tribe)
     db.commit()
     db.refresh(db_tribe)
-    
+
     # Log the tribe creation
     user_auth.log_user_action(
         db=db,
@@ -167,7 +166,7 @@ def create_tribe(db: Session, tribe_data: schemas.TribeBase, area_id: int, user_
         entity_id=db_tribe.id,
         details=f"Created new tribe: {tribe_data.name} in area #{area_id}"
     )
-    
+
     return db_tribe
 
 
@@ -176,15 +175,14 @@ def update_tribe(db: Session, tribe_id: int, tribe_data: schemas.TribeBase, user
     db_tribe = db.query(models.Tribe).filter(models.Tribe.id == tribe_id).first()
     if not db_tribe:
         return None
-    
+
     # Store original name and area_id for audit log
     original_name = db_tribe.name
-    original_area_id = db_tribe.area_id
-    
+
     # Handle TribeLabel enum case sensitivity issues
     label_value = None
     update_data = tribe_data.dict(exclude_unset=True)
-    
+
     if 'label' in update_data:
         label_str = update_data['label']
         if isinstance(label_str, str):
@@ -199,31 +197,31 @@ def update_tribe(db: Session, tribe_id: int, tribe_data: schemas.TribeBase, user
                 label_value = None
         else:
             label_value = label_str
-        
+
         # Remove label from update_data to handle separately
         del update_data['label']
-    
+
     # Update all provided fields except area_id
     # We'll handle area_id separately to avoid inconsistencies
     if 'area_id' in update_data:
         del update_data['area_id']  # Don't update area_id here
-    
+
     # Update all other fields
     for key, value in update_data.items():
         setattr(db_tribe, key, value)
-    
+
     # Update label separately
     if label_value is not None or 'label' in tribe_data.dict(exclude_unset=True):
         db_tribe.label = label_value
-    
+
     db.commit()
     db.refresh(db_tribe)
-    
+
     # Log the tribe update
     details = f"Updated tribe: {original_name}"
     if original_name != db_tribe.name:
         details += f" (renamed to {db_tribe.name})"
-        
+
     user_auth.log_user_action(
         db=db,
         user_id=user_id,
@@ -232,7 +230,7 @@ def update_tribe(db: Session, tribe_id: int, tribe_data: schemas.TribeBase, user
         entity_id=tribe_id,
         details=details
     )
-    
+
     return db_tribe
 
 
@@ -241,16 +239,16 @@ def update_tribe_area(db: Session, tribe_id: int, area_id: int, user_id: int) ->
     db_tribe = db.query(models.Tribe).filter(models.Tribe.id == tribe_id).first()
     if not db_tribe:
         return None
-    
+
     # Store original area_id for audit log
     original_area_id = db_tribe.area_id
-    
+
     # Update area_id
     db_tribe.area_id = area_id
-    
+
     db.commit()
     db.refresh(db_tribe)
-    
+
     # Log the tribe move
     user_auth.log_user_action(
         db=db,
@@ -260,7 +258,7 @@ def update_tribe_area(db: Session, tribe_id: int, area_id: int, user_id: int) ->
         entity_id=tribe_id,
         details=f"Moved tribe: {db_tribe.name} from area #{original_area_id} to area #{area_id}"
     )
-    
+
     return db_tribe
 
 
@@ -291,7 +289,7 @@ def create_squad(db: Session, squad_data: schemas.SquadBase, tribe_id: int, user
             team_type_value = team_type_str
     else:
         team_type_value = models.TeamType.STREAM_ALIGNED  # Default value
-            
+
     # Create squad with the provided data
     db_squad = models.Squad(
         name=squad_data.name,
@@ -312,11 +310,11 @@ def create_squad(db: Session, squad_data: schemas.SquadBase, tribe_id: int, user
         jira_board_url=squad_data.jira_board_url,
         tribe_id=tribe_id
     )
-    
+
     db.add(db_squad)
     db.commit()
     db.refresh(db_squad)
-    
+
     # Log the squad creation
     user_auth.log_user_action(
         db=db,
@@ -326,7 +324,7 @@ def create_squad(db: Session, squad_data: schemas.SquadBase, tribe_id: int, user
         entity_id=db_squad.id,
         details=f"Created new squad: {squad_data.name} in tribe #{tribe_id}"
     )
-    
+
     return db_squad
 
 
@@ -335,17 +333,16 @@ def update_squad(db: Session, squad_id: int, squad_data: schemas.SquadBase, user
     db_squad = db.query(models.Squad).filter(models.Squad.id == squad_id).first()
     if not db_squad:
         return None
-    
+
     # Store original name and tribe_id for audit log
     original_name = db_squad.name
-    original_tribe_id = db_squad.tribe_id
-    
+
     # Update all provided fields except tribe_id
     # We'll handle tribe_id separately to avoid inconsistencies
     update_data = squad_data.dict(exclude_unset=True)
     if 'tribe_id' in update_data:
         del update_data['tribe_id']  # Don't update tribe_id here
-    
+
     # Handle TeamType enum specially due to case sensitivity issues
     team_type_value = None
     if 'team_type' in update_data:
@@ -367,19 +364,19 @@ def update_squad(db: Session, squad_id: int, squad_data: schemas.SquadBase, user
     # Update all other attributes
     for key, value in update_data.items():
         setattr(db_squad, key, value)
-        
+
     # Update team_type separately after other updates
     if team_type_value is not None:
         db_squad.team_type = team_type_value
-    
+
     db.commit()
     db.refresh(db_squad)
-    
+
     # Log the squad update
     details = f"Updated squad: {original_name}"
     if original_name != db_squad.name:
         details += f" (renamed to {db_squad.name})"
-        
+
     user_auth.log_user_action(
         db=db,
         user_id=user_id,
@@ -388,7 +385,7 @@ def update_squad(db: Session, squad_id: int, squad_data: schemas.SquadBase, user
         entity_id=squad_id,
         details=details
     )
-    
+
     return db_squad
 
 
@@ -397,16 +394,16 @@ def update_squad_tribe(db: Session, squad_id: int, tribe_id: int, user_id: int) 
     db_squad = db.query(models.Squad).filter(models.Squad.id == squad_id).first()
     if not db_squad:
         return None
-    
+
     # Store original tribe_id for audit log
     original_tribe_id = db_squad.tribe_id
-    
+
     # Update tribe_id
     db_squad.tribe_id = tribe_id
-    
+
     db.commit()
     db.refresh(db_squad)
-    
+
     # Log the squad move
     user_auth.log_user_action(
         db=db,
@@ -416,5 +413,5 @@ def update_squad_tribe(db: Session, squad_id: int, tribe_id: int, user_id: int) 
         entity_id=squad_id,
         details=f"Moved squad: {db_squad.name} from tribe #{original_tribe_id} to tribe #{tribe_id}"
     )
-    
+
     return db_squad

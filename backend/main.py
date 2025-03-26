@@ -708,7 +708,7 @@ def create_area(
     # Check if user is admin
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to create areas")
-    
+
     try:
         return entity_crud.create_area(db, area, current_user.id)
     except Exception as e:
@@ -724,12 +724,12 @@ def update_area(
     # Check if user is admin
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to update areas")
-    
+
     # Update the area
     updated_area = entity_crud.update_area(db, area_id, area, current_user.id)
     if not updated_area:
         raise HTTPException(status_code=404, detail="Area not found")
-    
+
     return updated_area
 
 # Areas
@@ -775,12 +775,12 @@ def create_tribe(
     # Check if user is admin
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to create tribes")
-    
+
     # Check if the area exists
     area = crud.get_area(db, area_id)
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
-    
+
     try:
         return entity_crud.create_tribe(db, tribe, area_id, current_user.id)
     except Exception as e:
@@ -796,12 +796,12 @@ def update_tribe(
     # Check if user is admin
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to update tribes")
-    
+
     # Update the tribe
     updated_tribe = entity_crud.update_tribe(db, tribe_id, tribe, current_user.id)
     if not updated_tribe:
         raise HTTPException(status_code=404, detail="Tribe not found")
-    
+
     return updated_tribe
 
 @app.put("/admin/tribes/{tribe_id}/area", response_model=schemas.Tribe)
@@ -814,17 +814,17 @@ def update_tribe_area(
     # Check if user is admin
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to update tribes")
-    
+
     # Check if the area exists
     area = crud.get_area(db, area_id)
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
-    
+
     # Move the tribe to the new area
     updated_tribe = entity_crud.update_tribe_area(db, tribe_id, area_id, current_user.id)
     if not updated_tribe:
         raise HTTPException(status_code=404, detail="Tribe not found")
-    
+
     return updated_tribe
 
 # Tribes
@@ -874,12 +874,12 @@ def create_squad(
     # Check if user is admin
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to create squads")
-    
+
     # Check if the tribe exists
     tribe = crud.get_tribe(db, tribe_id)
     if not tribe:
         raise HTTPException(status_code=404, detail="Tribe not found")
-    
+
     try:
         return entity_crud.create_squad(db, squad, tribe_id, current_user.id)
     except Exception as e:
@@ -895,12 +895,12 @@ def update_squad(
     # Check if user is admin
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to update squads")
-    
+
     # Update the squad
     updated_squad = entity_crud.update_squad(db, squad_id, squad, current_user.id)
     if not updated_squad:
         raise HTTPException(status_code=404, detail="Squad not found")
-    
+
     return updated_squad
 
 @app.put("/admin/squads/{squad_id}/tribe", response_model=schemas.Squad)
@@ -913,17 +913,17 @@ def update_squad_tribe(
     # Check if user is admin
     if not user_auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to update squads")
-    
+
     # Check if the tribe exists
     tribe = crud.get_tribe(db, tribe_id)
     if not tribe:
         raise HTTPException(status_code=404, detail="Tribe not found")
-    
+
     # Move the squad to the new tribe
     updated_squad = entity_crud.update_squad_tribe(db, squad_id, tribe_id, current_user.id)
     if not updated_squad:
         raise HTTPException(status_code=404, detail="Squad not found")
-    
+
     return updated_squad
 
 # Squads
