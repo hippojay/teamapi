@@ -116,21 +116,21 @@ def update_squad_team_type(db: Session, squad_id: int, team_type: str, user_id: 
     if not squad:
         return None
 
-    # Validate team_type
-    try:
-        team_type_enum = models.TeamType[team_type.upper()]
-    except (KeyError, AttributeError):
-        # Default to STREAM_ALIGNED if invalid
-        team_type_enum = models.TeamType.STREAM_ALIGNED
-
-    # Update the team_type
-    squad.team_type = team_type_enum
+    # Normalize and validate team_type
+    team_type_upper = team_type.upper() if team_type else "STREAM_ALIGNED"
+    
+    # Ensure it's one of the valid values
+    if team_type_upper not in ["STREAM_ALIGNED", "PLATFORM", "ENABLING", "COMPLICATED_SUBSYSTEM"]:
+        team_type_upper = "STREAM_ALIGNED"
+    
+    # Update the team_type with the string value directly
+    squad.team_type = team_type_upper
 
     # Create an edit record
     edit = models.DescriptionEdit(
         entity_type="squad_team_type",
         entity_id=squad_id,
-        description=f"Updated team type to {team_type}",
+        description=f"Updated team type to {team_type_upper}",
         edited_by=user_id
     )
 

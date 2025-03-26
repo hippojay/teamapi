@@ -100,20 +100,20 @@ class ServiceStatus(enum.Enum):
     DOWN = "DOWN"
 
 class InteractionMode(enum.Enum):
-    COLLABORATION = "collaboration"
-    X_AS_A_SERVICE = "x_as_a_service"
-    FACILITATING = "facilitating"
+    COLLABORATION = "COLLABORATION"
+    X_AS_A_SERVICE = "X_AS_A_SERVICE"
+    FACILITATING = "FACILITATING"
 
 class TeamType(enum.Enum):
-    STREAM_ALIGNED = "stream_aligned"
-    PLATFORM = "platform"
-    ENABLING = "enabling"
-    COMPLICATED_SUBSYSTEM = "complicated_subsystem"
+    STREAM_ALIGNED = "STREAM_ALIGNED"
+    PLATFORM = "PLATFORM"
+    ENABLING = "ENABLING"
+    COMPLICATED_SUBSYSTEM = "COMPLICATED_SUBSYSTEM"
 
 class UserRole(enum.Enum):
-    admin = "admin"
-    guest = "guest"
-    team_member = "team_member"
+    ADMIN = "admin"
+    GUEST = "guest"
+    TEAM_MEMBER = "team_member"
 
 class User(Base):
     __tablename__ = "users"

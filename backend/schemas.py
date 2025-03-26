@@ -20,25 +20,25 @@ class ServiceType(str, Enum):
 # Removed DependencyType enum as per requirement
 
 class InteractionMode(str, Enum):
-    COLLABORATION = "collaboration"
-    X_AS_A_SERVICE = "x_as_a_service"
-    FACILITATING = "facilitating"
+    COLLABORATION = "COLLABORATION"
+    X_AS_A_SERVICE = "X_AS_A_SERVICE"
+    FACILITATING = "FACILITATING"
 
 class TeamType(str, Enum):
-    STREAM_ALIGNED = "stream_aligned"
-    PLATFORM = "platform"
-    ENABLING = "enabling"
-    COMPLICATED_SUBSYSTEM = "complicated_subsystem"
+    STREAM_ALIGNED = "STREAM_ALIGNED"
+    PLATFORM = "PLATFORM"
+    ENABLING = "ENABLING"
+    COMPLICATED_SUBSYSTEM = "COMPLICATED_SUBSYSTEM"
 
 class AreaLabel(str, Enum):
-    CFU_ALIGNED = "cfu_aligned"
-    PLATFORM_GROUP = "platform_group"
-    DIGITAL = "digital"
+    CFU_ALIGNED = "CFU_ALIGNED"
+    PLATFORM_GROUP = "PLATFORM_GROUP"
+    DIGITAL = "DIGITAL"
 
 class TribeLabel(str, Enum):
-    CFU_ALIGNED = "cfu_aligned"
-    PLATFORM_GROUP = "platform_group"
-    DIGITAL = "digital"
+    CFU_ALIGNED = "CFU_ALIGNED"
+    PLATFORM_GROUP = "PLATFORM_GROUP"
+    DIGITAL = "DIGITAL"
 
 # Base models
 class TeamMemberBase(BaseModel):
@@ -286,9 +286,9 @@ class AreaDetail(Area):
 
 # User role enum - names match database values
 class UserRole(str, Enum):
-    admin = "admin"
-    guest = "guest"
-    team_member = "team_member"
+    ADMIN = "admin"
+    GUEST = "guest"
+    TEAM_MEMBER = "team_member"
 
 # User and Authentication schemas
 class UserBase(BaseModel):
@@ -296,7 +296,7 @@ class UserBase(BaseModel):
     username: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    role: UserRole = UserRole.guest
+    role: UserRole = UserRole.GUEST
     is_admin: bool = False  # Deprecated, use role instead
 
 class UserCreate(UserBase):

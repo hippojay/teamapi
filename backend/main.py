@@ -27,7 +27,6 @@ from search_schemas import SearchResults
 
 # Import database initializer
 import db_initializer
-import os
 from database import db_config
 
 # Log database connection type
@@ -57,10 +56,6 @@ if initialize_db:
         print("\033[92mDatabase initialized successfully!\033[0m")
     else:
         print("\033[91mDatabase initialization failed. Please check the logs.\033[0m")
-else:
-    # Database is initialized, run any pending migrations
-    db_initializer.run_migrations()
-
 # For backward compatibility, ensure all tables exist
 Base.metadata.create_all(bind=engine)
 
@@ -127,6 +122,18 @@ def create_user(user: schemas.UserCreate,
     if not user_auth.is_email_allowed(user.email, db):
         raise HTTPException(status_code=403, detail="Email domain not allowed for registration")
 
+    # Determine the role value (use uppercase enum name but lowercase string value)
+    role_value = "guest"  # Default
+    if user.role:
+        # Convert to uppercase for lookup
+        role_upper = user.role.upper() if isinstance(user.role, str) else user.role
+        if role_upper == "ADMIN":
+            role_value = "admin"
+        elif role_upper == "TEAM_MEMBER":
+            role_value = "team_member"
+        elif role_upper == "GUEST":
+            role_value = "guest"
+            
     # Create user with full details (use email as username if not provided)
     username = user.username if user.username else user.email
     hashed_password = auth.get_password_hash(user.password)
@@ -136,7 +143,7 @@ def create_user(user: schemas.UserCreate,
         hashed_password=hashed_password,
         first_name=user.first_name,
         last_name=user.last_name,
-        role=models.UserRole[user.role] if user.role else models.UserRole.guest,
+        role=role_value,  # Use string value directly
         is_active=True,  # Admins can create pre-verified users
         is_admin=user.is_admin
     )
@@ -382,37 +389,31 @@ async def upload_data(
         if data_type == "organization":
             # For organization structure (areas, tribes, squads, team members)
             try:
-                from load_prod_data import load_data_from_excel, ensure_db_compatibility
-                
-                # Ensure database compatibility (especially for PostgreSQL)
-                if db_config.is_postgres:
-                    ensure_db_compatibility()
-                    
+                from load_prod_data import load_data_from_excel
+
                 db_session = db
                 # Use the provided sheet_name or default to "Sheet1"
                 selected_sheet = sheet_name or "Sheet1"
                 # Process the file with append_mode=True to update existing data
-                load_data_from_excel(temp_file_path, db_session, append_mode=True, 
-                                    sheet_name=selected_sheet, run_compatibility_check=False)
+                load_data_from_excel(temp_file_path, db_session, append_mode=True,
+                                     sheet_name=selected_sheet, run_compatibility_check=False)
                 sheet_info = f" from sheet '{selected_sheet}'" if not is_csv else ""
                 summary = {"message": f"Organization data processed successfully{sheet_info}."}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error processing organization data: {str(e)}")
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error processing organization data: {str(e)}")
         elif data_type == "services":
             # For services data
             try:
-                from load_prod_data import load_services_data, ensure_db_compatibility
-                
-                # Ensure database compatibility (especially for PostgreSQL)
-                if db_config.is_postgres:
-                    ensure_db_compatibility()
-                    
+                from load_prod_data import load_services_data
+
                 db_session = db
                 # Use the provided sheet_name or default to "Services"
                 selected_sheet = sheet_name or "Services"
                 # Process the file with append_mode=True to update existing data
-                load_services_data(temp_file_path, db_session, append_mode=True, 
-                                 sheet_name=selected_sheet, run_compatibility_check=False)
+                load_services_data(temp_file_path, db_session, append_mode=True,
+                                   sheet_name=selected_sheet, run_compatibility_check=False)
                 sheet_info = f" from sheet '{selected_sheet}'" if not is_csv else ""
                 summary = {"message": f"Services data processed successfully{sheet_info}."}
             except Exception as e:
@@ -423,12 +424,7 @@ async def upload_data(
                 raise HTTPException(status_code=400, detail="Dependencies data must be uploaded in CSV format")
             try:
                 from load_dependencies_data import load_dependencies_from_csv
-                from load_prod_data import ensure_db_compatibility
-                
-                # Ensure database compatibility (especially for PostgreSQL)
-                if db_config.is_postgres:
-                    ensure_db_compatibility()
-                    
+
                 db_session = db
                 # Process the file with append_mode=True to update existing data
                 load_dependencies_from_csv(temp_file_path, db_session, append_mode=True)
@@ -598,15 +594,18 @@ def update_area_label(
     old_label = area.label.name if area.label else None
 
     if label:
-        try:
-            # Use lowercase labels now
-            area.label = models.AreaLabel[label]
-        except KeyError:
-            valid_labels = [label_iter.name for label_iter in models.AreaLabel]
+        # Normalize to uppercase
+        label_upper = label.upper()
+        # Validate against known values
+        if label_upper not in ["CFU_ALIGNED", "PLATFORM_GROUP", "DIGITAL"]:
+            valid_labels = ["CFU_ALIGNED", "PLATFORM_GROUP", "DIGITAL"]
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid label. Valid options are: {', '.join(valid_labels)}"
             )
+            
+        # Set the label as a string
+        area.label = label_upper
     else:
         # If label is None or empty string, remove the current label
         area.label = None
@@ -637,15 +636,18 @@ def update_tribe_label(
     old_label = tribe.label.name if tribe.label else None
 
     if label:
-        try:
-            # Use lowercase labels now
-            tribe.label = models.TribeLabel[label]
-        except KeyError:
-            valid_labels = [lable_iter.name for lable_iter in models.TribeLabel]
+        # Normalize to uppercase
+        label_upper = label.upper()
+        # Validate against known values
+        if label_upper not in ["CFU_ALIGNED", "PLATFORM_GROUP", "DIGITAL"]:
+            valid_labels = ["CFU_ALIGNED", "PLATFORM_GROUP", "DIGITAL"]
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid label. Valid options are: {', '.join(valid_labels)}"
             )
+            
+        # Set the label as a string
+        tribe.label = label_upper
     else:
         # If label is None or empty string, remove the current label
         tribe.label = None
@@ -1362,14 +1364,14 @@ if __name__ == "__main__":
     parser.add_argument("--connection-string", help="Database connection string")
     parser.add_argument("--schema", help="Database schema name (PostgreSQL only)")
     args = parser.parse_args()
-    
+
     # Set environment variables based on command line arguments
     if args.db_type:
         os.environ["DB_TYPE"] = args.db_type
-    
+
     if args.connection_string:
         os.environ["DATABASE_URL"] = args.connection_string
-        
+
     if args.schema:
         os.environ["DATABASE_SCHEMA"] = args.schema
 

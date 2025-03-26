@@ -14,16 +14,9 @@ def create_area(db: Session, area_data: schemas.AreaBase, user_id: int) -> model
     # Handle AreaLabel enum case sensitivity issues
     label_value = None
     if area_data.label:
-        label_str = area_data.label
-        if isinstance(label_str, str):
-            # Map lowercase values to enum members
-            if label_str.lower() == 'cfu_aligned':
-                label_value = models.AreaLabel.CFU_ALIGNED
-            elif label_str.lower() == 'platform_group':
-                label_value = models.AreaLabel.PLATFORM_GROUP
-            elif label_str.lower() == 'digital':
-                label_value = models.AreaLabel.DIGITAL
-        else:
+        label_str = area_data.label.upper() if isinstance(area_data.label, str) else area_data.label
+        # Map values to valid enum members
+        if label_str in ["CFU_ALIGNED", "PLATFORM_GROUP", "DIGITAL"]:
             label_value = label_str
 
     # Create area with the provided data
@@ -70,19 +63,13 @@ def update_area(db: Session, area_id: int, area_data: schemas.AreaBase, user_id:
     update_data = area_data.dict(exclude_unset=True)
 
     if 'label' in update_data:
-        label_str = update_data['label']
-        if isinstance(label_str, str):
-            # Map lowercase values to enum members
-            if label_str.lower() == 'cfu_aligned':
-                label_value = models.AreaLabel.CFU_ALIGNED
-            elif label_str.lower() == 'platform_group':
-                label_value = models.AreaLabel.PLATFORM_GROUP
-            elif label_str.lower() == 'digital':
-                label_value = models.AreaLabel.DIGITAL
-            elif label_str == '' or label_str.lower() == 'none':
-                label_value = None
-        else:
+        label_str = update_data['label'].upper() if isinstance(update_data['label'], str) else update_data['label']
+        if label_str in ["CFU_ALIGNED", "PLATFORM_GROUP", "DIGITAL"]:
             label_value = label_str
+        elif label_str == '' or label_str.lower() == 'none':
+            label_value = None
+        else:
+            del update_data['label']  # Remove invalid label
 
         # Remove label from update_data to handle separately
         del update_data['label']
@@ -127,16 +114,9 @@ def create_tribe(db: Session, tribe_data: schemas.TribeBase, area_id: int, user_
     # Handle TribeLabel enum case sensitivity issues
     label_value = None
     if tribe_data.label:
-        label_str = tribe_data.label
-        if isinstance(label_str, str):
-            # Map lowercase values to enum members
-            if label_str.lower() == 'cfu_aligned':
-                label_value = models.TribeLabel.CFU_ALIGNED
-            elif label_str.lower() == 'platform_group':
-                label_value = models.TribeLabel.PLATFORM_GROUP
-            elif label_str.lower() == 'digital':
-                label_value = models.TribeLabel.DIGITAL
-        else:
+        label_str = tribe_data.label.upper() if isinstance(tribe_data.label, str) else tribe_data.label
+        # Map values to valid enum members
+        if label_str in ["CFU_ALIGNED", "PLATFORM_GROUP", "DIGITAL"]:
             label_value = label_str
 
     # Create tribe with the provided data
@@ -184,19 +164,13 @@ def update_tribe(db: Session, tribe_id: int, tribe_data: schemas.TribeBase, user
     update_data = tribe_data.dict(exclude_unset=True)
 
     if 'label' in update_data:
-        label_str = update_data['label']
-        if isinstance(label_str, str):
-            # Map lowercase values to enum members
-            if label_str.lower() == 'cfu_aligned':
-                label_value = models.TribeLabel.CFU_ALIGNED
-            elif label_str.lower() == 'platform_group':
-                label_value = models.TribeLabel.PLATFORM_GROUP
-            elif label_str.lower() == 'digital':
-                label_value = models.TribeLabel.DIGITAL
-            elif label_str == '' or label_str.lower() == 'none':
-                label_value = None
-        else:
+        label_str = update_data['label'].upper() if isinstance(update_data['label'], str) else update_data['label']
+        if label_str in ["CFU_ALIGNED", "PLATFORM_GROUP", "DIGITAL"]:
             label_value = label_str
+        elif label_str == '' or label_str.lower() == 'none':
+            label_value = None
+        else:
+            del update_data['label']  # Remove invalid label
 
         # Remove label from update_data to handle separately
         del update_data['label']
@@ -271,24 +245,13 @@ def create_squad(db: Session, squad_data: schemas.SquadBase, tribe_id: int, user
     ).first()
     if existing_squad:
         raise ValueError(f"A squad with the name '{squad_data.name}' already exists in this tribe")
-    # Handle TeamType enum specially due to case sensitivity issues
-    team_type_value = None
+
+    # Always use the string value from the enum for consistency
+    team_type_value = "STREAM_ALIGNED"  # Default
     if squad_data.team_type:
-        team_type_str = squad_data.team_type
-        if isinstance(team_type_str, str):
-            # Map lowercase values to enum members
-            if team_type_str == 'stream_aligned':
-                team_type_value = models.TeamType.STREAM_ALIGNED
-            elif team_type_str == 'platform':
-                team_type_value = models.TeamType.PLATFORM
-            elif team_type_str == 'enabling':
-                team_type_value = models.TeamType.ENABLING
-            elif team_type_str == 'complicated_subsystem':
-                team_type_value = models.TeamType.COMPLICATED_SUBSYSTEM
-        else:
+        team_type_str = squad_data.team_type.upper() if isinstance(squad_data.team_type, str) else squad_data.team_type
+        if team_type_str in ["STREAM_ALIGNED", "PLATFORM", "ENABLING", "COMPLICATED_SUBSYSTEM"]:
             team_type_value = team_type_str
-    else:
-        team_type_value = models.TeamType.STREAM_ALIGNED  # Default value
 
     # Create squad with the provided data
     db_squad = models.Squad(
@@ -296,7 +259,7 @@ def create_squad(db: Session, squad_data: schemas.SquadBase, tribe_id: int, user
         description=squad_data.description,
         status=squad_data.status,
         timezone=squad_data.timezone,
-        team_type=team_type_value,
+        team_type=team_type_value,  # Use string value directly
         member_count=squad_data.member_count,
         core_count=squad_data.core_count,
         subcon_count=squad_data.subcon_count,
@@ -343,31 +306,18 @@ def update_squad(db: Session, squad_id: int, squad_data: schemas.SquadBase, user
     if 'tribe_id' in update_data:
         del update_data['tribe_id']  # Don't update tribe_id here
 
-    # Handle TeamType enum specially due to case sensitivity issues
-    team_type_value = None
+    # Handle team_type specially for consistency
     if 'team_type' in update_data:
-        # Convert lowercase team_type to uppercase for the database enum
-        team_type_str = update_data['team_type']
-        if isinstance(team_type_str, str):
-            # Map lowercase values to enum members
-            if team_type_str == 'stream_aligned':
-                team_type_value = models.TeamType.STREAM_ALIGNED
-            elif team_type_str == 'platform':
-                team_type_value = models.TeamType.PLATFORM
-            elif team_type_str == 'enabling':
-                team_type_value = models.TeamType.ENABLING
-            elif team_type_str == 'complicated_subsystem':
-                team_type_value = models.TeamType.COMPLICATED_SUBSYSTEM
-        # Remove from update_data to handle separately
-        del update_data['team_type']
+        team_type_str = update_data['team_type'].upper() if isinstance(update_data['team_type'], str) else update_data['team_type']
+        if team_type_str in ["STREAM_ALIGNED", "PLATFORM", "ENABLING", "COMPLICATED_SUBSYSTEM"]:
+            update_data['team_type'] = team_type_str
+        # Remove if not valid
+        else:
+            del update_data['team_type']
 
     # Update all other attributes
     for key, value in update_data.items():
         setattr(db_squad, key, value)
-
-    # Update team_type separately after other updates
-    if team_type_value is not None:
-        db_squad.team_type = team_type_value
 
     db.commit()
     db.refresh(db_squad)

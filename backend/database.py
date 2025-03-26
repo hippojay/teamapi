@@ -8,6 +8,9 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import CreateSchema
 from typing import Optional, Dict, Any
 
+# Import logger after it's created - will be lazy-loaded to avoid circular imports
+logger = None
+
 # Add python-dotenv for environment variable loading
 try:
     from dotenv import load_dotenv
@@ -30,6 +33,15 @@ except ImportError:
     print("Warning: python-dotenv not installed. Install with pip install python-dotenv")
     print("Environment variables must be set manually or .env file won't be loaded.")
     # Continue without dotenv
+
+# Initialize logger after environment is loaded
+try:
+    from logger import get_logger
+    logger = get_logger('database')
+except ImportError:
+    # Fallback if logger module is not yet available
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger('database')
 
 # Base declarative for all models
 Base = declarative_base()
@@ -65,7 +77,7 @@ class DatabaseConfig:
             # Extract schema from connection string if present and override
             if '?schema=' in self.connection_string:
                 self.schema = self.connection_string.split('?schema=')[1].split('&')[0]
-                print(f"Extracted schema from connection string: {self.schema}")
+                logger.info(f"Extracted schema from connection string: {self.schema}")
                 # Remove schema parameter from connection string to avoid SQLAlchemy warnings
                 self.connection_string = self.connection_string.split('?schema=')[0]
         else:
@@ -75,14 +87,14 @@ class DatabaseConfig:
             
         # Log the schema being used
         if self.is_postgres:
-            print(f"Using PostgreSQL with schema: {self.schema}")
+            logger.info(f"Using PostgreSQL with schema: {self.schema}")
     
     def create_engine(self) -> Any:
         """Create SQLAlchemy engine based on configuration"""
         # Create engine with database-specific options
         if self.is_postgres:
             # PostgreSQL-specific configuration
-            logging.info(f"Connecting to PostgreSQL database: {self.connection_string}")
+            logger.info(f"Connecting to PostgreSQL database: {self.connection_string}")
             try:
                 # Handle the case when psycopg2 might not be installed
                 import psycopg2
@@ -101,21 +113,21 @@ class DatabaseConfig:
                         if not inspector.has_schema(self.schema):
                             with engine.begin() as conn:
                                 conn.execute(CreateSchema(self.schema))
-                                logging.info(f"Created schema: {self.schema}")
+                                logger.info(f"Created schema: {self.schema}")
                         
                         # Set schema as the default search path
                         with engine.begin() as conn:
                             conn.execute(text(f"SET search_path TO {self.schema}"))
-                            logging.info(f"Set search_path to schema: {self.schema}")
+                            logger.info(f"Set search path to schema: {self.schema}")
                             
                         # Update the Base metadata with schema info
                         Base.metadata.schema = self.schema
                     except Exception as e:
-                        logging.error(f"Error setting up schema: {str(e)}")
-                        logging.info("Will attempt to use default schema")
+                        logger.error(f"Error setting up schema: {str(e)}")
+                        logger.info("Will attempt to use default schema")
                         
             except ImportError:
-                logging.error("psycopg2 is not installed, but PostgreSQL connection was requested")
+                logger.error("psycopg2 is not installed, but PostgreSQL connection was requested")
                 raise ImportError("PostgreSQL support requires psycopg2 to be installed. Run 'pip install psycopg2-binary'")
             
         else:

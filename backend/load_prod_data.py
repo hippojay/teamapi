@@ -12,28 +12,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 def ensure_db_compatibility():
-    """
-    Ensure database compatibility by running necessary migrations
-    Specifically checks if PostgreSQL is being used and runs enum conversion
-    """
-    if not db_config.is_postgres:
-        # No special handling needed for SQLite
-        return
-        
-    logger.info("PostgreSQL database detected, checking for necessary migrations")
-    try:
-        # Import here to avoid circular imports
-        from run_migration import run_specific_migration
-        
-        # Run the enum conversion migration
-        success = run_specific_migration("convert_enums_to_strings")
-        if success:
-            logger.info("Enum conversion completed successfully")
-        else:
-            logger.warning("Enum conversion failed, but proceeding with data load anyway")
-    except Exception as e:
-        logger.warning(f"Error running enum conversion: {e}")
-        logger.info("Proceeding with data load despite migration failure")
+    """Placeholder function for backward compatibility"""
+    # This function previously triggered migrations
+    # Now it simply logs that migrations are no longer needed
+    logger.info("Database compatibility is managed through string-based enums; no migrations needed.")
 
 def load_services_data(file_path: str, db: Session, append_mode: bool = False, sheet_name: str = "Services", run_compatibility_check: bool = True):
     """
@@ -186,8 +168,9 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         return
 
     # Extract unique areas, tribes, and squads
+    logger.debug("Extracting unique organizational units")
     areas = df['Area'].dropna().unique()
-    print(f"Found {len(areas)} areas")
+    logger.info(f"Found unique areas: {len(areas)}")
 
     area_objects = {}
     tribe_objects = {}
@@ -212,7 +195,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         members_by_email = existing_members.copy()
         members_by_name = {member.name: member for member in existing_members.values()}
 
-        print(f"Operating in append mode. Found {len(existing_areas)} existing areas, {len(existing_tribes)} existing tribes, {len(existing_squads)} existing squads, and {len(existing_members)} existing team members.")
+        logger.info(f"Operating in append mode: areas={len(existing_areas)}, tribes={len(existing_tribes)}, squads={len(existing_squads)}, members={len(existing_members)}")
     else:
         members_by_email = {}
         members_by_name = {}
@@ -221,7 +204,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
     for area_name in areas:
         if append_mode and area_name in area_objects:
             # Area already exists
-            print(f"Using existing area: {area_name} (ID: {area_objects[area_name].id})")
+            logger.info(f"Using existing area: {area_name} (ID: {area_objects[area_name].id})")
             continue
 
         area = models.Area(
@@ -231,7 +214,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         db.add(area)
         db.flush()  # Flush to get the ID
         area_objects[area_name] = area
-        print(f"Created area: {area_name} (ID: {area.id})")
+        logger.info(f"Created new area: {area_name} (ID: {area.id})")
 
     # Create Tribes (or use existing in append mode)
     tribes_data = df[['Area', 'Tribe']].dropna().drop_duplicates()
@@ -240,12 +223,12 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         tribe_name = row['Tribe']
 
         if area_name not in area_objects:
-            print(f"Warning: Area '{area_name}' not found for tribe '{tribe_name}'. Skipping.")
+            logger.warning(f"Area not found for tribe: {area_name} -> {tribe_name}")
             continue
 
         if append_mode and tribe_name in tribe_objects:
             # Tribe already exists
-            print(f"Using existing tribe: {tribe_name} (ID: {tribe_objects[tribe_name].id})")
+            logger.info(f"Using existing tribe: {tribe_name} (ID: {tribe_objects[tribe_name].id})")
             continue
 
         tribe = models.Tribe(
@@ -256,7 +239,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         db.add(tribe)
         db.flush()
         tribe_objects[tribe_name] = tribe
-        print(f"Created tribe: {tribe_name} (ID: {tribe.id})")
+        logger.info(f"Created new tribe: {tribe_name} (ID: {tribe.id})")
 
     # Create Squads (or use existing in append mode)
     squads_data = df[['Tribe', 'Squad']].dropna().drop_duplicates()
@@ -265,16 +248,17 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         squad_name = row['Squad']
 
         if tribe_name not in tribe_objects:
-            print(f"Warning: Tribe '{tribe_name}' not found for squad '{squad_name}'. Skipping.")
+            logger.warning(f"Tribe not found for squad: {tribe_name} -> {squad_name}")
             continue
 
         if append_mode and squad_name in squad_objects:
             # Squad already exists
-            print(f"Using existing squad: {squad_name} (ID: {squad_objects[squad_name].id})")
+            logger.info(f"Using existing squad: {squad_name} (ID: {squad_objects[squad_name].id})")
             continue
 
         # Create new squad with default team_type
-        team_type_value = TeamType.STREAM_ALIGNED.value
+        # Always use uppercase for enum values for consistency
+        team_type_value = "STREAM_ALIGNED"
         
         squad = models.Squad(
             name=squad_name,
@@ -288,7 +272,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         db.add(squad)
         db.flush()
         squad_objects[squad_name] = squad
-        print(f"Created squad: {squad_name} (ID: {squad.id})")
+        logger.info(f"Created new squad: {squad_name} (ID: {squad.id})")
 
     # Dictionary to track supervisors
     supervisors_by_name = {}
@@ -343,7 +327,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         is_vacancy = name == 'Vacancy'
         has_email = not pd.isna(row['Business Email Address'])
 
-        print(f"Processing {name}")
+        logger.debug(f"Processing team member: {name} in squad {squad_name}")
 
         # Determine employment type and update counts only for non-vacancies
         if not is_vacancy:
@@ -398,7 +382,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
                         'capacity': capacity,
                         'role': row['Position'] if not pd.isna(row['Position']) else "Team Member"
                     })
-                    print(f"Updated existing member {member.name}'s capacity in squad {squad_name} to {capacity}")
+                    logger.info(f"Updated member capacity: {member.name} in {squad_name} to {capacity}")
             else:
                 # Add to squad_members table with provided capacity
                 db.execute(
@@ -409,7 +393,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
                         role=row['Position'] if not pd.isna(row['Position']) else "Team Member"
                     )
                 )
-                print(f"Added existing member {member.name} to additional squad {squad_name} with capacity {capacity}")
+                logger.info(f"Added member to additional squad: {member.name} to {squad_name} with capacity {capacity}")
 
                 # Update counts only for non-vacancies
                 if not is_vacancy:
@@ -454,7 +438,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
             # Store in dictionaries for reference
             members_by_email[email] = member
             members_by_name[name] = member
-            print(f"Created new member {member.name} in squad {squad_name} with capacity {capacity}")
+            logger.info(f"Created new team member: {member.name} in {squad_name}, capacity={capacity}, vacancy={is_vacancy}")
 
             # Update counts only for non-vacancies
             if not is_vacancy:
@@ -502,7 +486,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         db.flush()  # Flush to get the ID
 
         supervisors_by_name[supervisor_name] = supervisor
-        print(f"Created external supervisor: {supervisor_name}")
+        logger.info(f"Created external supervisor: {supervisor_name}")
 
     # Now set supervisor relationships based on the Supervisor Name field
     for _, row in members_data.iterrows():
@@ -527,7 +511,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
                 # Set the supervisor relationship if different
                 if member.supervisor_id != supervisor.id:
                     member.supervisor_id = supervisor.id
-                    print(f"Set supervisor for {member.name}: {supervisor.name}")
+                    logger.info(f"Set supervisor relationship: {member.name} -> {supervisor.name}")
         else:
             # Try to find the member by name
             if name in members_by_name and supervisor_name in supervisors_by_name:
@@ -548,10 +532,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
             squad.core_capacity = round(squad_core_capacity[squad_name], 2)
             squad.subcon_count = squad_subcon_counts[squad_name]
             squad.subcon_capacity = round(squad_subcon_capacity[squad_name], 2)
-            print(f"Updated squad '{squad_name}' with {squad.member_count} members "
-                  f"(Core: {squad.core_count}, Subcon: {squad.subcon_count}) "
-                  f"and total capacity of {squad.total_capacity:.2f} FTE "
-                  f"(Core: {squad.core_capacity:.2f}, Subcon: {squad.subcon_capacity:.2f})")
+            logger.info(f"Updated squad metrics: {squad_name}, members={squad.member_count} (Core={squad.core_count}, Subcon={squad.subcon_count}), capacity={round(squad.total_capacity, 2)} (Core={round(squad.core_capacity, 2)}, Subcon={round(squad.subcon_capacity, 2)})")
     # Update tribe and area counts and capacities
     if append_mode:
         # Recalculate all tribe and area counts to ensure correctness
@@ -562,7 +543,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
 
     # Commit all changes
     db.commit()
-    print(f"Database successfully updated with data from {file_path}!")
+    logger.info(f"Database successfully updated with organizational data from {file_path}")
 
 def calculate_tribe_and_area_counts(db: Session, tribes_to_update):
     """Calculate and update member counts and capacities for specific tribes and their areas"""
@@ -591,7 +572,7 @@ def calculate_tribe_and_area_counts(db: Session, tribes_to_update):
         tribe.subcon_count = subcon_count
         tribe.subcon_capacity = round(subcon_capacity, 2)
 
-        print(f"Updated tribe '{tribe.name}' with {member_count} members (Core: {core_count}, Subcon: {subcon_count}) and total capacity of {capacity:.2f} FTE (Core: {core_capacity:.2f}, Subcon: {subcon_capacity:.2f})")
+        logger.info(f"Updated tribe metrics: {tribe.name}, members={member_count} (Core={core_count}, Subcon={subcon_count}), capacity={round(capacity, 2)} (Core={round(core_capacity, 2)}, Subcon={round(subcon_capacity, 2)})")
 
         # Add to area counts
         area = db.query(models.Area).filter_by(id=tribe.area_id).first()
@@ -623,11 +604,11 @@ def calculate_tribe_and_area_counts(db: Session, tribes_to_update):
             area.subcon_count = area_subcon_counts[area_name]
             area.subcon_capacity = round(area_subcon_capacity[area_name], 2)
 
-            print(f"Updated area '{area_name}' with {count} members (Core: {area.core_count}, Subcon: {area.subcon_count}) and total capacity of {area.total_capacity:.2f} FTE (Core: {area.core_capacity:.2f}, Subcon: {area.subcon_capacity:.2f})")
+            logger.info(f"Updated area metrics: {area_name}, members={count} (Core={area.core_count}, Subcon={area.subcon_count}), capacity={round(area.total_capacity, 2)} (Core={round(area.core_capacity, 2)}, Subcon={round(area.subcon_capacity, 2)})")
 
 def update_all_tribe_and_area_counts(db: Session):
     """Recalculate all tribe and area counts from squad data"""
-    print("Recalculating all tribe and area counts...")
+    logger.info("Recalculating all tribe and area counts")
 
     # Initialize area counts
     areas = {area.id: area for area in db.query(models.Area).all()}
@@ -696,7 +677,7 @@ def update_all_tribe_and_area_counts(db: Session):
         area.subcon_count = counts['subcon_count']
         area.subcon_capacity = round(counts['subcon_capacity'], 2)
 
-    print("All tribe and area counts have been recalculated.")
+    logger.info("All tribe and area metrics have been recalculated")
 
 def parse_args():
     """Parse command line arguments"""
@@ -727,19 +708,19 @@ if __name__ == "__main__":
         if os.path.exists(default_file):
             files_to_process = [default_file]
         else:
-            print(f"Error: Default file not found: {default_file}")
-            print("Please specify a file with --file or multiple files with --files")
+            logger.error(f"Default file not found: {default_file}")
+            logger.info("Please specify a file with --file or multiple files with --files")
             exit(1)
 
     # Check if files exist
     for file_path in files_to_process:
         if not os.path.exists(file_path):
-            print(f"Error: File not found: {file_path}")
+            logger.error(f"File not found: {file_path}")
             exit(1)
             
     # Run database compatibility check if requested
     if args.run_migrations:
-        print("Running database compatibility migrations...")
+        logger.info("Running database compatibility migrations")
         ensure_db_compatibility()
 
     # Get DB session

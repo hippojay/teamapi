@@ -9,6 +9,6 @@ launch.json
 *.xlsm
 credentials/*
 .env
-
+logs/*.log
 # Example files
 backend/models_typed_example.py
