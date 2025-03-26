@@ -1,15 +1,41 @@
 import pandas as pd
 import os
 import argparse
+import logging
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine, Base
+from database import SessionLocal, engine, Base, db_config
 import models
-from models import ServiceStatus, ServiceType
+from models import ServiceStatus, ServiceType, TeamType
 
-# Create tables if they don't exist
-Base.metadata.create_all(bind=engine)
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-def load_services_data(file_path: str, db: Session, append_mode: bool = False, sheet_name: str = "Services"):
+def ensure_db_compatibility():
+    """
+    Ensure database compatibility by running necessary migrations
+    Specifically checks if PostgreSQL is being used and runs enum conversion
+    """
+    if not db_config.is_postgres:
+        # No special handling needed for SQLite
+        return
+        
+    logger.info("PostgreSQL database detected, checking for necessary migrations")
+    try:
+        # Import here to avoid circular imports
+        from run_migration import run_specific_migration
+        
+        # Run the enum conversion migration
+        success = run_specific_migration("convert_enums_to_strings")
+        if success:
+            logger.info("Enum conversion completed successfully")
+        else:
+            logger.warning("Enum conversion failed, but proceeding with data load anyway")
+    except Exception as e:
+        logger.warning(f"Error running enum conversion: {e}")
+        logger.info("Proceeding with data load despite migration failure")
+
+def load_services_data(file_path: str, db: Session, append_mode: bool = False, sheet_name: str = "Services", run_compatibility_check: bool = True):
     """
     Load services data from Excel or CSV file into the database
 
@@ -18,7 +44,12 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
     - db: Database session
     - append_mode: If True, will update existing records rather than creating duplicates
     - sheet_name: Name of the Excel sheet to load (default: "Services") - not used for CSV
+    - run_compatibility_check: If True, will run database compatibility checks
     """
+    # Run compatibility check if requested
+    if run_compatibility_check:
+        ensure_db_compatibility()
+        
     print(f"Loading services data from {file_path}")
 
     # Determine if file is CSV based on extension
@@ -66,20 +97,23 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
 
         squad_id = squads_by_name[squad_name].id
 
-        # Determine service type from the Type column
-        service_type = ServiceType.API  # Default
+        service_type_value = None
         if 'Type' in row and not pd.isna(row['Type']):
             type_str = row['Type'].lower()
             if type_str == 'api':
-                service_type = ServiceType.API
+                service_type_value = ServiceType.API.value
             elif 'repo' in type_str or 'repository' in type_str:
-                service_type = ServiceType.REPO
+                service_type_value = ServiceType.REPO.value
             elif 'platform' in type_str:
-                service_type = ServiceType.PLATFORM
+                service_type_value = ServiceType.PLATFORM.value
             elif 'web' in type_str or 'webpage' in type_str:
-                service_type = ServiceType.WEBPAGE
+                service_type_value = ServiceType.WEBPAGE.value
             elif 'app' in type_str or 'module' in type_str:
-                service_type = ServiceType.APP_MODULE
+                service_type_value = ServiceType.APP_MODULE.value
+        
+        # Use API as default if type couldn't be determined
+        if service_type_value is None:
+            service_type_value = ServiceType.API.value
 
         # Check if this service already exists
         service_key = f"{row['Service Name']}_{squad_id}"
@@ -87,10 +121,10 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
             # Update existing service
             service = existing_services[service_key]
             service.description = row['Description'] if 'Description' in row and not pd.isna(row['Description']) else service.description
-            service.service_type = service_type
+            service.service_type = service_type_value
             service.url = row['URL'] if 'URL' in row and not pd.isna(row['URL']) else service.url
             service.version = row['Version'] if 'Version' in row and not pd.isna(row['Version']) else service.version
-            service.status = ServiceStatus.HEALTHY  # Default to healthy
+            service.status = ServiceStatus.HEALTHY.value  # Default to healthy
 
             print(f"Updated existing service: {service.name} (ID: {service.id})")
         else:
@@ -98,21 +132,21 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
             service = models.Service(
                 name=row['Service Name'],
                 description=row['Description'] if 'Description' in row and not pd.isna(row['Description']) else "",
-                service_type=service_type,
+                service_type=service_type_value,
                 url=row['URL'] if 'URL' in row and not pd.isna(row['URL']) else None,
                 version=row['Version'] if 'Version' in row and not pd.isna(row['Version']) else "1.0.0",
-                status=ServiceStatus.HEALTHY,  # Default to healthy
+                status=ServiceStatus.HEALTHY.value,  # Default to healthy
                 uptime=99.9,  # Default uptime
                 squad_id=squad_id
             )
             db.add(service)
-            print(f"Created new service: {service.name} (Type: {service.service_type.value})")
+            print(f"Created new service: {service.name} (Type: {service.service_type})")
 
     # Commit all changes
     db.commit()
     print(f"Services data successfully loaded from {file_path}!")
 
-def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False, sheet_name: str = "Sheet1"):
+def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False, sheet_name: str = "Sheet1", run_compatibility_check: bool = True):
     """
     Load production data from Excel or CSV file into the database
 
@@ -121,7 +155,11 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
     - db: Database session
     - append_mode: If True, will update existing records rather than creating duplicates
     - sheet_name: Name of the Excel sheet to load (default: "Sheet1") - not used for CSV
+    - run_compatibility_check: If True, will run database compatibility checks
     """
+    # Run compatibility check if requested
+    if run_compatibility_check:
+        ensure_db_compatibility()
     # Determine if file is CSV based on extension
     is_csv = file_path.lower().endswith('.csv')
 
@@ -235,11 +273,15 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
             print(f"Using existing squad: {squad_name} (ID: {squad_objects[squad_name].id})")
             continue
 
+        # Create new squad with default team_type
+        team_type_value = TeamType.STREAM_ALIGNED.value
+        
         squad = models.Squad(
             name=squad_name,
             description="",  # Empty description as per requirements
             status="Active",  # Default to Active as per requirements
             timezone="UTC",   # Default to UTC as per requirements
+            team_type=team_type_value,  # Set default team type value
             member_count=0,   # Will be updated later
             tribe_id=tribe_objects[tribe_name].id
         )
@@ -665,6 +707,7 @@ def parse_args():
     parser.add_argument('--sheet', '-s', type=str, dest='sheet_name', default="Sheet1",
                         help='Name of the Excel sheet to load (default: "Sheet1")')
     parser.add_argument('--services', action='store_true', help='Load services data from the Excel file')
+    parser.add_argument('--run-migrations', action='store_true', help='Run database compatibility migrations before loading data')
 
     return parser.parse_args()
 
@@ -693,6 +736,11 @@ if __name__ == "__main__":
         if not os.path.exists(file_path):
             print(f"Error: File not found: {file_path}")
             exit(1)
+            
+    # Run database compatibility check if requested
+    if args.run_migrations:
+        print("Running database compatibility migrations...")
+        ensure_db_compatibility()
 
     # Get DB session
     db = SessionLocal()
@@ -705,9 +753,11 @@ if __name__ == "__main__":
             if args.services:
                 # Load services data
                 service_sheet = "Sheet1" if args.sheet_name == "Sheet1" else args.sheet_name
-                load_services_data(file_path, db, append_mode=should_append, sheet_name=service_sheet)
+                load_services_data(file_path, db, append_mode=should_append, 
+                                  sheet_name=service_sheet, run_compatibility_check=False)
             else:
                 # Load regular team data
-                load_data_from_excel(file_path, db, append_mode=should_append, sheet_name=args.sheet_name)
+                load_data_from_excel(file_path, db, append_mode=should_append, 
+                                    sheet_name=args.sheet_name, run_compatibility_check=False)
     finally:
         db.close()

@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 import models
 from search_schemas import SearchResultItem
+from database import db_config
 
 def search_all(db: Session, query: str, limit: int = 20):
     """

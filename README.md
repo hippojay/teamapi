@@ -9,6 +9,7 @@ A prototype of a "Who What Where" team API portal that shows organisational stru
 - Python 3.8 or higher
 - Node.js 14 or higher
 - npm or yarn
+- PostgreSQL (optional, if not using SQLite)
 
 ### Quick Start
 
@@ -18,12 +19,16 @@ A prototype of a "Who What Where" team API portal that shows organisational stru
    chmod +x init_db_and_admin.sh
    ```
 
-2. Initialize the database and create an admin user:
+2. Configure your database (optional):
+   - Copy `.env.example` to `.env` and configure database settings
+   - By default, SQLite is used
+
+3. Initialize the database and create an admin user:
    ```bash
    ./init_db_and_admin.sh
    ```
 
-3. Run the application:
+4. Run the application:
    ```bash
    ./run.sh
    ```
@@ -54,14 +59,15 @@ This will:
 
 ## Project Structure
 
-- `backend/`: FastAPI Python backend with SQLite database
+- `backend/`: FastAPI Python backend with database support (SQLite or PostgreSQL)
 - `frontend/`: React frontend with TailwindCSS
+- `.env.example`: Example environment configuration file
 
 ## Development
 
 ### Backend (FastAPI)
 
-The backend API is built with FastAPI and provides endpoints for:
+The backend API is built with FastAPI and supports both SQLite and PostgreSQL databases. It provides endpoints for:
 - Areas, Tribes, Squads
 - Team Members
 - Services

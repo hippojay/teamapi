@@ -5,6 +5,7 @@ from typing import List, Optional
 import models
 import schemas
 import auth
+from database import db_config
 
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()

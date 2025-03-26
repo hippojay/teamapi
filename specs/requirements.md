@@ -1,82 +1,106 @@
-# Who What Where - Project Requirements
+# Who What Where Application Requirements
 
-## Identified User Needs
+## Core Requirements
 
-1. **Security Enhancements**
-   - Update vulnerable npm dependencies to latest versions
-   - Address security issues in frontend libraries
-   - Ensure secure data handling in application
+Based on the conversations and issues identified, here are the key requirements for the Who What Where application:
 
-2. **Dependency Management**
-   - Create process for managing frontend dependencies
-   - Implement strategy for testing after dependency updates
-   - Document migration paths for major version upgrades
+1. **Multi-Database Support**
+   - Support for SQLite database (default)
+   - Support for PostgreSQL database
+   - Ability to add support for other database types in the future
+   - Consistent data model across different database backends
 
-3. **Codebase Maintenance**
-   - Identify and eliminate unused dependencies
-   - Improve code modularity and maintainability
-   - Implement standard practices for dependency updates
+2. **Organization Structure Management**
+   - Support for hierarchical organization structure (Areas, Tribes, Squads)
+   - Ability to add, edit, and delete organization entities
+   - Support for different team types (stream-aligned, platform, enabling, complicated subsystem)
+   - Tracking of team capacity, member counts, and other metrics
 
-4. **Feature Requirements** (From Feature to-do list)
-   - Add support for other databases beyond current SQLite
-   - Extract duplicated UI code into reusable React components
-   - Scan and locate security issues in the codebase
-   - Add TLS and authentication to API calls
-   - Enable management of organizational structures (areas, tribes, squads)
-   - Provide customization options for structure naming
-   - Support multi-layered organizational approach
-   - Add key people information into Area and Tribe views
-   - Include cost information for areas/tribe run rates
-   - Create historical views of organizational structure
-   - Implement future capacity planning for team members
-   - Add analytics views for various organizational metrics
-   - Implement Team topologies analytics (dependencies, architecture hotspots)
-   - Support gathering dependency data from repository contributions
+3. **Team Member Management**
+   - Support for tracking team members and their assignments to squads
+   - Ability to track team member roles, capacity, and other attributes
+   - Support for reporting relationships (supervisors)
+   - Distinction between core employees and contractors
 
-5. **Performance Requirements**
-   - Ensure application remains responsive after dependency updates
-   - Maintain or improve current load times and rendering performance
-   - Optimize data fetching and state management
+4. **Service and Dependency Tracking**
+   - Ability to track services provided by teams
+   - Support for tracking dependencies between teams
+   - Different types of team dependencies and interaction modes
+   - Service status monitoring and reporting
 
-6. **Testing Requirements**
-   - Ensure comprehensive test coverage for critical components
-   - Update testing libraries to compatible versions
-   - Implement tests for new features and refactored components
+5. **Data Import/Export**
+   - Ability to import organization data from Excel files
+   - Support for exporting data in various formats
+   - Handling of data migration and transformations
+   - Robust error handling during data operations
 
-7. **Documentation Requirements**
-   - Document migration steps for major library updates
-   - Maintain up-to-date dependency documentation
-   - Create guides for common development tasks
+6. **Security and Access Control**
+   - User authentication and authorization
+   - Role-based access control
+   - Secure API endpoints
+   - Audit logging of system actions
 
-8. **Operational Requirements**
-   - Implement automation for dependency updating
-   - Create procedures for handling breaking changes
-   - Establish monitoring for security vulnerabilities
+7. **Deployment and Operations**
+   - Consistent deployment process across environments
+   - Support for database migrations
+   - Robust error handling and logging
+   - Support for different hosting environments
 
-## Priority Matrix
+8. **Potential Future Features** (from Feature to do list)
+   - Add support for other databases
+   - Find duplicated UI code and convert to React components
+   - Scan and locate security issues
+   - Add TLS and auth to API calls
+   - Ability to add/rename organization structure elements (areas, tribes, squads)
+   - Add key people into Area and tribe view (leadership)
+   - Add cost information and run rates
+   - Add historical views of organization structure
+   - Add future capacity planning
+   - Add analytics views
+   - Team topology analytics and dependency hot spots
+   - Repository contribution data integration
 
-| Requirement | Priority | Complexity | Timeline |
-|-------------|----------|------------|----------|
-| Security Dependency Updates | High | Medium | Immediate |
-| Database Support Expansion | Medium | High | Q3 2023 |
-| UI Component Refactoring | Medium | Medium | Q2 2023 |
-| TLS and Auth for API | High | Medium | Q2 2023 |
-| Organizational Structure Features | Medium | High | Q3-Q4 2023 |
-| Analytics Views | Low | High | Q4 2023 |
-| Repository Integration | Low | Medium | Q1 2024 |
+## Technical Requirements
 
-## Acceptance Criteria
+1. **Code Quality and Maintenance**
+   - Modular architecture with clear separation of concerns
+   - Consistent code style and documentation
+   - Comprehensive test coverage
+   - Easy maintenance and extensibility
 
-1. **For Dependency Updates**
-   - All specified dependencies successfully updated
-   - No regressions in existing functionality
-   - All tests pass with updated dependencies
-   - No new security vulnerabilities introduced
-   - Application performance remains at or above current levels
+2. **Database Abstraction**
+   - Consistent handling of database operations across different backends
+   - Support for database-specific features when necessary
+   - Clean migration paths between database versions
+   - Handling of database-specific data types (e.g., enums in PostgreSQL)
+   - Support for running migrations automatically when needed
 
-2. **For Feature Implementation**
-   - Each feature meets the specific requirements defined in feature documents
-   - Code quality maintained or improved
-   - Tests written for new features
-   - Documentation updated to reflect new features
-   - No negative impact on existing functionality
+3. **API Design**
+   - RESTful API design principles
+   - Clear API documentation
+   - Consistent error handling and response formats
+   - API versioning to support backward compatibility
+
+4. **Frontend Development**
+   - Responsive UI design
+   - Component-based architecture
+   - Consistent styling and theming
+   - Accessibility compliance
+
+5. **Security**
+   - Input validation and sanitization
+   - Protection against common web vulnerabilities
+   - Secure storage of sensitive information
+   - Regular security scanning and updates
+
+6. **Performance**
+   - Efficient database queries
+   - Frontend optimization
+   - Caching where appropriate
+   - Performance monitoring and optimization
+
+7. **Deployment**
+   - Containerization support
+   - CI/CD pipeline integration
+   - Environment-specific configuration
+   - Backup and recovery procedures

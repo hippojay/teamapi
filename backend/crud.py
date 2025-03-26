@@ -7,16 +7,25 @@ from datetime import datetime
 import models
 import schemas
 import user_crud
+from database import db_config
+
+# Helper function to get schema-qualified table name
+def get_table_name(table_name):
+    """Get schema-qualified table name if using PostgreSQL with schema"""
+    if db_config.is_postgres and db_config.schema:
+        return f"{db_config.schema}.{table_name}"
+    return table_name
 
 # Function to safely query services table with proper enum handling
 def get_services_query(db: Session):
     """Create a query for services that handles potential enum conversion issues"""
     # Use a direct SQL query to fetch the raw data first
-    stmt = text("""
+    services_table = get_table_name("services")
+    stmt = text(f"""
         SELECT
             id, name, description, status, uptime, version,
             api_docs_url, squad_id, service_type, url
-        FROM services
+        FROM {services_table}
     """)
 
     result = db.execute(stmt).fetchall()
@@ -154,9 +163,10 @@ def get_squad(db: Session, squad_id: int) -> Optional[models.Squad]:
 
     # We'll store capacity and role information separately as metadata
     # Query the squad members junction table
-    stmt = text("""
+    squad_members_table = get_table_name("squad_members")
+    stmt = text(f"""
         SELECT sm.member_id, sm.capacity, sm.role
-        FROM squad_members sm
+        FROM {squad_members_table} sm
         WHERE sm.squad_id = :squad_id
     """)
 
@@ -183,10 +193,12 @@ def get_team_members(db: Session) -> List[models.TeamMember]:
     members = db.query(models.TeamMember).all()
 
     # Get all squad memberships
-    stmt = text("""
+    squad_members_table = get_table_name("squad_members")
+    squads_table = get_table_name("squads")
+    stmt = text(f"""
         SELECT sm.member_id, sm.squad_id, s.name as squad_name, sm.capacity, sm.role
-        FROM squad_members sm
-        JOIN squads s ON sm.squad_id = s.id
+        FROM {squad_members_table} sm
+        JOIN {squads_table} s ON sm.squad_id = s.id
     """)
 
     result = db.execute(stmt).fetchall()
@@ -237,9 +249,10 @@ def get_team_members_by_squad(db: Session, squad_id: int) -> List[models.TeamMem
     members = db.execute(stmt).scalars().all()
 
     # Get specific capacity and role information for this squad
-    capacity_stmt = text("""
+    squad_members_table = get_table_name("squad_members")
+    capacity_stmt = text(f"""
         SELECT member_id, capacity, role
-        FROM squad_members
+        FROM {squad_members_table}
         WHERE squad_id = :squad_id
     """)
 
@@ -254,10 +267,12 @@ def get_team_members_by_squad(db: Session, squad_id: int) -> List[models.TeamMem
         }
 
     # Also get all squad memberships for each member to calculate total capacity
-    all_memberships_stmt = text("""
+    squad_members_table = get_table_name("squad_members")
+    squads_table = get_table_name("squads")
+    all_memberships_stmt = text(f"""
         SELECT sm.member_id, sm.squad_id, s.name as squad_name, sm.capacity, sm.role
-        FROM squad_members sm
-        JOIN squads s ON sm.squad_id = s.id
+        FROM {squad_members_table} sm
+        JOIN {squads_table} s ON sm.squad_id = s.id
         WHERE sm.member_id IN :member_ids
     """)
 
@@ -313,10 +328,12 @@ def get_team_member(db: Session, member_id: int) -> Optional[models.TeamMember]:
         return None
 
     # Get squad memberships from the many-to-many relationship
-    stmt = text("""
+    squad_members_table = get_table_name("squad_members")
+    squads_table = get_table_name("squads")
+    stmt = text(f"""
         SELECT sm.squad_id, s.name as squad_name, sm.capacity, sm.role
-        FROM squad_members sm
-        JOIN squads s ON sm.squad_id = s.id
+        FROM {squad_members_table} sm
+        JOIN {squads_table} s ON sm.squad_id = s.id
         WHERE sm.member_id = :member_id
     """)
 
@@ -421,10 +438,12 @@ def delete_service(db: Session, service_id: int) -> bool:
 # Dependency operations
 def get_dependencies(db: Session, squad_id: int) -> List[models.Dependency]:
     # Query dependencies with joined dependency squad for name
-    stmt = text("""
+    dependencies_table = get_table_name("dependencies")
+    squads_table = get_table_name("squads")
+    stmt = text(f"""
         SELECT d.*, s.name as dependency_squad_name
-        FROM dependencies d
-        JOIN squads s ON d.dependency_squad_id = s.id
+        FROM {dependencies_table} d
+        JOIN {squads_table} s ON d.dependency_squad_id = s.id
         WHERE d.dependent_squad_id = :squad_id
     """)
 
@@ -463,10 +482,12 @@ def get_dependencies(db: Session, squad_id: int) -> List[models.Dependency]:
 
 def get_all_dependencies(db: Session) -> List[models.Dependency]:
     # Query all dependencies with joined dependency squad for name
-    stmt = text("""
+    dependencies_table = get_table_name("dependencies")
+    squads_table = get_table_name("squads")
+    stmt = text(f"""
         SELECT d.*, s.name as dependency_squad_name
-        FROM dependencies d
-        JOIN squads s ON d.dependency_squad_id = s.id
+        FROM {dependencies_table} d
+        JOIN {squads_table} s ON d.dependency_squad_id = s.id
     """)
 
     result = db.execute(stmt).fetchall()

@@ -27,10 +27,31 @@ from search_schemas import SearchResults
 
 # Import database initializer
 import db_initializer
+import os
+from database import db_config
 
-# Check if database is initialized, and initialize if needed
-if not db_initializer.check_database_initialized():
-    print("\033[93mDatabase not initialized. Performing first-time setup...\033[0m")
+# Log database connection type
+db_type = db_config.db_type
+print(f"\033[94mUsing {db_type.upper()} database\033[0m")
+
+# Always check if database is initialized regardless of database type
+initialize_db = not db_initializer.check_database_initialized()
+
+# Log initialization status
+if initialize_db:
+    if db_type == "postgresql":
+        print("\033[93mPostgreSQL database tables not found. Performing first-time setup...\033[0m")
+        # Set Base.metadata.schema here to ensure tables are created in the correct schema
+        if db_config.schema:
+            Base.metadata.schema = db_config.schema
+            print(f"\033[94mUsing schema: {db_config.schema}\033[0m")
+        else:
+            print("\033[91mWARNING: No schema specified for PostgreSQL. See docs/postgresql_schemas.md for help.\033[0m")
+    else:
+        print("\033[93mSQLite database not initialized. Performing first-time setup...\033[0m")
+
+# Initialize if needed
+if initialize_db:
     success = db_initializer.initialize_database()
     if success:
         print("\033[92mDatabase initialized successfully!\033[0m")
@@ -361,12 +382,18 @@ async def upload_data(
         if data_type == "organization":
             # For organization structure (areas, tribes, squads, team members)
             try:
-                from load_prod_data import load_data_from_excel
+                from load_prod_data import load_data_from_excel, ensure_db_compatibility
+                
+                # Ensure database compatibility (especially for PostgreSQL)
+                if db_config.is_postgres:
+                    ensure_db_compatibility()
+                    
                 db_session = db
                 # Use the provided sheet_name or default to "Sheet1"
                 selected_sheet = sheet_name or "Sheet1"
                 # Process the file with append_mode=True to update existing data
-                load_data_from_excel(temp_file_path, db_session, append_mode=True, sheet_name=selected_sheet)
+                load_data_from_excel(temp_file_path, db_session, append_mode=True, 
+                                    sheet_name=selected_sheet, run_compatibility_check=False)
                 sheet_info = f" from sheet '{selected_sheet}'" if not is_csv else ""
                 summary = {"message": f"Organization data processed successfully{sheet_info}."}
             except Exception as e:
@@ -374,12 +401,18 @@ async def upload_data(
         elif data_type == "services":
             # For services data
             try:
-                from load_prod_data import load_services_data
+                from load_prod_data import load_services_data, ensure_db_compatibility
+                
+                # Ensure database compatibility (especially for PostgreSQL)
+                if db_config.is_postgres:
+                    ensure_db_compatibility()
+                    
                 db_session = db
                 # Use the provided sheet_name or default to "Services"
                 selected_sheet = sheet_name or "Services"
                 # Process the file with append_mode=True to update existing data
-                load_services_data(temp_file_path, db_session, append_mode=True, sheet_name=selected_sheet)
+                load_services_data(temp_file_path, db_session, append_mode=True, 
+                                 sheet_name=selected_sheet, run_compatibility_check=False)
                 sheet_info = f" from sheet '{selected_sheet}'" if not is_csv else ""
                 summary = {"message": f"Services data processed successfully{sheet_info}."}
             except Exception as e:
@@ -390,6 +423,12 @@ async def upload_data(
                 raise HTTPException(status_code=400, detail="Dependencies data must be uploaded in CSV format")
             try:
                 from load_dependencies_data import load_dependencies_from_csv
+                from load_prod_data import ensure_db_compatibility
+                
+                # Ensure database compatibility (especially for PostgreSQL)
+                if db_config.is_postgres:
+                    ensure_db_compatibility()
+                    
                 db_session = db
                 # Process the file with append_mode=True to update existing data
                 load_dependencies_from_csv(temp_file_path, db_session, append_mode=True)
@@ -1314,12 +1353,25 @@ def search(q: str, limit: int = 20, db: Session = Depends(get_db)):
 if __name__ == "__main__":
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Who What Where Portal Backend")
-    parser.add_argument("--force-initdb", action="store_true", help="Force database initialisation")
+    parser.add_argument("--force-initdb", action="store_true", help="Force database initialisation (DANGER: Will reset all data)")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind the server to (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=8000, help="Port to bind the server to (default: 8000)")
     parser.add_argument("--admin-username", default="admin", help="Admin username (default: admin)")
     parser.add_argument("--admin-email", default="admin@example.com", help="Admin email (default: admin@example.com)")
+    parser.add_argument("--db-type", choices=["sqlite", "postgresql"], help="Database type (sqlite or postgresql)")
+    parser.add_argument("--connection-string", help="Database connection string")
+    parser.add_argument("--schema", help="Database schema name (PostgreSQL only)")
     args = parser.parse_args()
+    
+    # Set environment variables based on command line arguments
+    if args.db_type:
+        os.environ["DB_TYPE"] = args.db_type
+    
+    if args.connection_string:
+        os.environ["DATABASE_URL"] = args.connection_string
+        
+    if args.schema:
+        os.environ["DATABASE_SCHEMA"] = args.schema
 
     # Handle force initialization if requested
     if args.force_initdb:

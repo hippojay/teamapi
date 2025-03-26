@@ -10,6 +10,8 @@ xlrd
 python-jose[cryptography]
 passlib[bcrypt]
 email-validator
+psycopg2-binary
+python-dotenv
 
 # Development dependencies
 mypy>=1.6.0

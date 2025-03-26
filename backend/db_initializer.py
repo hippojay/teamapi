@@ -11,12 +11,12 @@ import string
 import random
 import secrets
 from datetime import datetime
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import OperationalError
 import logging
 from pathlib import Path
 
-from database import SessionLocal, engine, Base
+from database import SessionLocal, engine, Base, db_config, CreateSchema
 import models
 from auth import get_password_hash
 from models import UserRole
@@ -28,7 +28,15 @@ logger = logging.getLogger(__name__)
 # Current application version
 CURRENT_VERSION = "1.0.0"
 
-def check_database_initialized() -> bool:
+def check_database_initialized(db_type=None) -> bool:
+    """Check if the database has been initialized
+    
+    Args:
+        db_type (str, optional): Database type to check. If None, use the configured type.
+        
+    Returns:
+        bool: True if database is initialized, False otherwise
+    """
     """
     Check if the database has been initialized by looking for the SystemInfo table
     and checking the initialized flag.
@@ -37,11 +45,50 @@ def check_database_initialized() -> bool:
         bool: True if database is already initialized, False otherwise
     """
     try:
+        # If db_type is not specified, use the configured type
+        current_db_type = db_type or db_config.db_type
+        logger.info(f"Checking if {current_db_type} database is initialized")
+        
+        # Important: Force the schema to be applied to Base.metadata
+        if db_config.schema and current_db_type == "postgresql":
+            Base.metadata.schema = db_config.schema
+            logger.info(f"Using schema {db_config.schema} for database operations")
+        
+        # For PostgreSQL, try to set the search path first
+        if current_db_type == "postgresql" and db_config.schema:
+            try:
+                with engine.begin() as conn:
+                    conn.execute(text(f"SET search_path TO {db_config.schema}"))
+                    logger.info(f"Set search path to {db_config.schema} for initialization check")
+            except Exception as e:
+                logger.error(f"Error setting search path: {str(e)}")
+        
         db = SessionLocal()
         try:
             # Check if SystemInfo table exists
             inspector = inspect(engine)
-            if not inspector.has_table("system_info"):
+            table_exists = False
+            
+            try:
+                # For PostgreSQL with schema, we need to check in the specific schema
+                if current_db_type == "postgresql":
+                    if db_config.schema:
+                        # Try to query with explicit schema
+                        result = db.execute(text(f"SELECT 1 FROM information_schema.tables WHERE table_name = 'system_info' AND table_schema = '{db_config.schema}'")).fetchone()
+                        table_exists = result is not None
+                    else:
+                        # Check in current search path
+                        result = db.execute(text("SELECT 1 FROM information_schema.tables WHERE table_name = 'system_info'")).fetchone()
+                        table_exists = result is not None
+                else:
+                    # For SQLite, use inspector
+                    if inspector.has_table("system_info"):
+                        table_exists = True
+            except Exception as e:
+                logger.error(f"Error checking table existence: {str(e)}")
+                return False
+                    
+            if not table_exists:
                 logger.info("SystemInfo table does not exist. Database needs initialization.")
                 return False
 
@@ -67,7 +114,7 @@ def check_database_initialized() -> bool:
         logger.error(f"Error checking database initialization: {str(e)}")
         return False
 
-def initialize_database(admin_username="admin", admin_email="admin@example.com", admin_password=None):
+def initialize_database(admin_username="admin", admin_email="admin@example.com", admin_password=None, force_init=False):
     """
     Initialize the database:
     1. Create all tables if they don't exist
@@ -87,15 +134,63 @@ def initialize_database(admin_username="admin", admin_email="admin@example.com",
         bool: True if initialization was successful, False otherwise
     """
     try:
+        # Get database type from config
+        db_type = db_config.db_type
+        schema = db_config.schema
+        logger.info(f"Initializing database of type: {db_type}" + (f" with schema: {schema}" if schema else ""))
+        
+        # For PostgreSQL, set schema in metadata
+        if db_type == "postgresql" and schema:
+            Base.metadata.schema = schema
+            
+        # Set search path for PostgreSQL
+        if db_type == "postgresql" and schema:
+            try:
+                with engine.begin() as conn:
+                    # Try setting schema before creating tables
+                    conn.execute(text(f"SET search_path TO {schema}"))
+                    
+                    # Also ensure the schema exists
+                    conn.execute(CreateSchema(schema, if_not_exists=True))
+                    logger.info(f"Ensured schema {schema} exists")
+            except Exception as e:
+                logger.error(f"Error setting up PostgreSQL schema: {str(e)}")
+        
         # Create all tables defined in models
-        Base.metadata.create_all(bind=engine)
-        logger.info("Database tables created successfully")
+        try:
+            Base.metadata.create_all(bind=engine)
+            logger.info("Database tables created successfully")
+        except Exception as e:
+            logger.error(f"Error creating database tables: {str(e)}")
+            if db_type == "postgresql":
+                # PostgreSQL might need additional handling for sequences or constraints
+                logger.info("Attempting PostgreSQL-specific table creation")
+                try:
+                    # Try with explicit schema if provided
+                    if db_config.schema:
+                        # Ensure schema exists
+                        with engine.begin() as conn:
+                            conn.execute(CreateSchema(db_config.schema, if_not_exists=True))
+                        
+                        # Set search path to use this schema
+                        with engine.begin() as conn:
+                            conn.execute(text(f"SET search_path TO {db_config.schema}, public;"))
+                    
+                    # Retry table creation
+                    Base.metadata.create_all(bind=engine)
+                    logger.info("Database tables created successfully with PostgreSQL-specific handling")
+                except Exception as pg_e:
+                    logger.error(f"PostgreSQL-specific table creation also failed: {str(pg_e)}")
+                    raise
+            else:
+                # For other database types, just re-raise the original error
+                raise
 
         db = SessionLocal()
         try:
             # Check if SystemInfo already exists
             system_info = db.query(models.SystemInfo).first()
-            if not system_info:
+            if not system_info or force_init:
                 # Create a new SystemInfo record
                 system_info = models.SystemInfo(
                     version=CURRENT_VERSION,
