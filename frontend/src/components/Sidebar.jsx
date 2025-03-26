@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Home as HomeIcon, Database, Layers, User, ChevronLeftCircle, ChevronRightCircle, Target } from 'lucide-react';
+import { Users, Home as HomeIcon, Database, Layers, User, ChevronLeftCircle, ChevronRightCircle, Target, FolderTree } from 'lucide-react';
 import CustomGrid from './CustomGrid';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
@@ -25,6 +25,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
     { path: '/squads', icon: Users, label: 'Squads' },
     { path: '/services', icon: Database, label: 'Services' },
     { path: '/users', icon: User, label: 'Team Members' },
+    { path: '/org-explorer', icon: FolderTree, label: 'Org Explorer' },
     { path: '/okrs', icon: Target, label: 'OKRs' },
   ];
 

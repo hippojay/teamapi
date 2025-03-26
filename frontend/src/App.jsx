@@ -16,6 +16,7 @@ import UserDetailPage from './pages/UserDetailPage';
 import UsersPage from './pages/UsersPage';
 import MyProfileRedirect from './components/users/MyProfileRedirect';
 import DependencyMapPage from './pages/DependencyMapPage';
+import OrgExplorerPage from './pages/org-explorer';
 import OKRsPage from './pages/OKRsPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
@@ -60,6 +61,9 @@ function App() {
             
             {/* Dependencies */}
             <Route path="/dependencies" element={<DependencyMapPage />} />
+            
+            {/* Org Explorer */}
+            <Route path="/org-explorer" element={<OrgExplorerPage />} />
             
             {/* OKRs */}
             <Route path="/okrs" element={<OKRsPage />} />
