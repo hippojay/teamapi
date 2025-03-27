@@ -13,17 +13,16 @@ import secrets
 from datetime import datetime
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import OperationalError
-import logging
 from pathlib import Path
 
 from database import SessionLocal, engine, Base, db_config, CreateSchema
 import models
 from auth import get_password_hash
 from models import UserRole
+from logger import get_logger
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# Initialize logger
+logger = get_logger('db_initializer', log_level='INFO')
 
 # Current application version
 CURRENT_VERSION = "1.0.0"

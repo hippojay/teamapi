@@ -1,62 +1,75 @@
+# Logging Requirements
 
+This document outlines the logging requirements and implementation for the "Who What Where" application.
 
-# Logging System Requirements
+## Identified Requirements
 
-This document outlines the requirements for the application logging system in the "Who What Where" application.
-
-## General Requirements
-
-1. The application should maintain structured logs to support problem-solving and troubleshooting
-2. Logs should be stored in a dedicated log directory
-3. Log entries should capture date/time information in a standardized format
-4. Log entries should include the module or activity being performed
-5. Entries should be descriptive and capture useful state information
-6. The system should support different logging levels (INFO, DEBUG, WARNING, ERROR, CRITICAL)
-7. Logs should be rotated to prevent excessive disk usage
+1. Application should use a standardized logging framework to ensure consistent logging across components
+2. Logging should be configurable with different log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+3. Logs should include timestamps and module information
+4. Critical operations should be logged (database operations, authentication, data uploads)
+5. Logs should be rotated to prevent excessive disk usage
+6. Log files should be organized by module
+7. Logs should help with debugging issues in production
+8. Logging should support both console and file output
+9. Detailed user action tracking through audit logs
+10. Logging of security-related events (login attempts, password resets, etc.)
+11. Error conditions should be properly logged with appropriate context
+12. Performance metrics and database information should be logged
+13. Critical business operations (data uploads, modifications) should be tracked
 
 ## Implementation Details
 
-### Log Directory Structure
-- All logs should be stored in the `/logs` directory at the project root
-- Each module should have its own log file (e.g., `load_data.log`, `database.log`)
+- Using the built-in Python `logging` module with extensions for rotation and formatting
+- Logs are stored in the `/logs` directory by module name
+- Each module gets its own logger instance with appropriate configuration
+- Log files are rotated based on either size or time to prevent disk space issues
+- Sensitive information is not logged directly (passwords, tokens, etc.)
+- Structured logging available for complex events with context
+- Support for environment variable configuration of log levels
 
-### Log Format
-- Timestamp: ISO 8601 format (YYYY-MM-DD HH:MM:SS)
-- Log level: Clear indication of the severity (INFO, DEBUG, WARNING, ERROR, CRITICAL)
-- Module name: Which component generated the log
-- Message: Descriptive information about the event
-- Context data: Key-value pairs providing relevant state information
+## Current Implementation
 
-### Log Levels
-- DEBUG: Detailed information, typically useful only for diagnosing problems
-- INFO: Confirmation that things are working as expected
-- WARNING: Indication that something unexpected happened, but the application still works
-- ERROR: Due to a more serious problem, the application has not been able to perform some function
-- CRITICAL: A very serious error, indicating that the application may be unable to continue running
+### Key Modules with Logging
 
-### Log Rotation
-- Log files should be rotated based on size (default: 10MB)
-- A configurable number of backup files should be kept (default: 5)
-- Alternatively, time-based rotation (e.g., daily) should be supported
+1. **main.py** - Core application logging
+   - Server startup and configuration
+   - Database connection information
+   - API endpoint activity
+   - Authentication events
+   - Data upload operations
 
-### Configuration
-- Log level should be configurable via environment variables
-- Console output should be toggleable for development environments
+2. **logger.py** - Central logging framework
+   - Configurable log levels
+   - Rotating file handlers
+   - Console output options
+   - Structured logging support
 
-## Modules Requiring Logging
+3. **db_initializer.py** - Database initialization logging
+   - Schema creation events
+   - Database version information
+   - Initial setup processes
+   - Migration tracking
 
-The following modules should implement logging:
+4. **user_auth.py** - Authentication and user management logging
+   - Login attempts (successful and failed)
+   - User registration
+   - Email verification
+   - Password reset operations
+   - Profile updates
 
-1. Data loading modules (load_prod_data.py)
-2. Database operations (database.py)
-3. API endpoints (main.py) 
-4. Authentication (auth.py)
-5. CRUD operations (crud.py, entity_crud.py, search_crud.py, user_crud.py)
-6. Database migration scripts (run_migration.py)
+### Security Considerations
 
-## Future Considerations
+- Passwords are never logged in plain text
+- Tokens are partially masked (only first few characters shown)
+- Failed authentication attempts are logged with appropriate context
+- IP addresses and user agents should be logged for security auditing (future enhancement)
 
-1. Integration with external monitoring tools
-2. Log aggregation across multiple instances
-3. Structured logging with JSON format for better searchability
-4. Automated log analysis for error detection and reporting
+### Future Enhancements
+
+1. Add centralized log aggregation
+2. Implement log archiving for historical data
+3. Add performance metric logging
+4. Create dashboard for log visualization
+5. Add automated alerting for critical log events
+6. Implement comprehensive security event logging

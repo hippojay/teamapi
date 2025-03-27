@@ -19,6 +19,7 @@ import user_crud
 import user_auth
 import auth
 import audit_logger
+from logger import get_logger
 import shutil
 import tempfile
 import pandas as pd
@@ -29,8 +30,12 @@ from search_schemas import SearchResults
 import db_initializer
 from database import db_config
 
+# Initialize logger
+logger = get_logger('main', log_level='INFO')
+
 # Log database connection type
 db_type = db_config.db_type
+logger.info(f"Using {db_type.upper()} database")
 print(f"\033[94mUsing {db_type.upper()} database\033[0m")
 
 # Always check if database is initialized regardless of database type
@@ -39,27 +44,36 @@ initialize_db = not db_initializer.check_database_initialized()
 # Log initialization status
 if initialize_db:
     if db_type == "postgresql":
+        logger.warning("PostgreSQL database tables not found. Performing first-time setup...")
         print("\033[93mPostgreSQL database tables not found. Performing first-time setup...\033[0m")
         # Set Base.metadata.schema here to ensure tables are created in the correct schema
         if db_config.schema:
             Base.metadata.schema = db_config.schema
+            logger.info(f"Using schema: {db_config.schema}")
             print(f"\033[94mUsing schema: {db_config.schema}\033[0m")
         else:
+            logger.warning("WARNING: No schema specified for PostgreSQL. See docs/postgresql_schemas.md for help.")
             print("\033[91mWARNING: No schema specified for PostgreSQL. See docs/postgresql_schemas.md for help.\033[0m")
     else:
+        logger.warning("SQLite database not initialized. Performing first-time setup...")
         print("\033[93mSQLite database not initialized. Performing first-time setup...\033[0m")
 
 # Initialize if needed
 if initialize_db:
+    logger.info("Initializing database...")
     success = db_initializer.initialize_database()
     if success:
+        logger.info("Database initialized successfully!")
         print("\033[92mDatabase initialized successfully!\033[0m")
     else:
+        logger.error("Database initialization failed.")
         print("\033[91mDatabase initialization failed. Please check the logs.\033[0m")
 # For backward compatibility, ensure all tables exist
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Team API Portal")
+
+logger.info("FastAPI application initialized")
 
 # Mount static files directory
 static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -77,6 +91,7 @@ app.add_middleware(
 # Authentication endpoints
 @app.post("/token", response_model=schemas.Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    logger.info(f"Login attempt for user: {form_data.username}")
     user = auth.authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -92,6 +107,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     )
 
     # Log the login event
+    logger.info(f"Successful login for user: {user.username or user.email} (ID: {user.id})")
     audit_logger.log_login(db, user.id, user.username or user.email)
 
     return {"access_token": access_token, "token_type": "bearer"}
@@ -104,6 +120,7 @@ async def read_users_me(current_user: schemas.User = Depends(auth.get_current_ac
 def create_user(user: schemas.UserCreate,
                 db: Session = Depends(get_db),
                 current_user: schemas.User = Depends(auth.get_current_active_user)):
+    logger.info(f"User creation attempt by admin (ID: {current_user.id}) for email: {user.email}")
 
     # Only admins can create users directly
     if not user_auth.is_admin(current_user):
@@ -153,12 +170,14 @@ def create_user(user: schemas.UserCreate,
     db.refresh(db_user)
 
     # Log the user creation
+    logger.info(f"User created successfully: {user.email} (ID: {db_user.id}) by admin: {current_user.username or current_user.email} (ID: {current_user.id})")
     user_auth.log_user_action(db, current_user.id, "CREATE", "User", db_user.id, f"User created by admin: {user.email}")
 
     return db_user
 
 @app.post("/register", response_model=Dict[str, Any])
 def register_user(user: schemas.UserRegister, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    logger.info(f"User registration attempt for email: {user.email}")
     # Validate password complexity
     if not user_auth.validate_password(user.password):
         raise HTTPException(
@@ -208,25 +227,34 @@ def get_token_info(token: str, db: Session = Depends(get_db)):
 
 @app.post("/verify-email", response_model=Dict[str, str])
 def verify_email(verification: schemas.EmailVerification, db: Session = Depends(get_db)):
-    if user_auth.verify_email(db, verification):
+    logger.info(f"Email verification attempt for token: {verification.token}")
+    result = user_auth.verify_email(db, verification)
+    if result:
+        logger.info(f"Email verified successfully for token: {verification.token}")
         return {"message": "Email verified successfully. You can now log in."}
     else:
+        logger.warning(f"Email verification failed for token: {verification.token}")
         raise HTTPException(status_code=400, detail="Invalid or expired verification token")
 
 @app.post("/reset-password-request", response_model=Dict[str, str])
 def request_password_reset(request: schemas.PasswordResetRequest,
                            background_tasks: BackgroundTasks,
                            db: Session = Depends(get_db)):
+    logger.info(f"Password reset request for email: {request.email}")
     # Always return success even if email doesn't exist (security best practice)
     user = user_auth.get_user_by_email(db, request.email)
     if user:
+        logger.info(f"Creating password reset token for user: {request.email} (ID: {user.id})")
         token = user_auth.create_password_reset_token(db, request.email, user.id)
         background_tasks.add_task(user_auth.send_password_reset_email, request.email, token)
+    else:
+        logger.info(f"Password reset requested for non-existent email: {request.email}")
 
     return {"message": "If your email is registered, you will receive password reset instructions."}
 
 @app.post("/reset-password", response_model=Dict[str, str])
 def reset_password(reset: schemas.PasswordReset, db: Session = Depends(get_db)):
+    logger.info(f"Password reset attempt with token: {reset.token}")
     # Validate password complexity
     if not user_auth.validate_password(reset.new_password):
         raise HTTPException(
@@ -234,9 +262,12 @@ def reset_password(reset: schemas.PasswordReset, db: Session = Depends(get_db)):
             detail="Password must be at least 8 characters and include uppercase, lowercase, digit, and special character"
         )
 
-    if user_auth.reset_password(db, reset):
+    result = user_auth.reset_password(db, reset)
+    if result:
+        logger.info(f"Password reset successful for token: {reset.token}")
         return {"message": "Password reset successful. You can now log in with your new password."}
     else:
+        logger.warning(f"Password reset failed for token: {reset.token}")
         raise HTTPException(status_code=400, detail="Invalid or expired password reset token")
 
 # User profile management
@@ -360,6 +391,7 @@ async def upload_data(
     current_user: schemas.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    logger.info(f"Data upload initiated: type={data_type}, file={file.filename}, sheet={sheet_name}, dry_run={dry_run}, user_id={current_user.id}")
     """Upload organizational data from Excel file"""
     # Check if the user is an admin
     if not user_auth.is_admin(current_user):
@@ -1364,6 +1396,8 @@ if __name__ == "__main__":
     parser.add_argument("--connection-string", help="Database connection string")
     parser.add_argument("--schema", help="Database schema name (PostgreSQL only)")
     args = parser.parse_args()
+    
+    logger.info(f"Starting server with arguments: host={args.host}, port={args.port}, force_initdb={args.force_initdb}")
 
     # Set environment variables based on command line arguments
     if args.db_type:
@@ -1377,16 +1411,20 @@ if __name__ == "__main__":
 
     # Handle force initialization if requested
     if args.force_initdb:
+        logger.warning("Forcing database initialization... THIS WILL RESET ALL DATA")
         print("\033[93mForcing database initialization...\033[0m")
         success = db_initializer.initialize_database(
             admin_username=args.admin_username,
             admin_email=args.admin_email
         )
         if success:
+            logger.info("Database initialized successfully!")
             print("\033[92mDatabase initialized successfully!\033[0m")
         else:
+            logger.error("Database initialization failed.")
             print("\033[91mDatabase initialization failed. Check the logs for details.\033[0m")
             sys.exit(1)
 
     # Start the server
+    logger.info(f"Starting Uvicorn server at {args.host}:{args.port}")
     uvicorn.run("main:app", host=args.host, port=args.port, reload=True)
