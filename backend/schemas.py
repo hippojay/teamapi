@@ -6,29 +6,29 @@ from datetime import datetime
 
 # Enums
 class ServiceStatus(str, Enum):
-    HEALTHY = "HEALTHY"
-    DEGRADED = "DEGRADED"
-    DOWN = "DOWN"
+    HEALTHY = "healthy"
+    DEGRADED = "degraded"
+    DOWN = "down"
 
 class ServiceType(str, Enum):
-    API = "API"
-    REPO = "REPO"
-    PLATFORM = "PLATFORM"
-    WEBPAGE = "WEBPAGE"
-    APP_MODULE = "APP_MODULE"
+    API = "api"
+    REPO = "repo"
+    PLATFORM = "platform"
+    WEBPAGE = "webpage"
+    APP_MODULE = "app_module"
 
 # Removed DependencyType enum as per requirement
 
 class InteractionMode(str, Enum):
-    COLLABORATION = "COLLABORATION"
-    X_AS_A_SERVICE = "X_AS_A_SERVICE"
-    FACILITATING = "FACILITATING"
+    COLLABORATION = "collaboration"
+    X_AS_A_SERVICE = "x_as_a_service"
+    FACILITATING = "facilitating"
 
 class TeamType(str, Enum):
-    STREAM_ALIGNED = "STREAM_ALIGNED"
-    PLATFORM = "PLATFORM"
-    ENABLING = "ENABLING"
-    COMPLICATED_SUBSYSTEM = "COMPLICATED_SUBSYSTEM"
+    STREAM_ALIGNED = "stream_aligned"
+    PLATFORM = "platform"
+    ENABLING = "enabling"
+    COMPLICATED_SUBSYSTEM = "complicated_subsystem"
 
 class AreaLabel(str, Enum):
     CFU_ALIGNED = "CFU_ALIGNED"

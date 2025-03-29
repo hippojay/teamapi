@@ -95,20 +95,20 @@ squad_members = Table(
 
 # Define our enum classes
 class ServiceStatus(enum.Enum):
-    HEALTHY = "HEALTHY"
-    DEGRADED = "DEGRADED"
-    DOWN = "DOWN"
+    HEALTHY = "healthy"
+    DEGRADED = "degraded"
+    DOWN = "down"
 
 class InteractionMode(enum.Enum):
-    COLLABORATION = "COLLABORATION"
-    X_AS_A_SERVICE = "X_AS_A_SERVICE"
-    FACILITATING = "FACILITATING"
+    COLLABORATION = "collaboration"
+    X_AS_A_SERVICE = "x_as_a_service"
+    FACILITATING = "facilitating"
 
 class TeamType(enum.Enum):
-    STREAM_ALIGNED = "STREAM_ALIGNED"
-    PLATFORM = "PLATFORM"
-    ENABLING = "ENABLING"
-    COMPLICATED_SUBSYSTEM = "COMPLICATED_SUBSYSTEM"
+    STREAM_ALIGNED = "stream_aligned"
+    PLATFORM = "platform"
+    ENABLING = "enabling"
+    COMPLICATED_SUBSYSTEM = "complicated_subsystem"
 
 class UserRole(enum.Enum):
     ADMIN = "admin"
@@ -126,7 +126,7 @@ class User(Base):
     last_name = Column(String, nullable=True)
     hashed_password = Column(String)
     # Use string enum instead of native enum
-    role = Column(String, default="guest")
+    role = Column(String, default="guest")  # Ensuring lowercase for enum values
     is_active = Column(Boolean, default=False)  # Only active after email verification
     is_admin = Column(Boolean, default=False)  # Deprecated, use role instead
     created_at = Column(DateTime, default=func.now())
@@ -249,7 +249,7 @@ class Squad(Base):
     status = Column(String, default="Active")
     timezone = Column(String, default="UTC")
     # Use string enum instead of native enum
-    team_type = Column(String, default="stream_aligned")
+    team_type = Column(String, default="stream_aligned")  # Ensuring lowercase for enum values
     member_count = Column(Integer, default=0)
     core_count = Column(Integer, default=0)  # Count of regular employees
     subcon_count = Column(Integer, default=0)  # Count of contractors
@@ -305,11 +305,11 @@ class TeamMember(Base):
                                   remote_side=[id])
 
 class ServiceType(enum.Enum):
-    API = "API"
-    REPO = "REPO"
-    PLATFORM = "PLATFORM"
-    WEBPAGE = "WEBPAGE"
-    APP_MODULE = "APP_MODULE"
+    API = "api"
+    REPO = "repo"
+    PLATFORM = "platform"
+    WEBPAGE = "webpage"
+    APP_MODULE = "app_module"
 
 class Service(Base):
     __tablename__ = "services"
@@ -319,13 +319,13 @@ class Service(Base):
     name = Column(String, index=True)
     description = Column(Text, nullable=True)
     # Use string enum instead of native enum
-    status = Column(String, default="HEALTHY")
+    status = Column(String, default="healthy")  # Ensuring lowercase for enum values
     uptime = Column(Float, default=99.9)
     version = Column(String, default="1.0.0")
     api_docs_url = Column(String, nullable=True)
     squad_id = Column(Integer, ForeignKey("squads.id" if not schema else f"{schema}.squads.id"))
     # Use string enum instead of native enum
-    service_type = Column(String, default="API")
+    service_type = Column(String, default="api")  # Ensuring lowercase for enum values
     url = Column(String, nullable=True)  # Generic URL for any service type
 
     # Relationships
@@ -340,7 +340,7 @@ class Dependency(Base):
     dependency_squad_id = Column(Integer, ForeignKey("squads.id" if not schema else f"{schema}.squads.id"))
     dependency_name = Column(String)
     # Use string enum instead of native enum
-    interaction_mode = Column(String, default="x_as_a_service")
+    interaction_mode = Column(String, default="x_as_a_service")  # Ensuring lowercase for enum values
     interaction_frequency = Column(String, nullable=True)  # "Regular", "As needed", "Scheduled"
 
     # Relationships

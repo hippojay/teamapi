@@ -52,6 +52,9 @@ class RepositoryService:
         Get details of a specific repository by ID and source
         Returns repository details or None if not found
         """
+        # Normalize source to lowercase for consistency
+        source = source.lower() if isinstance(source, str) else source
+        
         if source == "gitlab" and self.gitlab_client:
             return self.gitlab_client.get_repository_details(repository_id)
         
@@ -62,6 +65,9 @@ class RepositoryService:
         Get all projects (repositories) in a group
         Returns a list of repositories with their details
         """
+        # Normalize source to lowercase for consistency
+        source = source.lower() if isinstance(source, str) else source
+        
         if source == "gitlab" and self.gitlab_client:
             return self.gitlab_client.get_group_projects(group_id, limit)
         

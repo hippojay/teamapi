@@ -31,7 +31,7 @@ const ServicesList = ({ squad, services, setServices }) => {
       // Apply service type filter
       if (serviceTypeFilter) {
         result = result.filter(service => 
-          service.service_type && service.service_type.toUpperCase() === serviceTypeFilter.toUpperCase()
+          service.service_type && service.service_type.toLowerCase() === serviceTypeFilter.toLowerCase()
         );
       }
       
@@ -98,18 +98,18 @@ const ServicesList = ({ squad, services, setServices }) => {
   };
 
   const getServiceIcon = (serviceType) => {
-    const type = serviceType && serviceType.toUpperCase();
+    const type = serviceType && serviceType.toLowerCase();
     switch (type) {
-      case 'API':
+      case 'api':
         return <Code className="h-4 w-4 text-blue-500" />;
-      case 'REPO':
-      case 'REPOSITORY':
+      case 'repo':
+      case 'repository':
         return <GitBranch className="h-4 w-4 text-purple-500" />;
-      case 'PLATFORM':
+      case 'platform':
         return <Server className="h-4 w-4 text-green-500" />;
-      case 'WEBPAGE':
+      case 'webpage':
         return <Globe className="h-4 w-4 text-orange-500" />;
-      case 'APP_MODULE':
+      case 'app_module':
         return <Smartphone className="h-4 w-4 text-red-500" />;
       default:
         return <Database className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />;
@@ -243,11 +243,11 @@ const ServicesList = ({ squad, services, setServices }) => {
             aria-label="Filter by service type"
           >
             <option value="">All Service Types</option>
-            <option value="API">API</option>
-            <option value="REPO">Repository</option>
-            <option value="PLATFORM">Platform</option>
-            <option value="WEBPAGE">Web Page</option>
-            <option value="APP_MODULE">App Module</option>
+            <option value="api">API</option>
+            <option value="repo">Repository</option>
+            <option value="platform">Platform</option>
+            <option value="webpage">Web Page</option>
+            <option value="app_module">App Module</option>
           </select>
         </div>
       </div>

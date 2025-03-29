@@ -231,7 +231,7 @@ def initialize_database(admin_username="admin", admin_email="admin@example.com",
                     hashed_password=hashed_password,
                     is_admin=True,
                     is_active=True,
-                    role=UserRole.admin
+                    role="admin"  # Always use lowercase for all enum values for consistency
                 )
                 db.add(admin_user)
                 db.commit()

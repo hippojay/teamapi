@@ -8,6 +8,10 @@ import re
 import models
 import schemas
 from auth import get_password_hash
+from logger import get_logger
+
+# Initialize logger
+logger = get_logger('user_auth', log_level='INFO')
 
 # Email functions
 async def send_verification_email(email: str, token: str):
@@ -156,7 +160,7 @@ def register_user(db: Session, user_data: schemas.UserRegister) -> models.User:
         last_name=user_data.last_name,
         hashed_password=hashed_password,
         is_active=False,
-        role=models.UserRole.guest
+        role="guest"  # Use string value, ensuring lowercase
     )
     db.add(db_user)
     db.commit()
@@ -167,7 +171,7 @@ def register_user(db: Session, user_data: schemas.UserRegister) -> models.User:
     # Check if the user is also a team member and upgrade role if so
     team_member = get_team_member_by_email(db, user_data.email)
     if team_member:
-        db_user.role = models.UserRole.team_member
+        db_user.role = "team_member"  # Use string value, ensuring lowercase
         db.commit()
         db.refresh(db_user)
         logger.info(f"Upgraded user {user_data.email} (ID: {db_user.id}) to team_member role due to existing team member record")
@@ -293,15 +297,14 @@ def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate) -> O
 
     if user_update.role is not None:
         try:
-            # Handle both string and enum values
+            # Handle both string and enum values - ensure lowercase
             if isinstance(user_update.role, str):
-                # Use the string directly to match enum values
-                db_user.role = models.UserRole[user_update.role]
+                db_user.role = user_update.role.lower()
             else:
-                db_user.role = models.UserRole[user_update.role]
+                db_user.role = user_update.role.value.lower()
         except (KeyError, AttributeError):
             # Fallback to direct assignment if conversion fails
-            db_user.role = user_update.role
+            db_user.role = str(user_update.role).lower()
 
     if user_update.is_active is not None:
         db_user.is_active = user_update.is_active
@@ -387,8 +390,8 @@ def is_admin(user: schemas.User) -> bool:
     if hasattr(user, 'role'):
         # Simply check if role is admin
         if isinstance(user.role, str):
-            return user.role == "admin" or user.is_admin
-        return user.role == schemas.UserRole.admin or user.is_admin
+            return user.role.lower() == "admin" or user.is_admin
+        return user.role.value.lower() == "admin" or user.is_admin
     return user.is_admin
 
 def update_admin_setting(db: Session, setting: schemas.AdminSettingUpdate, key: str, user_id: int) -> models.AdminSetting:

@@ -49,10 +49,10 @@ class GitLabClient:
                     "name": project["name"],
                     "path": project.get("path_with_namespace", ""),
                     "description": project.get("description", ""),
-                    "type": "repository",
+                    "type": "repository",  # Use lowercase for consistency
                     "url": project.get("web_url", ""),
                     "avatar_url": project.get("avatar_url", ""),
-                    "source": "gitlab",
+                    "source": "gitlab",  # Use lowercase for consistency
                     "updated_at": project.get("last_activity_at", "")
                 })
             
@@ -77,10 +77,10 @@ class GitLabClient:
                     "name": group["name"],
                     "path": group.get("full_path", ""),
                     "description": group.get("description", ""),
-                    "type": "group",
+                    "type": "group",  # Use lowercase for consistency
                     "url": group.get("web_url", ""),
                     "avatar_url": group.get("avatar_url", ""),
-                    "source": "gitlab",
+                    "source": "gitlab",  # Use lowercase for consistency
                     "updated_at": group.get("created_at", "")
                 })
             
@@ -110,8 +110,8 @@ class GitLabClient:
                 "default_branch": project.get("default_branch", "main"),
                 "created_at": project.get("created_at", ""),
                 "updated_at": project.get("last_activity_at", ""),
-                "type": "REPO",
-                "source": "gitlab"
+                "type": "repo",  # Use lowercase for consistency
+                "source": "gitlab"  # Use lowercase for consistency
             }
             
         except requests.exceptions.RequestException as e:
@@ -142,10 +142,10 @@ class GitLabClient:
                     "name": project["name"],
                     "path": project.get("path_with_namespace", ""),
                     "description": project.get("description", ""),
-                    "type": "repository",
+                    "type": "repository",  # Use lowercase for consistency
                     "url": project.get("web_url", ""),
                     "avatar_url": project.get("avatar_url", ""),
-                    "source": "gitlab",
+                    "source": "gitlab",  # Use lowercase for consistency
                     "updated_at": project.get("last_activity_at", "")
                 })
                 

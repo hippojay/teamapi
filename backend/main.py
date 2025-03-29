@@ -605,10 +605,20 @@ def update_squad_team_type(
     db: Session = Depends(get_db)
 ):
     """Update a squad's team type classification"""
-    squad = user_crud.update_squad_team_type(db, squad_id, team_type, current_user.id)
+    # Normalize team_type to lowercase to ensure consistent values
+    normalized_team_type = team_type.lower() if team_type else "stream_aligned"
+    # Validate it against allowed values
+    valid_types = ["stream_aligned", "platform", "enabling", "complicated_subsystem"]
+    if normalized_team_type not in valid_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid team_type. Input should be one of: {', '.join(valid_types)}"
+        )
+    
+    squad = user_crud.update_squad_team_type(db, squad_id, normalized_team_type, current_user.id)
     if not squad:
         raise HTTPException(status_code=404, detail="Squad not found")
-    return {"message": f"Team type updated to {team_type}", "team_type": team_type}
+    return {"message": f"Team type updated to {normalized_team_type}", "team_type": normalized_team_type}
 
 # Area label endpoint
 @app.put("/areas/{area_id}/label")

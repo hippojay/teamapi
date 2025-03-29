@@ -83,19 +83,19 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
         if 'Type' in row and not pd.isna(row['Type']):
             type_str = row['Type'].lower()
             if type_str == 'api':
-                service_type_value = ServiceType.API.value
+                service_type_value = "api"
             elif 'repo' in type_str or 'repository' in type_str:
-                service_type_value = ServiceType.REPO.value
+                service_type_value = "repo"
             elif 'platform' in type_str:
-                service_type_value = ServiceType.PLATFORM.value
+                service_type_value = "platform"
             elif 'web' in type_str or 'webpage' in type_str:
-                service_type_value = ServiceType.WEBPAGE.value
+                service_type_value = "webpage"
             elif 'app' in type_str or 'module' in type_str:
-                service_type_value = ServiceType.APP_MODULE.value
+                service_type_value = "app_module"
         
         # Use API as default if type couldn't be determined
         if service_type_value is None:
-            service_type_value = ServiceType.API.value
+            service_type_value = "api"
 
         # Check if this service already exists
         service_key = f"{row['Service Name']}_{squad_id}"
@@ -106,7 +106,7 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
             service.service_type = service_type_value
             service.url = row['URL'] if 'URL' in row and not pd.isna(row['URL']) else service.url
             service.version = row['Version'] if 'Version' in row and not pd.isna(row['Version']) else service.version
-            service.status = ServiceStatus.HEALTHY.value  # Default to healthy
+            service.status = "healthy"  # Default to healthy
 
             print(f"Updated existing service: {service.name} (ID: {service.id})")
         else:
@@ -117,7 +117,7 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
                 service_type=service_type_value,
                 url=row['URL'] if 'URL' in row and not pd.isna(row['URL']) else None,
                 version=row['Version'] if 'Version' in row and not pd.isna(row['Version']) else "1.0.0",
-                status=ServiceStatus.HEALTHY.value,  # Default to healthy
+                status="healthy",  # Default to healthy
                 uptime=99.9,  # Default uptime
                 squad_id=squad_id
             )
@@ -257,8 +257,8 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
             continue
 
         # Create new squad with default team_type
-        # Always use uppercase for enum values for consistency
-        team_type_value = "STREAM_ALIGNED"
+        # Always use lowercase for enum values for consistency
+        team_type_value = "stream_aligned"
         
         squad = models.Squad(
             name=squad_name,

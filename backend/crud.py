@@ -379,11 +379,10 @@ def get_service(db: Session, service_id: int) -> Optional[models.Service]:
     return None
 
 def create_service(db: Session, service: schemas.ServiceCreate) -> models.Service:
-    # Ensure we use the enum values from the models module
-    # ServiceStatus and ServiceType still use uppercase values, so we need to convert
-    # We'll keep the upper case conversion since those enums still use uppercase values
-    status_value = models.ServiceStatus[service.status.upper()] if isinstance(service.status, str) else service.status
-    service_type_value = models.ServiceType[service.service_type.upper()] if isinstance(service.service_type, str) else service.service_type
+    # Ensure we use lowercase values for consistency
+    # We'll convert any input to lowercase
+    status_value = service.status.lower() if isinstance(service.status, str) else service.status.value.lower()
+    service_type_value = service.service_type.lower() if isinstance(service.service_type, str) else service.service_type.value.lower()
 
     db_service = models.Service(
         name=service.name,
@@ -409,15 +408,14 @@ def update_service(db: Session, service_id: int, service_data: schemas.ServiceUp
     # Update fields if provided
     update_data = service_data.dict(exclude_unset=True)
 
-    # Handle enum values explicitly
-    # ServiceStatus and ServiceType still use uppercase values, so we need to convert
+    # Handle enum values explicitly - ensure lowercase
     if 'status' in update_data and update_data['status'] is not None:
         status = update_data['status']
-        update_data['status'] = models.ServiceStatus[status.upper()] if isinstance(status, str) else status
+        update_data['status'] = status.lower() if isinstance(status, str) else status.value.lower()
 
     if 'service_type' in update_data and update_data['service_type'] is not None:
         service_type = update_data['service_type']
-        update_data['service_type'] = models.ServiceType[service_type.upper()] if isinstance(service_type, str) else service_type
+        update_data['service_type'] = service_type.lower() if isinstance(service_type, str) else service_type.value.lower()
 
     for key, value in update_data.items():
         setattr(db_service, key, value)
@@ -455,12 +453,12 @@ def get_dependencies(db: Session, squad_id: int) -> List[models.Dependency]:
         # Handle interaction_mode case sensitivity
         interaction_mode = row.interaction_mode
         if interaction_mode:
-            # Convert uppercase to lowercase for frontend compatibility
-            if interaction_mode == 'X_AS_A_SERVICE':
+            # Convert to lowercase for consistency
+            if interaction_mode.upper() == 'X_AS_A_SERVICE' or interaction_mode.lower() == 'x_as_a_service':
                 interaction_mode = 'x_as_a_service'
-            elif interaction_mode == 'COLLABORATION':
+            elif interaction_mode.upper() == 'COLLABORATION' or interaction_mode.lower() == 'collaboration':
                 interaction_mode = 'collaboration'
-            elif interaction_mode == 'FACILITATING':
+            elif interaction_mode.upper() == 'FACILITATING' or interaction_mode.lower() == 'facilitating':
                 interaction_mode = 'facilitating'
 
         # Create the base dependency object
@@ -498,12 +496,12 @@ def get_all_dependencies(db: Session) -> List[models.Dependency]:
         # Handle interaction_mode case sensitivity
         interaction_mode = row.interaction_mode
         if interaction_mode:
-            # Convert uppercase to lowercase for frontend compatibility
-            if interaction_mode == 'X_AS_A_SERVICE':
+            # Convert to lowercase for consistency
+            if interaction_mode.upper() == 'X_AS_A_SERVICE' or interaction_mode.lower() == 'x_as_a_service':
                 interaction_mode = 'x_as_a_service'
-            elif interaction_mode == 'COLLABORATION':
+            elif interaction_mode.upper() == 'COLLABORATION' or interaction_mode.lower() == 'collaboration':
                 interaction_mode = 'collaboration'
-            elif interaction_mode == 'FACILITATING':
+            elif interaction_mode.upper() == 'FACILITATING' or interaction_mode.lower() == 'facilitating':
                 interaction_mode = 'facilitating'
 
         # Create the base dependency object
@@ -527,9 +525,9 @@ def create_dependency(db: Session, dependent_id: int, dependency_id: int, depend
     # Use the interaction_mode directly from the frontend
     interaction_mode_str = dependency_data.interaction_mode
 
-    # Just use the enum value directly - they now use lowercase values
+    # Just ensure lowercase values for consistency with models.py
     if isinstance(interaction_mode_str, str):
-        # The enum values are already lowercase in models.py
+        interaction_mode_str = interaction_mode_str.lower()
         if interaction_mode_str == 'x_as_a_service':
             interaction_mode_value = models.InteractionMode.X_AS_A_SERVICE
         elif interaction_mode_str == 'collaboration':
@@ -577,9 +575,9 @@ def update_dependency(db: Session, dependency_id: int, dependency_data: schemas.
     if 'interaction_mode' in update_data and update_data['interaction_mode'] is not None:
         interaction_mode_str = update_data['interaction_mode']
 
-        # Just use the enum value directly - they now use lowercase values
+        # Ensure lowercase values for consistency with models.py
         if isinstance(interaction_mode_str, str):
-            # The enum values are already lowercase in models.py
+            interaction_mode_str = interaction_mode_str.lower()
             if interaction_mode_str == 'x_as_a_service':
                 update_data['interaction_mode'] = models.InteractionMode.X_AS_A_SERVICE
             elif interaction_mode_str == 'collaboration':

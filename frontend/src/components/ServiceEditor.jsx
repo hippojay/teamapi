@@ -15,18 +15,18 @@ const ServiceEditor = ({
   const initialState = service ? {
     name: service.name || '',
     description: service.description || '',
-    status: service.status || 'HEALTHY',
+    status: service.status || 'healthy',
     version: service.version || '1.0.0',
-    service_type: service.service_type || 'API',
+    service_type: service.service_type || 'api',
     url: service.url || '',
     uptime: service.uptime || 99.9,
     squad_id: service.squad_id || (squad ? squad.id : null)
   } : {
     name: '',
     description: '',
-    status: 'HEALTHY',
+    status: 'healthy',
     version: '1.0.0',
-    service_type: 'API',
+    service_type: 'api',
     url: '',
     uptime: 99.9,
     squad_id: squad ? squad.id : null
@@ -190,15 +190,15 @@ const ServiceEditor = ({
                   : 'bg-white border-gray-300 text-gray-900'
               }`}
             >
-              <option value="API">API</option>
-              <option value="REPO">Code Repository</option>
-              <option value="PLATFORM">Platform Service</option>
-              <option value="WEBPAGE">Web Page</option>
-              <option value="APP_MODULE">Mobile App Module</option>
+              <option value="api">API</option>
+              <option value="repo">Code Repository</option>
+              <option value="platform">Platform Service</option>
+              <option value="webpage">Web Page</option>
+              <option value="app_module">Mobile App Module</option>
             </select>
             
             {/* Repository search button - only show for REPO type */}
-            {formData.service_type === 'REPO' && (
+            {formData.service_type === 'repo' && (
               <button
                 type="button"
                 onClick={() => setShowRepositoryModal(true)}
@@ -229,9 +229,9 @@ const ServiceEditor = ({
                   : 'bg-white border-gray-300 text-gray-900'
               }`}
             >
-              <option value="HEALTHY">Healthy</option>
-              <option value="DEGRADED">Degraded</option>
-              <option value="DOWN">Down</option>
+              <option value="healthy">Healthy</option>
+              <option value="degraded">Degraded</option>
+              <option value="down">Down</option>
             </select>
           </div>
         </div>
@@ -298,7 +298,7 @@ const ServiceEditor = ({
               name: repo.name,
               description: repo.description || prev.description,
               url: repo.url || prev.url,
-              service_type: 'REPO'
+              service_type: 'repo'
             }));
           } else if (repositories.length > 1) {
             // For multiple repositories, save the current one first
@@ -310,9 +310,9 @@ const ServiceEditor = ({
                 await api.createService({
                   name: repo.name,
                   description: repo.description || '',
-                  status: 'HEALTHY',
+                  status: 'healthy',
                   version: '1.0.0',
-                  service_type: 'REPO',
+                  service_type: 'repo',
                   url: repo.url || '',
                   uptime: 99.9,
                   squad_id: formData.squad_id

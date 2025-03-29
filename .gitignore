@@ -1,6 +1,6 @@
-backend/venv*
-frontend/node_modules*
-backend/__pycache__*
+venv*
+node_modules*
+__pycache__*
 # package-lock.json - We're now tracking this file for better CI performance
 backend/team_portal.db
 launch.json

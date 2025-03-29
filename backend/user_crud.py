@@ -116,21 +116,22 @@ def update_squad_team_type(db: Session, squad_id: int, team_type: str, user_id: 
     if not squad:
         return None
 
-    # Normalize and validate team_type
-    team_type_upper = team_type.upper() if team_type else "STREAM_ALIGNED"
+    # Normalize team_type to lowercase
+    team_type_value = team_type.lower() if team_type else "stream_aligned"
     
-    # Ensure it's one of the valid values
-    if team_type_upper not in ["STREAM_ALIGNED", "PLATFORM", "ENABLING", "COMPLICATED_SUBSYSTEM"]:
-        team_type_upper = "STREAM_ALIGNED"
+    # Validate the value against known types
+    valid_types = ["stream_aligned", "platform", "enabling", "complicated_subsystem"]
+    if team_type_value not in valid_types:
+        team_type_value = "stream_aligned"
     
-    # Update the team_type with the string value directly
-    squad.team_type = team_type_upper
+    # Update the team_type with the normalized lowercase value
+    squad.team_type = team_type_value
 
     # Create an edit record
     edit = models.DescriptionEdit(
         entity_type="squad_team_type",
         entity_id=squad_id,
-        description=f"Updated team type to {team_type_upper}",
+        description=f"Updated team type to {team_type_value}",
         edited_by=user_id
     )
 
