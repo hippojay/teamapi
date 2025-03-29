@@ -68,7 +68,7 @@ def is_email_allowed(email: str, db: Session) -> bool:
 def create_verification_token(db: Session, email: str, user_id: Optional[int] = None) -> str:
     """Create a verification token for email verification"""
     logger.info(f"Creating email verification token for email: {email}" + (f", user ID: {user_id}" if user_id else ""))
-    
+
     # Generate a secure random token
     token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
 
@@ -92,7 +92,7 @@ def create_verification_token(db: Session, email: str, user_id: Optional[int] = 
 def create_password_reset_token(db: Session, email: str, user_id: int) -> str:
     """Create a password reset token"""
     logger.info(f"Creating password reset token for user: {email} (ID: {user_id})")
-    
+
     # Generate a secure random token
     token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
 
@@ -116,7 +116,7 @@ def create_password_reset_token(db: Session, email: str, user_id: int) -> str:
 def verify_token(db: Session, token: str, token_type: str) -> Optional[models.ValidationToken]:
     """Verify a token is valid and not expired"""
     logger.info(f"Verifying {token_type} token: {token[:5]}***")
-    
+
     db_token = db.query(models.ValidationToken).filter(
         models.ValidationToken.token == token,
         models.ValidationToken.token_type == token_type
@@ -130,7 +130,7 @@ def verify_token(db: Session, token: str, token_type: str) -> Optional[models.Va
     if db_token.expires_at < datetime.utcnow():
         logger.warning(f"Token verification failed: {token_type} token expired: {token[:5]}*** (expired at {db_token.expires_at})")
         return None
-        
+
     logger.info(f"Token verified successfully: {token_type} token for {db_token.email}")
 
     return db_token
@@ -138,7 +138,7 @@ def verify_token(db: Session, token: str, token_type: str) -> Optional[models.Va
 def register_user(db: Session, user_data: schemas.UserRegister) -> models.User:
     """Register a new user (not verified yet)"""
     logger.info(f"Attempting to register new user with email: {user_data.email}")
-    
+
     # Check if email is allowed
     if not is_email_allowed(user_data.email, db):
         email_domain = user_data.email.split("@")[-1].lower()
@@ -165,7 +165,7 @@ def register_user(db: Session, user_data: schemas.UserRegister) -> models.User:
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    
+
     logger.info(f"Created new user: {user_data.email} (ID: {db_user.id}) - awaiting verification")
 
     # Check if the user is also a team member and upgrade role if so
@@ -265,7 +265,7 @@ def reset_password(db: Session, reset: schemas.PasswordReset) -> bool:
 def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate) -> Optional[models.User]:
     """Update user information"""
     logger.info(f"Updating user information for user ID: {user_id}")
-    
+
     db_user = db.query(models.User).filter(models.User.id == user_id).first()
     if not db_user:
         logger.warning(f"User update failed: User with ID {user_id} not found")
@@ -328,7 +328,7 @@ def validate_password(password: str) -> bool:
     """Validate password complexity requirements"""
     # Track reason for rejection for logging purposes
     reason = None
-    
+
     # At least 8 characters long
     if len(password) < 8:
         reason = "too short (minimum 8 characters)"
@@ -351,12 +351,12 @@ def validate_password(password: str) -> bool:
         result = False
     else:
         result = True
-    
+
     if not result:
         logger.warning(f"Password validation failed: {reason}")
     else:
         logger.info("Password validation successful")
-        
+
     return result
 
 def log_user_action(db: Session,
@@ -375,7 +375,7 @@ def log_user_action(db: Session,
     )
     db.add(log_entry)
     db.commit()
-    
+
     # Log to application logs as well
     user_info = f"User ID: {user_id}" if user_id else "Anonymous"
     entity_info = f"{entity_type} ID: {entity_id}" if entity_id else entity_type

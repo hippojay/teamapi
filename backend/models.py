@@ -1,9 +1,8 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Text, Enum, Table, DateTime, JSON
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Text, Table, DateTime, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import MetaData
 import enum
-import os
 
 from database import Base, db_config
 
@@ -20,7 +19,7 @@ metadata = MetaData(naming_convention={
 schema = None
 if db_config.is_postgres and db_config.schema:
     schema = db_config.schema
-    
+
 # Update Base to use our metadata
 Base.metadata = metadata
 

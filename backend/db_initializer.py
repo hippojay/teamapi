@@ -18,7 +18,6 @@ from pathlib import Path
 from database import SessionLocal, engine, Base, db_config, CreateSchema
 import models
 from auth import get_password_hash
-from models import UserRole
 from logger import get_logger
 
 # Initialize logger
@@ -29,10 +28,10 @@ CURRENT_VERSION = "1.0.0"
 
 def check_database_initialized(db_type=None) -> bool:
     """Check if the database has been initialized
-    
+
     Args:
         db_type (str, optional): Database type to check. If None, use the configured type.
-        
+
     Returns:
         bool: True if database is initialized, False otherwise
     """
@@ -47,12 +46,12 @@ def check_database_initialized(db_type=None) -> bool:
         # If db_type is not specified, use the configured type
         current_db_type = db_type or db_config.db_type
         logger.info(f"Checking if {current_db_type} database is initialized")
-        
+
         # Important: Force the schema to be applied to Base.metadata
         if db_config.schema and current_db_type == "postgresql":
             Base.metadata.schema = db_config.schema
             logger.info(f"Using schema {db_config.schema} for database operations")
-        
+
         # For PostgreSQL, try to set the search path first
         if current_db_type == "postgresql" and db_config.schema:
             try:
@@ -61,13 +60,13 @@ def check_database_initialized(db_type=None) -> bool:
                     logger.info(f"Set search path to {db_config.schema} for initialization check")
             except Exception as e:
                 logger.error(f"Error setting search path: {str(e)}")
-        
+
         db = SessionLocal()
         try:
             # Check if SystemInfo table exists
             inspector = inspect(engine)
             table_exists = False
-            
+
             try:
                 # For PostgreSQL with schema, we need to check in the specific schema
                 if current_db_type == "postgresql":
@@ -86,7 +85,7 @@ def check_database_initialized(db_type=None) -> bool:
             except Exception as e:
                 logger.error(f"Error checking table existence: {str(e)}")
                 return False
-                    
+
             if not table_exists:
                 logger.info("SystemInfo table does not exist. Database needs initialization.")
                 return False
@@ -137,24 +136,24 @@ def initialize_database(admin_username="admin", admin_email="admin@example.com",
         db_type = db_config.db_type
         schema = db_config.schema
         logger.info(f"Initializing database of type: {db_type}" + (f" with schema: {schema}" if schema else ""))
-        
+
         # For PostgreSQL, set schema in metadata
         if db_type == "postgresql" and schema:
             Base.metadata.schema = schema
-            
+
         # Set search path for PostgreSQL
         if db_type == "postgresql" and schema:
             try:
                 with engine.begin() as conn:
                     # Try setting schema before creating tables
                     conn.execute(text(f"SET search_path TO {schema}"))
-                    
+
                     # Also ensure the schema exists
                     conn.execute(CreateSchema(schema, if_not_exists=True))
                     logger.info(f"Ensured schema {schema} exists")
             except Exception as e:
                 logger.error(f"Error setting up PostgreSQL schema: {str(e)}")
-        
+
         # Create all tables defined in models
         try:
             Base.metadata.create_all(bind=engine)
@@ -170,11 +169,11 @@ def initialize_database(admin_username="admin", admin_email="admin@example.com",
                         # Ensure schema exists
                         with engine.begin() as conn:
                             conn.execute(CreateSchema(db_config.schema, if_not_exists=True))
-                        
+
                         # Set search path to use this schema
                         with engine.begin() as conn:
                             conn.execute(text(f"SET search_path TO {db_config.schema}, public;"))
-                    
+
                     # Retry table creation
                     Base.metadata.create_all(bind=engine)
                     logger.info("Database tables created successfully with PostgreSQL-specific handling")

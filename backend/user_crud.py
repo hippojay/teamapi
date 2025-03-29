@@ -5,7 +5,6 @@ from typing import List, Optional
 import models
 import schemas
 import auth
-from database import db_config
 
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
@@ -118,12 +117,12 @@ def update_squad_team_type(db: Session, squad_id: int, team_type: str, user_id: 
 
     # Normalize team_type to lowercase
     team_type_value = team_type.lower() if team_type else "stream_aligned"
-    
+
     # Validate the value against known types
     valid_types = ["stream_aligned", "platform", "enabling", "complicated_subsystem"]
     if team_type_value not in valid_types:
         team_type_value = "stream_aligned"
-    
+
     # Update the team_type with the normalized lowercase value
     squad.team_type = team_type_value
 
@@ -159,7 +158,7 @@ def get_admin_setting_value(db: Session, key: str, default_value: str = None):
 def update_admin_setting(db: Session, setting: schemas.AdminSettingUpdate, key: str, user_id: int):
     """Update an admin setting or create it if it doesn't exist"""
     db_setting = db.query(models.AdminSetting).filter(models.AdminSetting.key == key).first()
-    
+
     if db_setting:
         db_setting.value = setting.value
         if setting.description is not None:
@@ -171,14 +170,14 @@ def update_admin_setting(db: Session, setting: schemas.AdminSettingUpdate, key: 
             description=setting.description or ""
         )
         db.add(db_setting)
-    
+
     db.commit()
     db.refresh(db_setting)
-    
+
     # Log the setting update
     from audit_logger import log_setting_update
     log_setting_update(db, user_id, key)
-    
+
     return db_setting
 
 def get_audit_logs(db: Session, skip: int = 0, limit: int = 100):

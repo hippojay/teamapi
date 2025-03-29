@@ -151,7 +151,7 @@ def create_user(user: schemas.UserCreate,
             role_value = "team_member"
         elif role_upper == "GUEST":
             role_value = "guest"
-            
+
     # Create user with full details (use email as username if not provided)
     username = user.username if user.username else user.email
     hashed_password = auth.get_password_hash(user.password)
@@ -614,7 +614,7 @@ def update_squad_team_type(
             status_code=400,
             detail=f"Invalid team_type. Input should be one of: {', '.join(valid_types)}"
         )
-    
+
     squad = user_crud.update_squad_team_type(db, squad_id, normalized_team_type, current_user.id)
     if not squad:
         raise HTTPException(status_code=404, detail="Squad not found")
@@ -646,7 +646,7 @@ def update_area_label(
                 status_code=400,
                 detail=f"Invalid label. Valid options are: {', '.join(valid_labels)}"
             )
-            
+
         # Set the label as a string
         area.label = label_upper
     else:
@@ -688,7 +688,7 @@ def update_tribe_label(
                 status_code=400,
                 detail=f"Invalid label. Valid options are: {', '.join(valid_labels)}"
             )
-            
+
         # Set the label as a string
         tribe.label = label_upper
     else:
@@ -1409,7 +1409,7 @@ def search_repositories(q: str, limit: int = 20, db: Session = Depends(get_db)):
 
     # Initialize repository service
     repo_service = RepositoryService(db)
-    
+
     # Execute the search
     results = repo_service.search_repositories(search_query, limit)
     return {"results": results, "total": len(results)}
@@ -1421,12 +1421,12 @@ def get_repository_details(repo_id: int, source: str = "gitlab", db: Session = D
     """
     # Initialize repository service
     repo_service = RepositoryService(db)
-    
+
     # Get repository details
     details = repo_service.get_repository_details(repo_id, source)
     if not details:
         raise HTTPException(status_code=404, detail="Repository not found")
-        
+
     return details
 
 @app.get("/repositories/group/{group_id}/projects")
@@ -1436,7 +1436,7 @@ def get_group_projects(group_id: int, source: str = "gitlab", limit: int = 50, d
     """
     # Initialize repository service
     repo_service = RepositoryService(db)
-    
+
     # Get projects in the group
     projects = repo_service.get_group_projects(group_id, source, limit)
     return {"results": projects, "total": len(projects)}
@@ -1453,7 +1453,7 @@ if __name__ == "__main__":
     parser.add_argument("--connection-string", help="Database connection string")
     parser.add_argument("--schema", help="Database schema name (PostgreSQL only)")
     args = parser.parse_args()
-    
+
     logger.info(f"Starting server with arguments: host={args.host}, port={args.port}, force_initdb={args.force_initdb}")
 
     # Set environment variables based on command line arguments
