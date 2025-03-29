@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Check, Code, GitBranch, Server, Globe, Smartphone } from 'lucide-react';
+import { X, Check, Code, GitBranch, Server, Globe, Smartphone, Search, Plus } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import api from '../api';
+import RepositorySearchModal from './RepositorySearchModal';
 
 const ServiceEditor = ({ 
   service = null, 
@@ -34,6 +35,7 @@ const ServiceEditor = ({
   const [formData, setFormData] = useState(initialState);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showRepositoryModal, setShowRepositoryModal] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -194,6 +196,22 @@ const ServiceEditor = ({
               <option value="WEBPAGE">Web Page</option>
               <option value="APP_MODULE">Mobile App Module</option>
             </select>
+            
+            {/* Repository search button - only show for REPO type */}
+            {formData.service_type === 'REPO' && (
+              <button
+                type="button"
+                onClick={() => setShowRepositoryModal(true)}
+                className={`mt-2 w-full px-3 py-2 flex items-center justify-center border rounded-md ${
+                  darkMode 
+                    ? 'bg-dark-tertiary border-dark-border text-blue-400 hover:bg-dark-secondary' 
+                    : 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100'
+                }`}
+              >
+                <Search className="h-4 w-4 mr-2" />
+                Search and Add Repositories
+              </button>
+            )}
           </div>
           
           {/* Status field */}
@@ -266,6 +284,51 @@ const ServiceEditor = ({
           </button>
         </div>
       </form>
+      
+      {/* Repository Search Modal */}
+      <RepositorySearchModal
+        isOpen={showRepositoryModal}
+        onClose={() => setShowRepositoryModal(false)}
+        onAddRepositories={(repositories) => {
+          // If we're only adding one repository, update the current form
+          if (repositories.length === 1) {
+            const repo = repositories[0];
+            setFormData(prev => ({
+              ...prev,
+              name: repo.name,
+              description: repo.description || prev.description,
+              url: repo.url || prev.url,
+              service_type: 'REPO'
+            }));
+          } else if (repositories.length > 1) {
+            // For multiple repositories, save the current one first
+            handleSubmit(new Event('submit'));
+            
+            // Then create additional services for each repository
+            repositories.forEach(async (repo) => {
+              try {
+                await api.createService({
+                  name: repo.name,
+                  description: repo.description || '',
+                  status: 'HEALTHY',
+                  version: '1.0.0',
+                  service_type: 'REPO',
+                  url: repo.url || '',
+                  uptime: 99.9,
+                  squad_id: formData.squad_id
+                });
+              } catch (err) {
+                console.error('Failed to create repository service:', err);
+              }
+            });
+            
+            // Force a refresh of the service list
+            if (onSave) {
+              onSave({ id: 0 }); // Dummy ID to trigger refresh
+            }
+          }
+        }}
+      />
     </div>
   );
 };

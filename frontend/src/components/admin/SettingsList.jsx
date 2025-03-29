@@ -1,6 +1,7 @@
 import React from 'react';
 import { Edit, Plus } from 'lucide-react';
 import SettingEditForm from './SettingEditForm';
+import RepositorySettings from './RepositorySettings';
 
 const SettingsList = ({
   settings,
@@ -10,6 +11,9 @@ const SettingsList = ({
   setShowAddSettingModal,
   darkMode
 }) => {
+  // Filter out repository settings to display separately
+  const repositorySettingsKeys = ['gitlab_api_url', 'gitlab_api_token'];
+  const regularSettings = settings.filter(s => !repositorySettingsKeys.includes(s.key));
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -25,6 +29,17 @@ const SettingsList = ({
         </button>
       </div>
       
+      {/* Repository Settings Panel */}
+      <div className="mb-6">
+        <RepositorySettings
+          settings={settings}
+          editingSettings={editingSettings}
+          handleEditSetting={handleEditSetting}
+          handleSaveSetting={handleSaveSetting}
+          darkMode={darkMode}
+        />
+      </div>
+      
       <div className={`overflow-x-auto rounded-lg border ${darkMode ? 'border-dark-border' : 'border-gray-200'}`}>
         <table className={`min-w-full divide-y ${darkMode ? 'divide-dark-border' : 'divide-gray-200'}`}>
           <thead className={darkMode ? 'bg-dark-tertiary' : 'bg-gray-50'}>
@@ -37,12 +52,12 @@ const SettingsList = ({
             </tr>
           </thead>
           <tbody className={`${darkMode ? 'divide-y divide-dark-border' : 'divide-y divide-gray-200'}`}>
-            {settings.length === 0 ? (
+            {regularSettings.length === 0 ? (
               <tr>
                 <td colSpan="5" className="px-6 py-4 text-center">No settings found</td>
               </tr>
             ) : (
-              settings.map(setting => (
+              regularSettings.map(setting => (
                 <tr key={setting.id} className={darkMode ? 'bg-dark-secondary' : 'bg-white'}>
                   <td className="px-6 py-4 whitespace-nowrap font-medium">{setting.key}</td>
                   <td className="px-6 py-4">

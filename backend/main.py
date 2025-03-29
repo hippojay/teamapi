@@ -25,6 +25,7 @@ import tempfile
 import pandas as pd
 import os
 from search_schemas import SearchResults
+from repository.repository_service import RepositoryService
 
 # Import database initializer
 import db_initializer
@@ -1383,6 +1384,52 @@ def search(q: str, limit: int = 20, db: Session = Depends(get_db)):
     # Execute the search
     results = search_crud.search_all(db, search_query, limit)
     return SearchResults(results=results, total=len(results))
+
+# Repository search endpoints
+@app.get("/repositories/search")
+def search_repositories(q: str, limit: int = 20, db: Session = Depends(get_db)):
+    """
+    Search for repositories across configured platforms (GitHub, GitLab, etc.)
+    Requires at least 3 characters to perform a search
+    """
+    # Clean and validate the search query
+    search_query = q.strip()
+    if len(search_query) < 3:
+        return {"results": [], "total": 0}
+
+    # Initialize repository service
+    repo_service = RepositoryService(db)
+    
+    # Execute the search
+    results = repo_service.search_repositories(search_query, limit)
+    return {"results": results, "total": len(results)}
+
+@app.get("/repositories/{repo_id}/details")
+def get_repository_details(repo_id: int, source: str = "gitlab", db: Session = Depends(get_db)):
+    """
+    Get detailed information about a specific repository
+    """
+    # Initialize repository service
+    repo_service = RepositoryService(db)
+    
+    # Get repository details
+    details = repo_service.get_repository_details(repo_id, source)
+    if not details:
+        raise HTTPException(status_code=404, detail="Repository not found")
+        
+    return details
+
+@app.get("/repositories/group/{group_id}/projects")
+def get_group_projects(group_id: int, source: str = "gitlab", limit: int = 50, db: Session = Depends(get_db)):
+    """
+    Get all projects (repositories) in a group/organization
+    """
+    # Initialize repository service
+    repo_service = RepositoryService(db)
+    
+    # Get projects in the group
+    projects = repo_service.get_group_projects(group_id, source, limit)
+    return {"results": projects, "total": len(projects)}
 
 if __name__ == "__main__":
     # Parse command-line arguments

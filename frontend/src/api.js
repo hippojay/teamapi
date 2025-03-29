@@ -900,6 +900,59 @@ const api = {
       console.error('Error performing search:', error);
       return { results: [], total: 0 };
     }
+  },
+  
+  // Repository search endpoints
+  searchRepositories: async (query, limit = 20) => {
+    // Only search if query is at least 3 characters
+    if (!query || query.length < 3) {
+      return { results: [], total: 0 };
+    }
+    
+    try {
+      const encodedQuery = encodeURIComponent(query.trim());
+      const response = await fetch(`${API_URL}/repositories/search?q=${encodedQuery}&limit=${limit}`);
+      
+      if (!response.ok) {
+        throw new Error('Repository search failed');
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error searching repositories:', error);
+      return { results: [], total: 0 };
+    }
+  },
+  
+  getRepositoryDetails: async (repoId, source = "gitlab") => {
+    try {
+      const response = await fetch(`${API_URL}/repositories/${repoId}/details?source=${source}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to get repository details');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Error getting repository details:', error);
+      throw error;
+    }
+  },
+  
+  getGroupProjects: async (groupId, source = "gitlab", limit = 50) => {
+    try {
+      const response = await fetch(`${API_URL}/repositories/group/${groupId}/projects?source=${source}&limit=${limit}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to get group projects');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Error getting group projects:', error);
+      return { results: [], total: 0 };
+    }
   }
 };
 

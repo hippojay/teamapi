@@ -155,3 +155,22 @@ def log_data_upload(
         entity_id=None,
         details=details
     )
+
+def log_setting_update(
+    db: Session,
+    user_id: int,
+    setting_key: str,
+    details: Optional[str] = None
+):
+    """Log a setting update action"""
+    if details is None:
+        details = f"Updated setting: {setting_key}"
+
+    user_auth.log_user_action(
+        db=db,
+        user_id=user_id,
+        action="UPDATE",
+        entity_type="Setting",
+        entity_id=None,
+        details=details
+    )

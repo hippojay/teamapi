@@ -140,3 +140,46 @@ def update_squad_team_type(db: Session, squad_id: int, team_type: str, user_id: 
     db.refresh(edit)
 
     return squad
+
+# Admin settings operations
+def get_admin_settings(db: Session):
+    """Get all admin settings"""
+    return db.query(models.AdminSetting).all()
+
+def get_admin_setting(db: Session, key: str):
+    """Get a specific admin setting by key"""
+    return db.query(models.AdminSetting).filter(models.AdminSetting.key == key).first()
+
+def get_admin_setting_value(db: Session, key: str, default_value: str = None):
+    """Get the value of an admin setting, or return default if not found"""
+    setting = get_admin_setting(db, key)
+    return setting.value if setting else default_value
+
+def update_admin_setting(db: Session, setting: schemas.AdminSettingUpdate, key: str, user_id: int):
+    """Update an admin setting or create it if it doesn't exist"""
+    db_setting = db.query(models.AdminSetting).filter(models.AdminSetting.key == key).first()
+    
+    if db_setting:
+        db_setting.value = setting.value
+        if setting.description is not None:
+            db_setting.description = setting.description
+    else:
+        db_setting = models.AdminSetting(
+            key=key,
+            value=setting.value,
+            description=setting.description or ""
+        )
+        db.add(db_setting)
+    
+    db.commit()
+    db.refresh(db_setting)
+    
+    # Log the setting update
+    from audit_logger import log_setting_update
+    log_setting_update(db, user_id, key)
+    
+    return db_setting
+
+def get_audit_logs(db: Session, skip: int = 0, limit: int = 100):
+    """Get audit logs ordered by most recent first"""
+    return db.query(models.AuditLog).order_by(models.AuditLog.created_at.desc()).offset(skip).limit(limit).all()
