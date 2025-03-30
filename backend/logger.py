@@ -39,9 +39,9 @@ class MicrosecondFormatter(logging.Formatter):
         ct = self.converter(record.created)
         if datefmt:
             s = time.strftime(datefmt, ct)
-            # Add microseconds manually
-            if '%f' in datefmt:
-                s = s.replace('%f', '%06d' % (record.msecs * 1000))
+            # Add microseconds manually - multiply msecs by 1000 to get microseconds
+            if '%f' in s:
+                s = s.replace('%f', '{0:06d}'.format(int(record.msecs * 1000)))
             return s
         else:
             return time.strftime(self.default_time_format, ct)
@@ -208,7 +208,7 @@ class Logger:
         if log_level >= logging.ERROR:
             with open(MAIN_LOG_FILE, 'a') as f:
                 dt = datetime.datetime.now()
-                timestamp = dt.strftime('%Y-%m-%d %H:%M:%S.') + f'{dt.microsecond:06d}'
+                timestamp = dt.strftime('%Y-%m-%d %H:%M:%S.%f')
                 f.write(f"{timestamp} - {logging.getLevelName(log_level)} - {self.module_name} - {full_message}\n")
     
     def exception(self, message, exc_info=True, **kwargs):

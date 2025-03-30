@@ -6,7 +6,7 @@
 2. Log messages should not include source file name and line number (logger.py:XXX) in the standard output
 3. Log messages should include relevant contextual information for troubleshooting
 4. System must support different log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-5. All timestamps must display microseconds with proper formatting
+5. All timestamps must display microseconds with proper formatting (using %f placeholder)
 
 ## Feature Requirements
 
