@@ -199,18 +199,18 @@ def register_user(db: Session, user_data: schemas.UserRegister) -> models.User:
             )
 
         # Create a verification token
-        try:
-            token = create_verification_token(db, user_data.email, db_user.id)
-            logger.info(f"Created verification token for user {user_data.email} (ID: {db_user.id})")
-        except Exception as e:
-            log_and_handle_exception(
-                logger,
-                f"Error creating verification token for {user_data.email}",
-                e,
-                reraise=True,
-                user_id=db_user.id,
-                email=user_data.email
-            )
+        # try:
+        #    token = create_verification_token(db, user_data.email, db_user.id)
+        #    logger.info(f"Created verification token for user {user_data.email} (ID: {db_user.id})")
+        # except Exception as e:
+        #    log_and_handle_exception(
+        #        logger,
+        #        f"Error creating verification token for {user_data.email}",
+        #        e,
+        #        reraise=True,
+        #        user_id=db_user.id,
+        #        email=user_data.email
+        #    )
 
         # Log the user creation
         try:
