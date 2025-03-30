@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check, Code, GitBranch, Server, Globe, Smartphone, Search, Plus } from 'lucide-react';
+import { X, Check, Code, GitBranch, Server, Globe, Smartphone, Search } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import api from '../api';
 import RepositorySearchModal from './RepositorySearchModal';
