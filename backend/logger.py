@@ -3,8 +3,8 @@ import logging
 import sys
 import traceback
 import json
+import time
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
-from pathlib import Path
 import datetime
 import socket
 import platform
@@ -25,17 +25,26 @@ LOG_LEVELS = {
     'CRITICAL': logging.CRITICAL
 }
 
-# Determine the project root directory
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-LOG_DIR = PROJECT_ROOT / "logs"
-MAIN_LOG_FILE = LOG_DIR / "application.log"
-
 # Ensure log directory exists
 if not LOG_DIR.exists():
     LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 # Global dictionary to store metrics and counters
 _metrics = {}
+
+# Custom formatter for microseconds
+class MicrosecondFormatter(logging.Formatter):
+    """Custom formatter that correctly handles microsecond formatting."""
+    def formatTime(self, record, datefmt=None):
+        ct = self.converter(record.created)
+        if datefmt:
+            s = time.strftime(datefmt, ct)
+            # Add microseconds manually
+            if '%f' in datefmt:
+                s = s.replace('%f', '%06d' % (record.msecs * 1000))
+            return s
+        else:
+            return time.strftime(self.default_time_format, ct)
 
 class Logger:
     """
@@ -87,15 +96,15 @@ class Logger:
         if self.logger.hasHandlers():
             self.logger.handlers.clear()
         
-        # Create enhanced formatter with timestamp, module, but without redundant logger internals
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        # Create enhanced formatter with timestamp, level, module, but without filename or line number
+        formatter = MicrosecondFormatter(
+            '%(asctime)s - %(levelname)s - %(name)s - %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S.%f'
         )
         
-        # Create a special formatter for warnings and errors that includes file/line information
-        error_formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(threadName)s - %(message)s',
+        # Create a special formatter for warnings and errors that includes thread name but not filename/line
+        error_formatter = MicrosecondFormatter(
+            '%(asctime)s - %(levelname)s - %(name)s - %(threadName)s - %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S.%f'
         )
         
@@ -198,8 +207,9 @@ class Logger:
         # All errors and criticals are also sent to the main log file
         if log_level >= logging.ERROR:
             with open(MAIN_LOG_FILE, 'a') as f:
-                timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-                f.write(f"{timestamp} - {self.module_name} - {logging.getLevelName(log_level)} - {full_message}\n")
+                dt = datetime.datetime.now()
+                timestamp = dt.strftime('%Y-%m-%d %H:%M:%S.') + f'{dt.microsecond:06d}'
+                f.write(f"{timestamp} - {logging.getLevelName(log_level)} - {self.module_name} - {full_message}\n")
     
     def exception(self, message, exc_info=True, **kwargs):
         """
@@ -292,9 +302,9 @@ def get_logger(module_name, log_level=None, log_to_console=True):
     main_handler = getattr(get_logger, '_main_handler', None)
     
     if main_handler is None:
-        # Create a formatter for the main log - always use the error formatter for the main log
-        main_formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+        # Create a formatter for the main log with new format (level before module, no filename)
+        main_formatter = MicrosecondFormatter(
+            '%(asctime)s - %(levelname)s - %(name)s - %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S.%f'
         )
         
