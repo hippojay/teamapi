@@ -1,0 +1,17 @@
+{
+  "name": "who-what-where-ui-tests-latest",
+  "version": "1.0.0",
+  "description": "BDD UI tests with latest Cucumber version",
+  "main": "index.js",
+  "scripts": {
+    "test": "cucumber-js",
+    "test:debug": "PWDEBUG=1 cucumber-js",
+    "test:report": "cucumber-js --format html:reports/cucumber-report.html --format json:reports/cucumber-report.json"
+  },
+  "dependencies": {
+    "@cucumber/cucumber": "^11.2.0",
+    "@cucumber/pretty-formatter": "^1.0.1",
+    "@playwright/test": "^1.40.1",
+    "dotenv": "^16.3.1"
+  }
+}

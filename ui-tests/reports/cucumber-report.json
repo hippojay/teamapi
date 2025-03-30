@@ -1,0 +1,867 @@
+[
+  {
+    "description": "  As a user of the \"Who What Where\" application\n  I want to be able to navigate through the application\n  So that I can access different sections and view relevant information",
+    "elements": [
+      {
+        "description": "",
+        "id": "basic-navigation;accessing-the-application-homepage",
+        "keyword": "Scenario",
+        "line": 9,
+        "name": "Accessing the application homepage",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 186340373
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am a normal user accessing the application",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:8"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 13384274
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 10,
+            "name": "I navigate to the home page",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:18"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1285026656
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 11,
+            "name": "I should see the sidebar menu",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:82"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 74334884
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 12,
+            "name": "I should see the header menu",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:87"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 38674704
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 13,
+            "name": "I should see summary boxes",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:107"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1011667038
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 14,
+            "name": "I should not see any error messages",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:115"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 35490297
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 34152885
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "basic-navigation;navigating-using-the-sidebar-menu",
+        "keyword": "Scenario",
+        "line": 16,
+        "name": "Navigating using the sidebar menu",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 114070603
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am a normal user accessing the application",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:8"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 552805
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 17,
+            "name": "I am on the home page",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:13"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1294650595
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 18,
+            "name": "I click on a menu item in the sidebar",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:23"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1029320891
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 19,
+            "name": "I should be navigated to a new page",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:137"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2968245
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 20,
+            "name": "the new page should be populated with relevant data or a no-data message",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:144"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 46266220
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 21,
+            "name": "I should not see any error messages",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:115"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 20133612
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1570910784
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "basic-navigation;viewing-tribes-section",
+        "keyword": "Scenario",
+        "line": 23,
+        "name": "Viewing Tribes section",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 110275546
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am a normal user accessing the application",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:8"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 244902
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 24,
+            "name": "I am on the home page",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:13"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1235838949
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 25,
+            "name": "I click on \"Tribes\" in the sidebar menu",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:75"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 134764176
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 26,
+            "name": "I should see a list of all tribes",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:167"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1021452494
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 27,
+            "name": "I should not see any error messages",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:115"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 17065838
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 33615412
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "basic-navigation;viewing-cluster-section",
+        "keyword": "Scenario",
+        "line": 29,
+        "name": "Viewing Cluster section",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 120923543
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am a normal user accessing the application",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:8"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 389428
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 30,
+            "name": "I am on the home page",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:13"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1270083561
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 31,
+            "name": "I click on \"Cluster\" in the sidebar menu",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:75"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 108079154
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 32,
+            "name": "I should see a list of all clusters",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:167"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1026351730
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 33,
+            "name": "I should not see any error messages",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:115"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 20805894
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 36626344
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "basic-navigation;viewing-squads-section",
+        "keyword": "Scenario",
+        "line": 35,
+        "name": "Viewing Squads section",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 114462645
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am a normal user accessing the application",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:8"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 174805
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 36,
+            "name": "I am on the home page",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:13"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1265560679
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 37,
+            "name": "I click on \"squads\" in the sidebar menu",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:75"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 148121433
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 38,
+            "name": "I should see a list of all squads",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:167"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1032396150
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 39,
+            "name": "I should not see any error messages",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:115"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 24929497
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 43568229
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "basic-navigation;viewing-team-members-section",
+        "keyword": "Scenario",
+        "line": 41,
+        "name": "Viewing Team Members section",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 127240222
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am a normal user accessing the application",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:8"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 236120
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 42,
+            "name": "I am on the home page",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:13"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1358853150
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 43,
+            "name": "I click on \"team members\" in the sidebar menu",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:75"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 138885668
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 44,
+            "name": "I should see a list of all team members",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:203"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1085273183
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 45,
+            "name": "I should not see any error messages",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:115"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 56133686
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 30271881
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "basic-navigation;viewing-services-section",
+        "keyword": "Scenario",
+        "line": 47,
+        "name": "Viewing Services section",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 100607772
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am a normal user accessing the application",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:8"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 265812
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 48,
+            "name": "I am on the home page",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:13"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1230353803
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 49,
+            "name": "I click on \"services\" in the sidebar menu",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:75"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 129843214
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 50,
+            "name": "I should see a list of all services",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:167"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1017583082
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 51,
+            "name": "I should not see any error messages",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:115"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 21190834
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 35491889
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "basic-navigation;viewing-org-explorer-section",
+        "keyword": "Scenario",
+        "line": 53,
+        "name": "Viewing Org Explorer section",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 140235425
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am a normal user accessing the application",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:8"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 347160
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 54,
+            "name": "I am on the home page",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:13"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1356487004
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 55,
+            "name": "I click on \"Org Explorer\" in the sidebar menu",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:75"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 140505955
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 56,
+            "name": "I should see a list of all areas",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:167"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1015058156
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 57,
+            "name": "I should not see any error messages",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:115"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 16145561
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 27927427
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "basic-navigation;viewing-okrs-section",
+        "keyword": "Scenario",
+        "line": 59,
+        "name": "Viewing OKRs section",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 137836531
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am a normal user accessing the application",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:8"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 239664
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 60,
+            "name": "I am on the home page",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:13"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1248604534
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 61,
+            "name": "I click on \"OKRs\" in the sidebar menu",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:75"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 123100303
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 62,
+            "name": "I should see a list of all areas",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:167"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1017555682
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 63,
+            "name": "I should not see any error messages",
+            "match": {
+              "location": "features/step_definitions/navigation_steps.js:115"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 17597634
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 36387071
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "basic-navigation",
+    "line": 1,
+    "keyword": "Feature",
+    "name": "Basic Navigation",
+    "tags": [],
+    "uri": "features/basic_navigation.feature"
+  }
+]
