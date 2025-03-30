@@ -10,17 +10,18 @@
 
 ## Feature Requirements
 
-1. Add support for other databases beyond SQLite
-2. Find duplicated UI code and turn into React components
-3. Scan and locate any security issues
-4. Add TLS and auth to API calls
-5. Ability to add areas, tribes and squads
-6. Ability to rename structures based on needs
-7. Ability to operate with a generic multi-layered approach
-8. Add key people into Area and tribe view (such as area leadership and tribe leadership)
-9. Add cost information, for areas/tribe run rates
-10. Add historical views (go back in time to see what org was on X date)
-11. Add future capacity view for team members, squads, tribes, areas
-12. Add analytics views for data (cost, people, tribes, hot spots)
-13. Add Team topologies analytics (dependencies hot spots, architectural hot spots)
-14. Gather dependency data from repository contributions
+1. Migrate from react-scripts to Vite for modern frontend development experience
+2. Add support for other databases beyond SQLite
+3. Find duplicated UI code and turn into React components
+4. Scan and locate any security issues
+5. Add TLS and auth to API calls
+6. Ability to add areas, tribes and squads
+7. Ability to rename structures based on needs
+8. Ability to operate with a generic multi-layered approach
+9. Add key people into Area and tribe view (such as area leadership and tribe leadership)
+10. Add cost information, for areas/tribe run rates
+11. Add historical views (go back in time to see what org was on X date)
+12. Add future capacity view for team members, squads, tribes, areas
+13. Add analytics views for data (cost, people, tribes, hot spots)
+14. Add Team topologies analytics (dependencies hot spots, architectural hot spots)
+15. Gather dependency data from repository contributions
