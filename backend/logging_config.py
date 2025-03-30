@@ -1,7 +1,7 @@
 """
 Centralized logging configuration for the Who What Where application.
 
-This module defines default logging levels, formats, and other configuration 
+This module defines default logging levels, formats, and other configuration
 that can be applied consistently across the application.
 """
 
@@ -58,18 +58,18 @@ def get_log_level_for_module(module_name):
     # Check for module-specific environment variable
     env_var_name = f"LOG_LEVEL_{module_name.upper()}"
     module_level = os.environ.get(env_var_name)
-    
+
     if module_level:
         return module_level
-        
+
     # Check for global log level environment variable
     global_level = os.environ.get("LOG_LEVEL")
     if global_level:
         return global_level
-        
+
     # Fall back to module-specific default
     if module_name in MODULE_LOG_LEVELS:
         return MODULE_LOG_LEVELS[module_name]
-        
+
     # Last resort: general default
     return DEFAULT_LOG_LEVEL

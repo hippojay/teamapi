@@ -60,9 +60,9 @@ def check_database_initialized(db_type=None) -> bool:
                     logger.info(f"Set search path to {db_config.schema} for initialization check")
             except Exception as e:
                 log_and_handle_exception(
-                    logger, 
-                    f"Error setting search path for schema {db_config.schema}", 
-                    e, 
+                    logger,
+                    f"Error setting search path for schema {db_config.schema}",
+                    e,
                     reraise=False,
                     db_type=current_db_type,
                     connection_string=db_config.connection_string.split('@')[-1] if hasattr(db_config, 'connection_string') else 'unknown'
@@ -91,15 +91,15 @@ def check_database_initialized(db_type=None) -> bool:
                         table_exists = True
             except Exception as e:
                 log_and_handle_exception(
-                    logger, 
-                    "Error checking database table existence", 
-                    e, 
+                    logger,
+                    "Error checking database table existence",
+                    e,
                     reraise=False,
                     db_type=current_db_type,
                     table="system_info"
                 )
                 return False
-                
+
             if not table_exists:
                 logger.info("SystemInfo table does not exist. Database needs initialization.")
                 return False
@@ -124,9 +124,9 @@ def check_database_initialized(db_type=None) -> bool:
             db.close()
     except Exception as e:
         log_and_handle_exception(
-            logger, 
-            "Failed to check database initialization status", 
-            e, 
+            logger,
+            "Failed to check database initialization status",
+            e,
             reraise=False,
             db_type=db_type or db_config.db_type
         )
@@ -180,14 +180,14 @@ def initialize_database(admin_username="admin", admin_email="admin@example.com",
             logger.info("Database tables created successfully")
         except Exception as e:
             log_and_handle_exception(
-                logger, 
-                "Error creating database tables", 
-                e, 
+                logger,
+                "Error creating database tables",
+                e,
                 reraise=False,
                 db_type=db_type,
                 schema=schema if db_type == "postgresql" else None
             )
-            
+
             if db_type == "postgresql":
                 # PostgreSQL might need additional handling for sequences or constraints
                 logger.info("Attempting PostgreSQL-specific table creation")
@@ -207,9 +207,9 @@ def initialize_database(admin_username="admin", admin_email="admin@example.com",
                     logger.info("Database tables created successfully with PostgreSQL-specific handling")
                 except Exception as pg_e:
                     log_and_handle_exception(
-                        logger, 
-                        "PostgreSQL-specific table creation also failed", 
-                        pg_e, 
+                        logger,
+                        "PostgreSQL-specific table creation also failed",
+                        pg_e,
                         reraise=True,
                         db_type="postgresql",
                         schema=schema,
@@ -287,9 +287,9 @@ def initialize_database(admin_username="admin", admin_email="admin@example.com",
         except Exception as e:
             db.rollback()
             log_and_handle_exception(
-                logger, 
-                "Error during database initialization", 
-                e, 
+                logger,
+                "Error during database initialization",
+                e,
                 reraise=False,
                 db_type=db_type,
                 schema=schema if db_type == "postgresql" else None,
@@ -300,9 +300,9 @@ def initialize_database(admin_username="admin", admin_email="admin@example.com",
             db.close()
     except Exception as e:
         log_and_handle_exception(
-            logger, 
-            "Fatal error initializing database", 
-            e, 
+            logger,
+            "Fatal error initializing database",
+            e,
             reraise=False,
             db_type=db_type,
             schema=schema if db_type == "postgresql" else None
@@ -325,9 +325,9 @@ def get_db_version() -> str:
             db.close()
     except Exception as e:
         log_and_handle_exception(
-            logger, 
-            "Error retrieving database version", 
-            e, 
+            logger,
+            "Error retrieving database version",
+            e,
             reraise=False
         )
         return None
@@ -359,9 +359,9 @@ def update_db_version(new_version: str) -> bool:
             db.close()
     except Exception as e:
         log_and_handle_exception(
-            logger, 
-            f"Failed to update database version to {new_version}", 
-            e, 
+            logger,
+            f"Failed to update database version to {new_version}",
+            e,
             reraise=False
         )
         return False
@@ -400,9 +400,9 @@ def record_migration(migration_name: str) -> bool:
             db.close()
     except Exception as e:
         log_and_handle_exception(
-            logger, 
-            f"Failed to record migration {migration_name}", 
-            e, 
+            logger,
+            f"Failed to record migration {migration_name}",
+            e,
             reraise=False,
             migration=migration_name
         )
@@ -451,9 +451,9 @@ def run_migrations():
             db.close()
     except Exception as e:
         log_and_handle_exception(
-            logger, 
-            "Error running database migrations", 
-            e, 
+            logger,
+            "Error running database migrations",
+            e,
             reraise=False
         )
         return False
@@ -532,9 +532,9 @@ def save_admin_credentials(username, email, password):
 
     except Exception as e:
         log_and_handle_exception(
-            logger, 
-            "Failed to save admin credentials to file", 
-            e, 
+            logger,
+            "Failed to save admin credentials to file",
+            e,
             reraise=False,
             username=username,
             email=email,

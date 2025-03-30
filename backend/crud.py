@@ -33,11 +33,11 @@ def get_services_query(db: Session):
     """)
 
     logger.info(f"Executing services query on table {services_table}")
-    
+
     try:
         result = db.execute(stmt).fetchall()
         logger.info(f"Retrieved {len(result)} services from database")
-        
+
         services = []
 
         # Manually convert each row to a Service object with correct enum handling
@@ -131,7 +131,7 @@ def get_areas(db: Session) -> List[models.Area]:
 
 def get_area(db: Session, area_id: int) -> Optional[models.Area]:
     logger.info(f"Fetching area with ID={area_id}")
-    
+
     try:
         area = db.query(models.Area).filter(models.Area.id == area_id).first()
 
@@ -453,13 +453,13 @@ def get_service(db: Session, service_id: int) -> Optional[models.Service]:
 
 def create_service(db: Session, service: schemas.ServiceCreate) -> models.Service:
     logger.info(f"Creating new service: {service.name} for squad ID={service.squad_id}")
-    
+
     try:
         # Ensure we use lowercase values for consistency
         # We'll convert any input to lowercase
         status_value = service.status.lower() if isinstance(service.status, str) else service.status.value.lower()
         service_type_value = service.service_type.lower() if isinstance(service.service_type, str) else service.service_type.value.lower()
-        
+
         logger.debug(f"Normalized service values: status={status_value}, type={service_type_value}")
 
         db_service = models.Service(
@@ -475,7 +475,7 @@ def create_service(db: Session, service: schemas.ServiceCreate) -> models.Servic
         db.add(db_service)
         db.commit()
         db.refresh(db_service)
-        
+
         logger.info(f"Successfully created service ID={db_service.id} for squad ID={service.squad_id}")
         return db_service
     except Exception as e:

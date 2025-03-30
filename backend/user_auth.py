@@ -163,7 +163,7 @@ def register_user(db: Session, user_data: schemas.UserRegister) -> models.User:
             is_active=False,
             role="guest"  # Use string value, ensuring lowercase
         )
-        
+
         try:
             db.add(db_user)
             db.commit()
@@ -236,7 +236,7 @@ def register_user(db: Session, user_data: schemas.UserRegister) -> models.User:
 def verify_email(db: Session, verification: schemas.EmailVerification) -> bool:
     """Verify a user's email address"""
     logger.info(f"Email verification attempt for token: {verification.token[:5]}***")
-    
+
     try:
         # Verify the token
         db_token = verify_token(db, verification.token, "email_verification")
@@ -333,7 +333,7 @@ def request_password_reset(db: Session, request: schemas.PasswordResetRequest) -
 def reset_password(db: Session, reset: schemas.PasswordReset) -> bool:
     """Reset a user's password"""
     logger.info(f"Password reset attempt with token: {reset.token[:5]}***")
-    
+
     try:
         # Verify the token
         db_token = verify_token(db, reset.token, "password_reset")
@@ -391,13 +391,13 @@ def reset_password(db: Session, reset: schemas.PasswordReset) -> bool:
             # Create a hash of the old password hash for comparison only
             # This just helps detect if the same password was reused (same hash would produce same masked hash)
             import hashlib
-            old_masked = hashlib.sha256(old_hash.encode()).hexdigest()[:8] 
+            old_masked = hashlib.sha256(old_hash.encode()).hexdigest()[:8]
             new_masked = hashlib.sha256(db_user.hashed_password.encode()).hexdigest()[:8]
-            
+
             # Only log if they're different - don't reveal if they used the same password
             password_reused = old_masked == new_masked
             detail_message = "Password reset completed" + (", similar password detected" if password_reused else "")
-            
+
             log_user_action(db, db_user.id, "UPDATE", "User", db_user.id, detail_message)
         except Exception as e:
             # Don't fail the reset if logging fails
@@ -409,7 +409,7 @@ def reset_password(db: Session, reset: schemas.PasswordReset) -> bool:
     except Exception as e:
         log_and_handle_exception(
             logger,
-            f"Unexpected error during password reset for token: {reset.token[:5]}***", 
+            f"Unexpected error during password reset for token: {reset.token[:5]}***",
             e,
             reraise=True,
             token_prefix=reset.token[:5]

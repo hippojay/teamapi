@@ -1,11 +1,9 @@
 import pandas as pd
 import os
 import argparse
-import logging
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine, Base, db_config
+from database import SessionLocal
 import models
-from models import ServiceStatus, ServiceType, TeamType
 from logger import get_logger, log_and_handle_exception
 
 # Configure logging
@@ -31,7 +29,7 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
     # Run compatibility check if requested
     if run_compatibility_check:
         ensure_db_compatibility()
-        
+
     print(f"Loading services data from {file_path}")
 
     # Determine if file is CSV based on extension
@@ -92,7 +90,7 @@ def load_services_data(file_path: str, db: Session, append_mode: bool = False, s
                 service_type_value = "webpage"
             elif 'app' in type_str or 'module' in type_str:
                 service_type_value = "app_module"
-        
+
         # Use API as default if type couldn't be determined
         if service_type_value is None:
             service_type_value = "api"
@@ -142,7 +140,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
     # Run compatibility check if requested
     if run_compatibility_check:
         ensure_db_compatibility()
-    
+
     # Determine if file is CSV based on extension
     is_csv = file_path.lower().endswith('.csv')
 
@@ -150,8 +148,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         logger.info(f"Loading production data from {file_path} (CSV)")
     else:
         logger.info(f"Loading production data from {file_path}, sheet: {sheet_name}")
-    
-            
+
     # Read the file
     try:
         if is_csv:
@@ -282,7 +279,7 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
         # Create new squad with default team_type
         # Always use lowercase for enum values for consistency
         team_type_value = "stream_aligned"
-        
+
         squad = models.Squad(
             name=squad_name,
             description="",  # Empty description as per requirements
@@ -555,7 +552,10 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
             squad.core_capacity = round(squad_core_capacity[squad_name], 2)
             squad.subcon_count = squad_subcon_counts[squad_name]
             squad.subcon_capacity = round(squad_subcon_capacity[squad_name], 2)
-            logger.info(f"Updated squad metrics: {squad_name}, members={squad.member_count} (Core={squad.core_count}, Subcon={squad.subcon_count}), capacity={round(squad.total_capacity, 2)} (Core={round(squad.core_capacity, 2)}, Subcon={round(squad.subcon_capacity, 2)})")
+            logger.info(f"Updated squad metrics: {squad_name}, members={squad.member_count} "
+                        f"(Core={squad.core_count}, Subcon={squad.subcon_count}), "
+                        f"capacity={round(squad.total_capacity, 2)} (Core={round(squad.core_capacity, 2)}, "
+                        f"Subcon={round(squad.subcon_capacity, 2)})")
     # Update tribe and area counts and capacities
     if append_mode:
         # Recalculate all tribe and area counts to ensure correctness
@@ -627,7 +627,10 @@ def calculate_tribe_and_area_counts(db: Session, tribes_to_update):
             area.subcon_count = area_subcon_counts[area_name]
             area.subcon_capacity = round(area_subcon_capacity[area_name], 2)
 
-            logger.info(f"Updated area metrics: {area_name}, members={count} (Core={area.core_count}, Subcon={area.subcon_count}), capacity={round(area.total_capacity, 2)} (Core={round(area.core_capacity, 2)}, Subcon={round(area.subcon_capacity, 2)})")
+            logger.info(f"Updated area metrics: {area_name}, "
+                        f"members={count} (Core={area.core_count}, "
+                        f"Subcon={area.subcon_count}), capacity={round(area.total_capacity, 2)} "
+                        f"(Core={round(area.core_capacity, 2)}, Subcon={round(area.subcon_capacity, 2)})")
 
 def update_all_tribe_and_area_counts(db: Session):
     """Recalculate all tribe and area counts from squad data"""
@@ -740,7 +743,7 @@ if __name__ == "__main__":
         if not os.path.exists(file_path):
             logger.error(f"File not found: {file_path}")
             exit(1)
-            
+
     # Run database compatibility check if requested
     if args.run_migrations:
         logger.info("Running database compatibility migrations")
@@ -757,11 +760,11 @@ if __name__ == "__main__":
             if args.services:
                 # Load services data
                 service_sheet = "Sheet1" if args.sheet_name == "Sheet1" else args.sheet_name
-                load_services_data(file_path, db, append_mode=should_append, 
-                                  sheet_name=service_sheet, run_compatibility_check=False)
+                load_services_data(file_path, db, append_mode=should_append,
+                                   sheet_name=service_sheet, run_compatibility_check=False)
             else:
                 # Load regular team data
-                load_data_from_excel(file_path, db, append_mode=should_append, 
-                                    sheet_name=args.sheet_name, run_compatibility_check=False)
+                load_data_from_excel(file_path, db, append_mode=should_append,
+                                     sheet_name=args.sheet_name, run_compatibility_check=False)
     finally:
         db.close()

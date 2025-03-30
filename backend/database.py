@@ -1,12 +1,11 @@
 import os
-import sys
 import logging
 from pathlib import Path
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import CreateSchema
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 
 # Configure global logger for database
 lazy_loaded_logger = None
@@ -58,18 +57,18 @@ APP_SCHEMA_NAME = "who_what_where"
 
 class DatabaseConfig:
     """Configuration class for database connection"""
-    
+
     def __init__(self, connection_string: Optional[str] = None, schema: Optional[str] = None):
         # Default to SQLite if no connection string is provided
         self.is_postgres = False
         self.db_type = "sqlite"
-        
+
         # For PostgreSQL, use the provided schema or default to APP_SCHEMA_NAME
         if schema:
             self.schema = schema
         else:
             self.schema = APP_SCHEMA_NAME if connection_string and connection_string.startswith("postgresql") else None
-        
+
         if connection_string is None:
             # Default SQLite configuration
             self.connection_string = "sqlite:///./team_portal.db"
@@ -80,7 +79,7 @@ class DatabaseConfig:
             self.connect_args = {}
             self.is_postgres = True
             self.db_type = "postgresql"
-            
+
             # Extract schema from connection string if present and override
             if '?schema=' in self.connection_string:
                 self.schema = self.connection_string.split('?schema=')[1].split('&')[0]
@@ -91,15 +90,15 @@ class DatabaseConfig:
             # Assume SQLite if not PostgreSQL
             self.connection_string = connection_string
             self.connect_args = {"check_same_thread": False}
-            
+
         # Log the schema being used
         if self.is_postgres:
             logger.info(f"Using PostgreSQL with schema: {self.schema}")
-    
+
     def create_engine(self) -> Any:
         """Create SQLAlchemy engine based on configuration"""
         logger.info(f"Creating database engine for {self.db_type}")
-        
+
         try:
             # Create engine with database-specific options
             if self.is_postgres:
@@ -107,14 +106,13 @@ class DatabaseConfig:
                 logger.info(f"Connecting to PostgreSQL database: {self.connection_string}")
                 try:
                     # Handle the case when psycopg2 might not be installed
-                    import psycopg2
-                    
+
                     # Create the engine
                     engine = create_engine(
                         self.connection_string,
                         connect_args=self.connect_args
                     )
-                    
+
                     # Create schema if specified and set it as the default search path
                     if self.schema:
                         try:
@@ -124,12 +122,12 @@ class DatabaseConfig:
                                 with engine.begin() as conn:
                                     conn.execute(CreateSchema(self.schema))
                                     logger.info(f"Created schema: {self.schema}")
-                            
+
                             # Set schema as the default search path
                             with engine.begin() as conn:
                                 conn.execute(text(f"SET search_path TO {self.schema}"))
                                 logger.info(f"Set search path to schema: {self.schema}")
-                                
+
                             # Update the Base metadata with schema info
                             Base.metadata.schema = self.schema
                         except Exception as e:
@@ -140,7 +138,7 @@ class DatabaseConfig:
                     logger.error("psycopg2 is not installed, but PostgreSQL connection was requested")
                     logger.critical("Cannot connect to PostgreSQL database without psycopg2")
                     raise ImportError("PostgreSQL support requires psycopg2 to be installed. Run 'pip install psycopg2-binary'")
-                
+
             else:
                 # SQLite configuration
                 logger.info(f"Connecting to SQLite database: {self.connection_string}")
@@ -148,12 +146,12 @@ class DatabaseConfig:
                     self.connection_string,
                     connect_args=self.connect_args
                 )
-            
+
             # Test connection
             with engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
                 logger.info("Database connection test successful")
-                
+
             return engine
         except Exception as e:
             logger.critical(f"Failed to create database engine: {str(e)}")
@@ -166,7 +164,7 @@ class DatabaseConfig:
                 # For SQLite, suggest common issues
                 logger.error("SQLite connection failed. Check if the database file path is writable.")
                 logger.error("Make sure the directory exists and the application has write permissions.")
-            
+
             raise
 
 # Get database configuration from environment or use defaults
@@ -175,11 +173,11 @@ def get_db_config() -> DatabaseConfig:
     db_type = os.environ.get("DB_TYPE", "sqlite").lower()
     connection_string = os.environ.get("DATABASE_URL")
     schema = os.environ.get("DATABASE_SCHEMA")
-    
+
     # Use APP_SCHEMA_NAME if schema is not explicitly set and using PostgreSQL
     if db_type == "postgresql" and not schema:
         schema = APP_SCHEMA_NAME
-    
+
     # Database-specific configurations
     if db_type == "postgresql" and not connection_string:
         # Build PostgreSQL connection string if individual parameters are provided
@@ -188,10 +186,10 @@ def get_db_config() -> DatabaseConfig:
         pg_user = os.environ.get("PG_USER", "postgres")
         pg_password = os.environ.get("PG_PASSWORD", "")
         pg_dbname = os.environ.get("PG_DBNAME", "who_what_where")
-        
+
         # Create connection string
         connection_string = f"postgresql://{pg_user}:{pg_password}@{pg_host}:{pg_port}/{pg_dbname}"
-        
+
     # For SQLite, use DB_PATH if DATABASE_URL is not set
     elif db_type == "sqlite" and not connection_string:
         db_path = os.environ.get("DB_PATH", "./team_portal.db")
@@ -200,7 +198,7 @@ def get_db_config() -> DatabaseConfig:
             connection_string = f"sqlite:///{db_path}"
         else:
             connection_string = db_path
-    
+
     return DatabaseConfig(connection_string, schema)
 
 # Initialize database connection
