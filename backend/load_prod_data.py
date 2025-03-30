@@ -6,10 +6,10 @@ from sqlalchemy.orm import Session
 from database import SessionLocal, engine, Base, db_config
 import models
 from models import ServiceStatus, ServiceType, TeamType
+from logger import get_logger, log_and_handle_exception
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = get_logger('load_prod_data')
 
 def ensure_db_compatibility():
     """Placeholder function for backward compatibility"""
@@ -142,30 +142,49 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
     # Run compatibility check if requested
     if run_compatibility_check:
         ensure_db_compatibility()
+    
     # Determine if file is CSV based on extension
     is_csv = file_path.lower().endswith('.csv')
 
     if is_csv:
-        print(f"Loading production data from {file_path} (CSV)")
+        logger.info(f"Loading production data from {file_path} (CSV)")
     else:
-        print(f"Loading production data from {file_path}, sheet: {sheet_name}")
-
-    # Read the file
+        logger.info(f"Loading production data from {file_path}, sheet: {sheet_name}")
+    
     try:
-        if is_csv:
-            # For CSV files, sheet_name is ignored
-            df = pd.read_csv(file_path)
-            print(f"Successfully read CSV file with {len(df)} rows")
-        else:
-            # For Excel files, use the specified sheet
-            df = pd.read_excel(file_path, sheet_name=sheet_name)
-            print(f"Successfully read Excel file with {len(df)} rows")
-    except Exception as e:
-        if is_csv:
-            print(f"Error reading CSV file: {e}")
-        else:
-            print(f"Error reading Excel file: {e}")
-        return
+        # Make sure file exists and is readable
+        if not os.path.exists(file_path):
+            error_msg = f"File does not exist: {file_path}"
+            logger.error(error_msg)
+            raise FileNotFoundError(error_msg)
+            
+        # Read the file
+        try:
+            if is_csv:
+                # For CSV files, sheet_name is ignored
+                df = pd.read_csv(file_path)
+                logger.info(f"Successfully read CSV file with {len(df)} rows")
+            else:
+                # For Excel files, use the specified sheet
+                df = pd.read_excel(file_path, sheet_name=sheet_name)
+                logger.info(f"Successfully read Excel file with {len(df)} rows")
+        except Exception as e:
+            log_and_handle_exception(
+                logger,
+                f"Error reading {'CSV' if is_csv else 'Excel'} file: {file_path}",
+                e,
+                reraise=True,
+                file_path=file_path,
+                sheet_name=None if is_csv else sheet_name
+            )
+
+        # Check required columns
+        required_columns = ['Area', 'Tribe', 'Squad', 'Name', 'Business Email Address']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            error_msg = f"Required columns missing: {', '.join(missing_columns)}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
     # Extract unique areas, tribes, and squads
     logger.debug("Extracting unique organizational units")

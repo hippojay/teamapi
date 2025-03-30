@@ -18,7 +18,7 @@ from pathlib import Path
 from database import SessionLocal, engine, Base, db_config, CreateSchema
 import models
 from auth import get_password_hash
-from logger import get_logger
+from logger import get_logger, log_and_handle_exception
 
 # Initialize logger
 logger = get_logger('db_initializer', log_level='INFO')
@@ -59,7 +59,14 @@ def check_database_initialized(db_type=None) -> bool:
                     conn.execute(text(f"SET search_path TO {db_config.schema}"))
                     logger.info(f"Set search path to {db_config.schema} for initialization check")
             except Exception as e:
-                logger.error(f"Error setting search path: {str(e)}")
+                log_and_handle_exception(
+                    logger, 
+                    f"Error setting search path for schema {db_config.schema}", 
+                    e, 
+                    reraise=False,
+                    db_type=current_db_type,
+                    connection_string=db_config.connection_string.split('@')[-1] if hasattr(db_config, 'connection_string') else 'unknown'
+                )
 
         db = SessionLocal()
         try:
@@ -83,9 +90,16 @@ def check_database_initialized(db_type=None) -> bool:
                     if inspector.has_table("system_info"):
                         table_exists = True
             except Exception as e:
-                logger.error(f"Error checking table existence: {str(e)}")
+                log_and_handle_exception(
+                    logger, 
+                    "Error checking database table existence", 
+                    e, 
+                    reraise=False,
+                    db_type=current_db_type,
+                    table="system_info"
+                )
                 return False
-
+                
             if not table_exists:
                 logger.info("SystemInfo table does not exist. Database needs initialization.")
                 return False
@@ -109,7 +123,13 @@ def check_database_initialized(db_type=None) -> bool:
         finally:
             db.close()
     except Exception as e:
-        logger.error(f"Error checking database initialization: {str(e)}")
+        log_and_handle_exception(
+            logger, 
+            "Failed to check database initialization status", 
+            e, 
+            reraise=False,
+            db_type=db_type or db_config.db_type
+        )
         return False
 
 def initialize_database(admin_username="admin", admin_email="admin@example.com", admin_password=None, force_init=False):
@@ -159,7 +179,15 @@ def initialize_database(admin_username="admin", admin_email="admin@example.com",
             Base.metadata.create_all(bind=engine)
             logger.info("Database tables created successfully")
         except Exception as e:
-            logger.error(f"Error creating database tables: {str(e)}")
+            log_and_handle_exception(
+                logger, 
+                "Error creating database tables", 
+                e, 
+                reraise=False,
+                db_type=db_type,
+                schema=schema if db_type == "postgresql" else None
+            )
+            
             if db_type == "postgresql":
                 # PostgreSQL might need additional handling for sequences or constraints
                 logger.info("Attempting PostgreSQL-specific table creation")
@@ -178,8 +206,15 @@ def initialize_database(admin_username="admin", admin_email="admin@example.com",
                     Base.metadata.create_all(bind=engine)
                     logger.info("Database tables created successfully with PostgreSQL-specific handling")
                 except Exception as pg_e:
-                    logger.error(f"PostgreSQL-specific table creation also failed: {str(pg_e)}")
-                    raise
+                    log_and_handle_exception(
+                        logger, 
+                        "PostgreSQL-specific table creation also failed", 
+                        pg_e, 
+                        reraise=True,
+                        db_type="postgresql",
+                        schema=schema,
+                        retry_attempt=True
+                    )
             else:
                 # For other database types, just re-raise the original error
                 raise
@@ -251,12 +286,27 @@ def initialize_database(admin_username="admin", admin_email="admin@example.com",
 
         except Exception as e:
             db.rollback()
-            logger.error(f"Error during database initialization: {str(e)}")
+            log_and_handle_exception(
+                logger, 
+                "Error during database initialization", 
+                e, 
+                reraise=False,
+                db_type=db_type,
+                schema=schema if db_type == "postgresql" else None,
+                admin_user=admin_username
+            )
             return False
         finally:
             db.close()
     except Exception as e:
-        logger.error(f"Error creating database tables: {str(e)}")
+        log_and_handle_exception(
+            logger, 
+            "Fatal error initializing database", 
+            e, 
+            reraise=False,
+            db_type=db_type,
+            schema=schema if db_type == "postgresql" else None
+        )
         return False
 
 def get_db_version() -> str:
@@ -274,7 +324,12 @@ def get_db_version() -> str:
         finally:
             db.close()
     except Exception as e:
-        logger.error(f"Error getting database version: {str(e)}")
+        log_and_handle_exception(
+            logger, 
+            "Error retrieving database version", 
+            e, 
+            reraise=False
+        )
         return None
 
 def update_db_version(new_version: str) -> bool:
@@ -303,7 +358,12 @@ def update_db_version(new_version: str) -> bool:
         finally:
             db.close()
     except Exception as e:
-        logger.error(f"Error updating database version: {str(e)}")
+        log_and_handle_exception(
+            logger, 
+            f"Failed to update database version to {new_version}", 
+            e, 
+            reraise=False
+        )
         return False
 
 def record_migration(migration_name: str) -> bool:
@@ -339,7 +399,13 @@ def record_migration(migration_name: str) -> bool:
         finally:
             db.close()
     except Exception as e:
-        logger.error(f"Error recording migration: {str(e)}")
+        log_and_handle_exception(
+            logger, 
+            f"Failed to record migration {migration_name}", 
+            e, 
+            reraise=False,
+            migration=migration_name
+        )
         return False
 
 def run_migrations():
@@ -384,7 +450,12 @@ def run_migrations():
         finally:
             db.close()
     except Exception as e:
-        logger.error(f"Error running migrations: {str(e)}")
+        log_and_handle_exception(
+            logger, 
+            "Error running database migrations", 
+            e, 
+            reraise=False
+        )
         return False
 
 def generate_secure_password(length=16):
@@ -460,7 +531,15 @@ def save_admin_credentials(username, email, password):
         print("\033[93mIMPORTANT: This file contains your admin password. Keep it secure and delete it after first login.\033[0m")
 
     except Exception as e:
-        logger.error(f"Error saving admin credentials: {str(e)}")
+        log_and_handle_exception(
+            logger, 
+            "Failed to save admin credentials to file", 
+            e, 
+            reraise=False,
+            username=username,
+            email=email,
+            credentials_location=str(creds_dir)
+        )
         print(f"\033[91mCould not save admin credentials to file: {str(e)}\033[0m")
         print(f"\033[93mPlease note your generated password: {password}\033[0m")
 

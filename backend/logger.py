@@ -1,8 +1,20 @@
 import os
 import logging
+import sys
+import traceback
+import json
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from pathlib import Path
 import datetime
+import socket
+import platform
+import inspect
+
+# Import centralized logging configuration
+from logging_config import (
+    LOG_DIR, MAIN_LOG_FILE, DEFAULT_BACKUP_COUNT, DEFAULT_MAX_LOG_SIZE_MB,
+    SIMPLE_LOG_FORMAT, DETAILED_LOG_FORMAT, get_log_level_for_module
+)
 
 # Constants
 LOG_LEVELS = {
@@ -16,10 +28,14 @@ LOG_LEVELS = {
 # Determine the project root directory
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 LOG_DIR = PROJECT_ROOT / "logs"
+MAIN_LOG_FILE = LOG_DIR / "application.log"
 
 # Ensure log directory exists
 if not LOG_DIR.exists():
     LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+# Global dictionary to store metrics and counters
+_metrics = {}
 
 class Logger:
     """
@@ -28,6 +44,24 @@ class Logger:
     This implements different log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     and ensures logs are written to appropriately named files with timestamps.
     """
+    
+    class LevelFilter(logging.Filter):
+        """
+        Filter that applies different formatters based on log level.
+        """
+        def __init__(self, handler, standard_formatter, error_formatter):
+            super().__init__()
+            self.handler = handler
+            self.standard_formatter = standard_formatter
+            self.error_formatter = error_formatter
+            
+        def filter(self, record):
+            # No filtering, just formatter switching
+            if record.levelno >= logging.WARNING:
+                self.handler.setFormatter(self.error_formatter)
+            else:
+                self.handler.setFormatter(self.standard_formatter)
+            return True
     
     def __init__(self, module_name, log_level='INFO', log_to_console=True, 
                  rotating_logs=True, max_size_mb=10, backup_count=5):
@@ -53,10 +87,16 @@ class Logger:
         if self.logger.hasHandlers():
             self.logger.handlers.clear()
         
-        # Create formatter with timestamp and module information
+        # Create enhanced formatter with timestamp, module, but without redundant logger internals
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            datefmt='%Y-%m-%d %H:%M:%S.%f'
+        )
+        
+        # Create a special formatter for warnings and errors that includes file/line information
+        error_formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(threadName)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S.%f'
         )
         
         # Add file handler
@@ -78,14 +118,19 @@ class Logger:
                 backupCount=backup_count
             )
         
-        file_handler.setFormatter(formatter)
+        # Add file_handler to logger with level filter
+        file_handler.setFormatter(formatter)  # Default formatter
         self.logger.addHandler(file_handler)
+        file_filter = self.LevelFilter(file_handler, formatter, error_formatter)
+        file_handler.addFilter(file_filter)
         
         # Add console handler if requested
         if log_to_console:
             console_handler = logging.StreamHandler()
-            console_handler.setFormatter(formatter)
+            console_handler.setFormatter(formatter)  # Default formatter
             self.logger.addHandler(console_handler)
+            console_filter = self.LevelFilter(console_handler, formatter, error_formatter)
+            console_handler.addFilter(console_filter)
     
     def debug(self, message):
         """Log debug message."""
@@ -118,29 +163,205 @@ class Logger:
         """
         log_level = LOG_LEVELS.get(level.upper(), logging.INFO)
         
-        # Add context information if provided
+        # Add call stack information for warnings and above
+        if log_level >= logging.WARNING:
+            # Get the caller's frame information
+            caller_frame = inspect.currentframe().f_back
+            filename = caller_frame.f_code.co_filename
+            line_number = caller_frame.f_lineno
+            function_name = caller_frame.f_code.co_name
+            
+            # Include source location in the message for warnings and errors
+            source_location = f"{os.path.basename(filename)}:{line_number}"
+            message = f"[{source_location}] {message}"
+            
+            kwargs.update({
+                'file': os.path.basename(filename),
+                'line': line_number,
+                'function': function_name
+            })
+        
+        # Add context information as a structured JSON string
         if kwargs:
-            context_str = " | ".join(f"{k}={v}" for k, v in kwargs.items())
-            full_message = f"{message} | {context_str}"
+            try:
+                context_json = json.dumps(kwargs)
+                full_message = f"{message} | {context_json}"
+            except (TypeError, ValueError):
+                # Fall back to string format if JSON conversion fails
+                context_str = " | ".join(f"{k}={v}" for k, v in kwargs.items())
+                full_message = f"{message} | {context_str}"
         else:
             full_message = message
         
         self.logger.log(log_level, full_message)
+        
+        # All errors and criticals are also sent to the main log file
+        if log_level >= logging.ERROR:
+            with open(MAIN_LOG_FILE, 'a') as f:
+                timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+                f.write(f"{timestamp} - {self.module_name} - {logging.getLevelName(log_level)} - {full_message}\n")
+    
+    def exception(self, message, exc_info=True, **kwargs):
+        """
+        Log an exception with stack trace.
+        
+        Args:
+            message (str): Error message
+            exc_info (bool/Exception): True to use current exception, or pass an exception
+            **kwargs: Additional context data to include in the log
+        """
+        # Capture the current exception info if not provided
+        if exc_info is True:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+        elif isinstance(exc_info, BaseException):
+            exc_type = type(exc_info)
+            exc_value = exc_info
+            exc_traceback = exc_info.__traceback__
+        else:
+            exc_type, exc_value, exc_traceback = None, None, None
+        
+        # Format the exception into a structured message
+        if exc_type and exc_value:
+            # Get exception details
+            exception_name = exc_type.__name__
+            exception_msg = str(exc_value)
+            
+            # Format traceback if available
+            if exc_traceback:
+                tb_lines = traceback.format_tb(exc_traceback)
+                tb_text = '\n'.join(tb_lines)
+            else:
+                tb_text = "No traceback available"
+            
+            # Add exception details to kwargs
+            kwargs.update({
+                'exception_type': exception_name,
+                'exception_message': exception_msg,
+                'traceback': tb_text
+            })
+            
+            # Ensure the exception name is part of the message for better filtering
+            message = f"{message} - {exception_name}: {exception_msg}"
+        
+        # Log the exception with the enhanced context
+        self.structured('ERROR', message, **kwargs)
+    
+    def metric(self, name, value=1, **kwargs):
+        """
+        Log a metric or counter that can be used for monitoring or statistics.
+        
+        Args:
+            name (str): Name of the metric
+            value (int/float): Value to record
+            **kwargs: Additional dimensions/tags for the metric
+        """
+        if name not in _metrics:
+            _metrics[name] = {'count': 0, 'sum': 0, 'values': []}
+        
+        _metrics[name]['count'] += 1
+        _metrics[name]['sum'] += value
+        _metrics[name]['values'].append(value)
+        
+        # Log the metric
+        self.structured('INFO', f"METRIC: {name}", value=value, metric=True, **kwargs)
 
 # Function to get a configured logger instance
-def get_logger(module_name, log_level='INFO', log_to_console=True):
+def get_logger(module_name, log_level=None, log_to_console=True):
     """
     Get a logger configured for the specified module.
     
     Args:
         module_name (str): Name of the module (e.g., 'load_data', 'database')
-        log_level (str): Minimum log level to record (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        log_level (str): Override the log level if provided
         log_to_console (bool): Whether to also log to console
         
     Returns:
         Logger: Configured logger instance
     """
-    # Get log level from environment variable if set, otherwise use provided value
-    env_log_level = os.environ.get('LOG_LEVEL', log_level)
+    # Get appropriate log level from configuration or environment, or use provided value
+    if log_level is None:
+        env_log_level = get_log_level_for_module(module_name)
+    else:
+        env_log_level = os.environ.get('LOG_LEVEL', log_level)
     
-    return Logger(module_name, env_log_level, log_to_console)
+    logger_instance = Logger(module_name, env_log_level, log_to_console)
+    
+    # Add a handler for the main application log file as well (for capturing all modules in one place)
+    # Configure a handler for the main log file
+    # Use a static reference to avoid creating multiple handlers
+    main_handler = getattr(get_logger, '_main_handler', None)
+    
+    if main_handler is None:
+        # Create a formatter for the main log - always use the error formatter for the main log
+        main_formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S.%f'
+        )
+        
+        # Use rotating file handler for the main log file
+        main_handler = RotatingFileHandler(
+            MAIN_LOG_FILE,
+            maxBytes=10 * 1024 * 1024,  # 10 MB
+            backupCount=5
+        )
+        main_handler.setFormatter(main_formatter)
+        main_handler.setLevel(logging.INFO)  # Only INFO and above for the main log
+        
+        # Store the handler for reuse
+        setattr(get_logger, '_main_handler', main_handler)
+        
+    # Add the main handler if it's not already present
+    if main_handler not in logger_instance.logger.handlers:
+        logger_instance.logger.addHandler(main_handler)
+    
+    return logger_instance
+
+# Error handling utility function
+def log_and_handle_exception(logger, message, exception=None, reraise=True, **kwargs):
+    """
+    Utility function to log an exception with full context and optionally re-raise it.
+    
+    Args:
+        logger: Logger instance
+        message (str): Error message to log
+        exception: Exception to log (defaults to current exception)
+        reraise (bool): Whether to re-raise the exception after logging
+        **kwargs: Additional context to include in the log
+    """
+    try:
+        if exception is None:
+            # Log current exception
+            logger.exception(message, **kwargs)
+        else:
+            # Log provided exception
+            logger.exception(message, exc_info=exception, **kwargs)
+    except Exception as e:
+        # Fallback to ensure we at least get some record of the error
+        print(f"ERROR: Failed to log exception: {e}. Original error: {message}")
+    
+    # Re-raise if requested
+    if reraise and exception is not None:
+        raise exception
+    elif reraise:
+        # Just re-raise current exception
+        raise
+
+# System information for logging context
+def get_system_info():
+    """
+    Get basic system information for log context.
+    
+    Returns:
+        dict: System information including hostname, python version, etc.
+    """
+    return {
+        'hostname': socket.gethostname(),
+        'python_version': platform.python_version(),
+        'platform': platform.platform(),
+        'system': platform.system(),
+        'version': platform.version()
+    }
+
+# Global logger for system-wide messages
+system_logger = get_logger('system', log_level='INFO')
+system_logger.structured('INFO', "Logging system initialized", **get_system_info())

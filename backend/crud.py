@@ -8,6 +8,10 @@ import models
 import schemas
 import user_crud
 from database import db_config
+from logger import get_logger, log_and_handle_exception
+
+# Initialize logger
+logger = get_logger('crud', log_level='INFO')
 
 # Helper function to get schema-qualified table name
 def get_table_name(table_name):
@@ -28,69 +32,138 @@ def get_services_query(db: Session):
         FROM {services_table}
     """)
 
-    result = db.execute(stmt).fetchall()
+    logger.info(f"Executing services query on table {services_table}")
+    
+    try:
+        result = db.execute(stmt).fetchall()
+        logger.info(f"Retrieved {len(result)} services from database")
+        
+        services = []
 
-    services = []
-
-    # Manually convert each row to a Service object with correct enum handling
-    for row in result:
-        try:
-            # Handle status enum
+        # Manually convert each row to a Service object with correct enum handling
+        for row in result:
             try:
-                status = models.ServiceStatus(row.status) if row.status else models.ServiceStatus.HEALTHY
-            except ValueError:
-                # Try uppercase
-                status = models.ServiceStatus(row.status.upper()) if row.status else models.ServiceStatus.HEALTHY
+                # Handle status enum
+                try:
+                    status = models.ServiceStatus(row.status) if row.status else models.ServiceStatus.HEALTHY
+                except ValueError:
+                    # Try uppercase
+                    status = models.ServiceStatus(row.status.upper()) if row.status else models.ServiceStatus.HEALTHY
+                    logger.warning(f"Had to convert service status to uppercase for service ID {row.id}: {row.status}")
 
-            # Handle service_type enum
-            try:
-                service_type = models.ServiceType(row.service_type) if row.service_type else models.ServiceType.API
-            except ValueError:
-                # Try uppercase
-                service_type = models.ServiceType(row.service_type.upper()) if row.service_type else models.ServiceType.API
+                # Handle service_type enum
+                try:
+                    service_type = models.ServiceType(row.service_type) if row.service_type else models.ServiceType.API
+                except ValueError:
+                    # Try uppercase
+                    service_type = models.ServiceType(row.service_type.upper()) if row.service_type else models.ServiceType.API
+                    logger.warning(f"Had to convert service_type to uppercase for service ID {row.id}: {row.service_type}")
 
-            # Create Service object
-            service = models.Service(
-                id=row.id,
-                name=row.name,
-                description=row.description,
-                status=status,
-                uptime=row.uptime if row.uptime is not None else 99.9,
-                version=row.version if row.version is not None else "1.0.0",
-                api_docs_url=row.api_docs_url,
-                squad_id=row.squad_id,
-                service_type=service_type,
-                url=row.url
-            )
+                # Create Service object
+                service = models.Service(
+                    id=row.id,
+                    name=row.name,
+                    description=row.description,
+                    status=status,
+                    uptime=row.uptime if row.uptime is not None else 99.9,
+                    version=row.version if row.version is not None else "1.0.0",
+                    api_docs_url=row.api_docs_url,
+                    squad_id=row.squad_id,
+                    service_type=service_type,
+                    url=row.url
+                )
 
-            services.append(service)
-        except Exception as e:
-            print(f"Error processing service ID {row.id}: {e}")
+                services.append(service)
+                logger.debug(f"Processed service: ID={row.id}, name={row.name}, type={service_type}")
+            except Exception as e:
+                log_and_handle_exception(
+                    logger,
+                    f"Error processing service ID {row.id}",
+                    e,
+                    reraise=False,
+                    service_id=row.id,
+                    service_name=getattr(row, 'name', 'unknown'),
+                    service_type=getattr(row, 'service_type', 'unknown'),
+                    status=getattr(row, 'status', 'unknown')
+                )
 
-    return services
+        return services
+    except Exception as e:
+        log_and_handle_exception(
+            logger,
+            "Failed to execute services query",
+            e,
+            reraise=True,
+            services_table=services_table
+        )
 
 # Area operations
 def get_areas(db: Session) -> List[models.Area]:
-    areas = db.query(models.Area).all()
+    logger.info("Fetching all areas")
+    try:
+        areas = db.query(models.Area).all()
+        logger.info(f"Retrieved {len(areas)} areas from database")
 
-    # Check for edited descriptions
-    for area in areas:
-        edited_description = user_crud.get_entity_description(db, "area", area.id)
-        if edited_description is not None:
-            area.description = edited_description
-
-    return areas
+        # Check for edited descriptions
+        for area in areas:
+            try:
+                edited_description = user_crud.get_entity_description(db, "area", area.id)
+                if edited_description is not None:
+                    area.description = edited_description
+                    logger.debug(f"Applied edited description for area ID={area.id}")
+            except Exception as e:
+                log_and_handle_exception(
+                    logger,
+                    f"Error retrieving edited description for area {area.id}",
+                    e,
+                    reraise=False,
+                    area_id=area.id,
+                    area_name=getattr(area, 'name', 'unknown')
+                )
+        return areas
+    except Exception as e:
+        log_and_handle_exception(
+            logger,
+            "Failed to retrieve areas",
+            e,
+            reraise=True
+        )
 
 def get_area(db: Session, area_id: int) -> Optional[models.Area]:
-    area = db.query(models.Area).filter(models.Area.id == area_id).first()
+    logger.info(f"Fetching area with ID={area_id}")
+    
+    try:
+        area = db.query(models.Area).filter(models.Area.id == area_id).first()
 
-    if area:
-        # Check for edited description
-        edited_description = user_crud.get_entity_description(db, "area", area_id)
-        if edited_description is not None:
-            area.description = edited_description
+        if area:
+            logger.info(f"Found area '{area.name}' (ID={area_id})")
+            # Check for edited description
+            try:
+                edited_description = user_crud.get_entity_description(db, "area", area_id)
+                if edited_description is not None:
+                    area.description = edited_description
+                    logger.debug(f"Applied edited description for area ID={area_id}")
+            except Exception as e:
+                log_and_handle_exception(
+                    logger,
+                    f"Error retrieving edited description for area {area_id}",
+                    e,
+                    reraise=False,
+                    area_id=area_id,
+                    area_name=getattr(area, 'name', 'unknown')
+                )
+        else:
+            logger.warning(f"Area with ID={area_id} not found")
 
-    return area
+        return area
+    except Exception as e:
+        log_and_handle_exception(
+            logger,
+            f"Error fetching area with ID={area_id}",
+            e,
+            reraise=True,
+            area_id=area_id
+        )
 
 # Tribe operations
 def get_tribes(db: Session) -> List[models.Tribe]:
@@ -379,25 +452,44 @@ def get_service(db: Session, service_id: int) -> Optional[models.Service]:
     return None
 
 def create_service(db: Session, service: schemas.ServiceCreate) -> models.Service:
-    # Ensure we use lowercase values for consistency
-    # We'll convert any input to lowercase
-    status_value = service.status.lower() if isinstance(service.status, str) else service.status.value.lower()
-    service_type_value = service.service_type.lower() if isinstance(service.service_type, str) else service.service_type.value.lower()
+    logger.info(f"Creating new service: {service.name} for squad ID={service.squad_id}")
+    
+    try:
+        # Ensure we use lowercase values for consistency
+        # We'll convert any input to lowercase
+        status_value = service.status.lower() if isinstance(service.status, str) else service.status.value.lower()
+        service_type_value = service.service_type.lower() if isinstance(service.service_type, str) else service.service_type.value.lower()
+        
+        logger.debug(f"Normalized service values: status={status_value}, type={service_type_value}")
 
-    db_service = models.Service(
-        name=service.name,
-        description=service.description,
-        status=status_value,
-        uptime=service.uptime,
-        version=service.version,
-        service_type=service_type_value,
-        url=service.url,
-        squad_id=service.squad_id
-    )
-    db.add(db_service)
-    db.commit()
-    db.refresh(db_service)
-    return db_service
+        db_service = models.Service(
+            name=service.name,
+            description=service.description,
+            status=status_value,
+            uptime=service.uptime,
+            version=service.version,
+            service_type=service_type_value,
+            url=service.url,
+            squad_id=service.squad_id
+        )
+        db.add(db_service)
+        db.commit()
+        db.refresh(db_service)
+        
+        logger.info(f"Successfully created service ID={db_service.id} for squad ID={service.squad_id}")
+        return db_service
+    except Exception as e:
+        db.rollback()
+        log_and_handle_exception(
+            logger,
+            f"Failed to create service: {service.name}",
+            e,
+            reraise=True,
+            service_name=service.name,
+            squad_id=service.squad_id,
+            service_type=service.service_type,
+            status=service.status
+        )
 
 def update_service(db: Session, service_id: int, service_data: schemas.ServiceUpdate) -> Optional[models.Service]:
     # Get existing service

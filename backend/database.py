@@ -8,8 +8,21 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import CreateSchema
 from typing import Optional, Dict, Any
 
-# Import logger after it's created - will be lazy-loaded to avoid circular imports
-logger = None
+# Configure global logger for database
+lazy_loaded_logger = None
+
+def get_db_logger():
+    global lazy_loaded_logger
+    if lazy_loaded_logger is None:
+        try:
+            # Import here to avoid circular imports
+            from logger import get_logger
+            lazy_loaded_logger = get_logger('database', log_level='INFO')
+        except ImportError:
+            # Fallback if logger module is not yet available
+            logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            lazy_loaded_logger = logging.getLogger('database')
+    return lazy_loaded_logger
 
 # Add python-dotenv for environment variable loading
 try:
@@ -34,14 +47,8 @@ except ImportError:
     print("Environment variables must be set manually or .env file won't be loaded.")
     # Continue without dotenv
 
-# Initialize logger after environment is loaded
-try:
-    from logger import get_logger
-    logger = get_logger('database')
-except ImportError:
-    # Fallback if logger module is not yet available
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    logger = logging.getLogger('database')
+# Initialize logger for early logging
+logger = get_db_logger()
 
 # Base declarative for all models
 Base = declarative_base()
@@ -91,53 +98,76 @@ class DatabaseConfig:
     
     def create_engine(self) -> Any:
         """Create SQLAlchemy engine based on configuration"""
-        # Create engine with database-specific options
-        if self.is_postgres:
-            # PostgreSQL-specific configuration
-            logger.info(f"Connecting to PostgreSQL database: {self.connection_string}")
-            try:
-                # Handle the case when psycopg2 might not be installed
-                import psycopg2
+        logger.info(f"Creating database engine for {self.db_type}")
+        
+        try:
+            # Create engine with database-specific options
+            if self.is_postgres:
+                # PostgreSQL-specific configuration
+                logger.info(f"Connecting to PostgreSQL database: {self.connection_string}")
+                try:
+                    # Handle the case when psycopg2 might not be installed
+                    import psycopg2
+                    
+                    # Create the engine
+                    engine = create_engine(
+                        self.connection_string,
+                        connect_args=self.connect_args
+                    )
+                    
+                    # Create schema if specified and set it as the default search path
+                    if self.schema:
+                        try:
+                            # Check if schema exists
+                            inspector = inspect(engine)
+                            if not inspector.has_schema(self.schema):
+                                with engine.begin() as conn:
+                                    conn.execute(CreateSchema(self.schema))
+                                    logger.info(f"Created schema: {self.schema}")
+                            
+                            # Set schema as the default search path
+                            with engine.begin() as conn:
+                                conn.execute(text(f"SET search_path TO {self.schema}"))
+                                logger.info(f"Set search path to schema: {self.schema}")
+                                
+                            # Update the Base metadata with schema info
+                            Base.metadata.schema = self.schema
+                        except Exception as e:
+                            logger.error(f"Error setting up schema: {str(e)}")
+                            logger.info("Will attempt to use default schema")
+                            # Try to continue without schema
+                except ImportError:
+                    logger.error("psycopg2 is not installed, but PostgreSQL connection was requested")
+                    logger.critical("Cannot connect to PostgreSQL database without psycopg2")
+                    raise ImportError("PostgreSQL support requires psycopg2 to be installed. Run 'pip install psycopg2-binary'")
                 
-                # Create the engine
+            else:
+                # SQLite configuration
+                logger.info(f"Connecting to SQLite database: {self.connection_string}")
                 engine = create_engine(
                     self.connection_string,
                     connect_args=self.connect_args
                 )
-                
-                # Create schema if specified and set it as the default search path
-                if self.schema:
-                    try:
-                        # Check if schema exists
-                        inspector = inspect(engine)
-                        if not inspector.has_schema(self.schema):
-                            with engine.begin() as conn:
-                                conn.execute(CreateSchema(self.schema))
-                                logger.info(f"Created schema: {self.schema}")
-                        
-                        # Set schema as the default search path
-                        with engine.begin() as conn:
-                            conn.execute(text(f"SET search_path TO {self.schema}"))
-                            logger.info(f"Set search path to schema: {self.schema}")
-                            
-                        # Update the Base metadata with schema info
-                        Base.metadata.schema = self.schema
-                    except Exception as e:
-                        logger.error(f"Error setting up schema: {str(e)}")
-                        logger.info("Will attempt to use default schema")
-                        
-            except ImportError:
-                logger.error("psycopg2 is not installed, but PostgreSQL connection was requested")
-                raise ImportError("PostgreSQL support requires psycopg2 to be installed. Run 'pip install psycopg2-binary'")
             
-        else:
-            # SQLite configuration
-            engine = create_engine(
-                self.connection_string,
-                connect_args=self.connect_args
-            )
-        
-        return engine
+            # Test connection
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+                logger.info("Database connection test successful")
+                
+            return engine
+        except Exception as e:
+            logger.critical(f"Failed to create database engine: {str(e)}")
+            # Try to provide helpful troubleshooting information
+            if self.is_postgres:
+                # For PostgreSQL, suggest common issues
+                logger.error("PostgreSQL connection failed. Check username, password, host, port, and database name.")
+                logger.error("Make sure PostgreSQL server is running and accessible from this host.")
+            else:
+                # For SQLite, suggest common issues
+                logger.error("SQLite connection failed. Check if the database file path is writable.")
+                logger.error("Make sure the directory exists and the application has write permissions.")
+            
+            raise
 
 # Get database configuration from environment or use defaults
 def get_db_config() -> DatabaseConfig:
@@ -183,7 +213,13 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Dependency to get DB session
 def get_db():
     db = SessionLocal()
+    logger.debug("Created new database session")
     try:
         yield db
+    except Exception as e:
+        logger.error(f"Error in database session: {str(e)}")
+        db.rollback()
+        raise
     finally:
+        logger.debug("Closing database session")
         db.close()

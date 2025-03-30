@@ -8,7 +8,7 @@ import re
 import models
 import schemas
 from auth import get_password_hash
-from logger import get_logger
+from logger import get_logger, log_and_handle_exception
 
 # Initialize logger
 logger = get_logger('user_auth', log_level='INFO')
@@ -139,83 +139,176 @@ def register_user(db: Session, user_data: schemas.UserRegister) -> models.User:
     """Register a new user (not verified yet)"""
     logger.info(f"Attempting to register new user with email: {user_data.email}")
 
-    # Check if email is allowed
-    if not is_email_allowed(user_data.email, db):
-        email_domain = user_data.email.split("@")[-1].lower()
-        logger.warning(f"Registration rejected: Email domain {email_domain} not in allowed domains list")
-        raise HTTPException(status_code=403, detail="Email domain not allowed for registration")
+    try:
+        # Check if email is allowed
+        if not is_email_allowed(user_data.email, db):
+            email_domain = user_data.email.split("@")[-1].lower()
+            logger.warning(f"Registration rejected: Email domain {email_domain} not in allowed domains list")
+            raise HTTPException(status_code=403, detail="Email domain not allowed for registration")
 
-    # Check if email already exists
-    existing_user = get_user_by_email(db, user_data.email)
-    if existing_user:
-        logger.warning(f"Registration rejected: Email {user_data.email} already registered")
-        raise HTTPException(status_code=400, detail="Email already registered")
+        # Check if email already exists
+        existing_user = get_user_by_email(db, user_data.email)
+        if existing_user:
+            logger.warning(f"Registration rejected: Email {user_data.email} already registered")
+            raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Create the user with inactive status and use email as username
-    hashed_password = get_password_hash(user_data.password)
-    db_user = models.User(
-        email=user_data.email,
-        username=user_data.email,  # Set username equal to email
-        first_name=user_data.first_name,
-        last_name=user_data.last_name,
-        hashed_password=hashed_password,
-        is_active=False,
-        role="guest"  # Use string value, ensuring lowercase
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+        # Create the user with inactive status and use email as username
+        hashed_password = get_password_hash(user_data.password)
+        db_user = models.User(
+            email=user_data.email,
+            username=user_data.email,  # Set username equal to email
+            first_name=user_data.first_name,
+            last_name=user_data.last_name,
+            hashed_password=hashed_password,
+            is_active=False,
+            role="guest"  # Use string value, ensuring lowercase
+        )
+        
+        try:
+            db.add(db_user)
+            db.commit()
+            db.refresh(db_user)
+            logger.info(f"Created new user: {user_data.email} (ID: {db_user.id}) - awaiting verification")
+        except Exception as e:
+            db.rollback()
+            log_and_handle_exception(
+                logger,
+                f"Database error creating user: {user_data.email}",
+                e,
+                reraise=True,
+                email=user_data.email
+            )
 
-    logger.info(f"Created new user: {user_data.email} (ID: {db_user.id}) - awaiting verification")
+        # Check if the user is also a team member and upgrade role if so
+        try:
+            team_member = get_team_member_by_email(db, user_data.email)
+            if team_member:
+                db_user.role = "team_member"  # Use string value, ensuring lowercase
+                db.commit()
+                db.refresh(db_user)
+                logger.info(f"Upgraded user {user_data.email} (ID: {db_user.id}) to team_member role due to existing team member record")
+        except Exception as e:
+            # Log but don't fail the registration if this fails
+            log_and_handle_exception(
+                logger,
+                f"Error checking for team member record for {user_data.email}",
+                e,
+                reraise=False,
+                user_id=db_user.id,
+                email=user_data.email
+            )
 
-    # Check if the user is also a team member and upgrade role if so
-    team_member = get_team_member_by_email(db, user_data.email)
-    if team_member:
-        db_user.role = "team_member"  # Use string value, ensuring lowercase
-        db.commit()
-        db.refresh(db_user)
-        logger.info(f"Upgraded user {user_data.email} (ID: {db_user.id}) to team_member role due to existing team member record")
+        # Create a verification token
+        try:
+            token = create_verification_token(db, user_data.email, db_user.id)
+            logger.info(f"Created verification token for user {user_data.email} (ID: {db_user.id})")
+        except Exception as e:
+            log_and_handle_exception(
+                logger,
+                f"Error creating verification token for {user_data.email}",
+                e,
+                reraise=True,
+                user_id=db_user.id,
+                email=user_data.email
+            )
 
-    # Create a verification token
-    create_verification_token(db, user_data.email, db_user.id)
+        # Log the user creation
+        try:
+            log_user_action(db, db_user.id, "CREATE", "User", db_user.id, f"User registered: {user_data.email}")
+        except Exception as e:
+            # Just log this error, don't fail registration
+            logger.error(f"Error logging user action for new registration {user_data.email}: {str(e)}")
 
-    # Send verification email
-    # This would be an async call in production
-    # await send_verification_email(user_data.email, token)
-
-    # Log the user creation
-    log_user_action(db, db_user.id, "CREATE", "User", db_user.id, f"User registered: {user_data.email}")
-
-    return db_user
+        return db_user
+    except HTTPException:
+        # Re-raise HTTP exceptions directly
+        raise
+    except Exception as e:
+        # Catch and log any other unexpected errors
+        log_and_handle_exception(
+            logger,
+            f"Unexpected error during user registration: {user_data.email}",
+            e,
+            reraise=True,
+            email=user_data.email
+        )
 
 def verify_email(db: Session, verification: schemas.EmailVerification) -> bool:
     """Verify a user's email address"""
-    # Verify the token
-    db_token = verify_token(db, verification.token, "email_verification")
-    if not db_token:
+    logger.info(f"Email verification attempt for token: {verification.token[:5]}***")
+    
+    try:
+        # Verify the token
+        db_token = verify_token(db, verification.token, "email_verification")
+        if not db_token:
+            logger.warning(f"Email verification failed: Invalid or expired token: {verification.token[:5]}***")
+            return False
+
+        # Check if token email matches the provided email
+        if db_token.email != verification.email:
+            logger.warning(f"Email verification failed: Token email mismatch. Token: {verification.token[:5]}***, Email: {verification.email}")
+            return False
+
+        # Get the user
+        db_user = get_user_by_email(db, verification.email)
+        if not db_user:
+            logger.warning(f"Email verification failed: User not found for email: {verification.email}")
+            return False
+
+        # Activate the user
+        try:
+            db_user.is_active = True
+            # Record verification timestamp
+            db_user.verified_at = datetime.utcnow()
+            db.commit()
+            logger.info(f"User activated successfully: {db_user.email} (ID: {db_user.id})")
+        except Exception as e:
+            db.rollback()
+            log_and_handle_exception(
+                logger,
+                f"Database error activating user: {db_user.email} (ID: {db_user.id})",
+                e,
+                reraise=True,
+                user_id=db_user.id,
+                email=db_user.email
+            )
+
+        # Delete the used token
+        try:
+            db.delete(db_token)
+            db.commit()
+            logger.debug(f"Deleted used verification token: {verification.token[:5]}***")
+        except Exception as e:
+            # Don't fail if token deletion fails
+            log_and_handle_exception(
+                logger,
+                f"Error deleting used verification token: {verification.token[:5]}***",
+                e,
+                reraise=False,
+                user_id=db_user.id,
+                email=db_user.email
+            )
+
+        # Log the verification
+        try:
+            log_user_action(db, db_user.id, "UPDATE", "User", db_user.id, "Email verified")
+        except Exception as e:
+            # Don't fail if action logging fails
+            logger.error(f"Error logging email verification for user {db_user.id}: {str(e)}")
+
+        # All steps succeeded
+        logger.info(f"Email verification completed successfully for: {db_user.email} (ID: {db_user.id})")
+        return True
+    except Exception as e:
+        log_and_handle_exception(
+            logger,
+            f"Unexpected error during email verification for token: {verification.token[:5]}***",
+            e,
+            reraise=True,
+            token_prefix=verification.token[:5],
+            email=verification.email
+        )
         return False
-
-    # Check if token email matches the provided email
-    if db_token.email != verification.email:
-        return False
-
-    # Get the user
-    db_user = get_user_by_email(db, verification.email)
-    if not db_user:
-        return False
-
-    # Activate the user
-    db_user.is_active = True
-    db.commit()
-
-    # Delete the used token
-    db.delete(db_token)
-    db.commit()
-
-    # Log the verification
-    log_user_action(db, db_user.id, "UPDATE", "User", db_user.id, "Email verified")
-
-    return True
 
 def request_password_reset(db: Session, request: schemas.PasswordResetRequest) -> bool:
     """Request a password reset"""
@@ -239,28 +332,89 @@ def request_password_reset(db: Session, request: schemas.PasswordResetRequest) -
 
 def reset_password(db: Session, reset: schemas.PasswordReset) -> bool:
     """Reset a user's password"""
-    # Verify the token
-    db_token = verify_token(db, reset.token, "password_reset")
-    if not db_token:
+    logger.info(f"Password reset attempt with token: {reset.token[:5]}***")
+    
+    try:
+        # Verify the token
+        db_token = verify_token(db, reset.token, "password_reset")
+        if not db_token:
+            logger.warning(f"Password reset failed: Invalid or expired token: {reset.token[:5]}***")
+            return False
+
+        # Get the user
+        db_user = db.query(models.User).filter(models.User.id == db_token.user_id).first()
+        if not db_user:
+            logger.warning(f"Password reset failed: User not found for ID: {db_token.user_id}, token: {reset.token[:5]}***")
+            return False
+
+        # Additional security check - verify email matches token's email
+        if db_user.email != db_token.email:
+            logger.warning(f"Password reset failed: Email mismatch between token ({db_token.email}) and user ({db_user.email})")
+            return False
+
+        # Update the password
+        try:
+            old_hash = db_user.hashed_password  # Save for logging purposes
+            db_user.hashed_password = get_password_hash(reset.new_password)
+            db_user.password_changed_at = datetime.utcnow()
+            db.commit()
+            logger.info(f"Password updated successfully for user: {db_user.email} (ID: {db_user.id})")
+        except Exception as e:
+            db.rollback()
+            log_and_handle_exception(
+                logger,
+                f"Database error updating password for user ID: {db_user.id}",
+                e,
+                reraise=True,
+                user_id=db_user.id,
+                email=db_user.email
+            )
+
+        # Delete the used token
+        try:
+            db.delete(db_token)
+            db.commit()
+            logger.debug(f"Deleted used password reset token: {reset.token[:5]}***")
+        except Exception as e:
+            # Don't fail if token deletion fails
+            log_and_handle_exception(
+                logger,
+                f"Error deleting used password reset token: {reset.token[:5]}***",
+                e,
+                reraise=False,
+                user_id=db_user.id,
+                email=db_user.email
+            )
+
+        # Log the reset - include metadata but not the actual passwords/hashes
+        try:
+            # Create a hash of the old password hash for comparison only
+            # This just helps detect if the same password was reused (same hash would produce same masked hash)
+            import hashlib
+            old_masked = hashlib.sha256(old_hash.encode()).hexdigest()[:8] 
+            new_masked = hashlib.sha256(db_user.hashed_password.encode()).hexdigest()[:8]
+            
+            # Only log if they're different - don't reveal if they used the same password
+            password_reused = old_masked == new_masked
+            detail_message = "Password reset completed" + (", similar password detected" if password_reused else "")
+            
+            log_user_action(db, db_user.id, "UPDATE", "User", db_user.id, detail_message)
+        except Exception as e:
+            # Don't fail the reset if logging fails
+            logger.error(f"Error logging password reset for user {db_user.id}: {str(e)}")
+
+        # All steps succeeded
+        logger.info(f"Password reset completed successfully for: {db_user.email} (ID: {db_user.id})")
+        return True
+    except Exception as e:
+        log_and_handle_exception(
+            logger,
+            f"Unexpected error during password reset for token: {reset.token[:5]}***", 
+            e,
+            reraise=True,
+            token_prefix=reset.token[:5]
+        )
         return False
-
-    # Get the user
-    db_user = db.query(models.User).filter(models.User.id == db_token.user_id).first()
-    if not db_user:
-        return False
-
-    # Update the password
-    db_user.hashed_password = get_password_hash(reset.new_password)
-    db.commit()
-
-    # Delete the used token
-    db.delete(db_token)
-    db.commit()
-
-    # Log the reset
-    log_user_action(db, db_user.id, "UPDATE", "User", db_user.id, "Password reset completed")
-
-    return True
 
 def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate) -> Optional[models.User]:
     """Update user information"""
