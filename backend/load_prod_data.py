@@ -151,40 +151,44 @@ def load_data_from_excel(file_path: str, db: Session, append_mode: bool = False,
     else:
         logger.info(f"Loading production data from {file_path}, sheet: {sheet_name}")
     
-    try:
-        # Make sure file exists and is readable
-        if not os.path.exists(file_path):
-            error_msg = f"File does not exist: {file_path}"
-            logger.error(error_msg)
-            raise FileNotFoundError(error_msg)
             
-        # Read the file
-        try:
-            if is_csv:
-                # For CSV files, sheet_name is ignored
-                df = pd.read_csv(file_path)
-                logger.info(f"Successfully read CSV file with {len(df)} rows")
-            else:
-                # For Excel files, use the specified sheet
-                df = pd.read_excel(file_path, sheet_name=sheet_name)
-                logger.info(f"Successfully read Excel file with {len(df)} rows")
-        except Exception as e:
-            log_and_handle_exception(
-                logger,
-                f"Error reading {'CSV' if is_csv else 'Excel'} file: {file_path}",
-                e,
-                reraise=True,
-                file_path=file_path,
-                sheet_name=None if is_csv else sheet_name
-            )
+    # Read the file
+    try:
+        if is_csv:
+            # For CSV files, sheet_name is ignored
+            df = pd.read_csv(file_path)
+            logger.info(f"Successfully read CSV file with {len(df)} rows")
+        else:
+            # For Excel files, use the specified sheet
+            df = pd.read_excel(file_path, sheet_name=sheet_name)
+            logger.info(f"Successfully read Excel file with {len(df)} rows")
+    except Exception as e:
+        log_and_handle_exception(
+            logger,
+            f"Error reading {'CSV' if is_csv else 'Excel'} file: {file_path}",
+            e,
+            reraise=True,
+            file_path=file_path,
+            sheet_name=None if is_csv else sheet_name
+        )
 
-        # Check required columns
+    # Check required columns
+    try:
         required_columns = ['Area', 'Tribe', 'Squad', 'Name', 'Business Email Address']
         missing_columns = [col for col in required_columns if col not in df.columns]
         if missing_columns:
             error_msg = f"Required columns missing: {', '.join(missing_columns)}"
             logger.error(error_msg)
             raise ValueError(error_msg)
+    except Exception as e:
+        log_and_handle_exception(
+            logger,
+            f"Error reading column in {'CSV' if is_csv else 'Excel'} file: {file_path}",
+            e,
+            reraise=True,
+            file_path=file_path,
+            sheet_name=None if is_csv else sheet_name
+        )
 
     # Extract unique areas, tribes, and squads
     logger.debug("Extracting unique organizational units")
