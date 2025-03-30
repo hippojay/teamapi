@@ -80,6 +80,11 @@ reports/
 /coverage
 .nyc_output
 
+# Cucumber reports
+*/cucumber-report.*
+*/reports/cucumber-*
+ui-tests/reports/
+
 # React/JS build outputs
 /build
 /dist
