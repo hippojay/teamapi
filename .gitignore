@@ -67,6 +67,7 @@ credentials/*
 *.xlsb
 *.xlsm
 *.xls
+datafiles/*
 
 # Log files
 logs/*.log
