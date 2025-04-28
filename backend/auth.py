@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Optional
+import os
+import sys
+from dotenv import load_dotenv
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
@@ -10,10 +13,18 @@ import models
 import schemas
 from database import get_db
 
+# Load environment variables
+load_dotenv()
+
 # Configuration for JWT
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"  # Replace with a secure secret key in production
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 120
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    sys.stderr.write("ERROR: JWT_SECRET_KEY environment variable is not set. This is required for security.\n")
+    sys.stderr.write("Please set a strong, unique secret key in your .env file.\n")
+    sys.exit(1)
+
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "120"))
 
 # Password hashing
 # Use a try-except block to handle bcrypt version compatibility issues
