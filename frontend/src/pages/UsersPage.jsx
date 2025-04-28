@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Search, Filter } from 'lucide-react';
+import { User, Search, Filter, AlertCircle } from 'lucide-react';
 import api from '../api';
 import { useTheme } from '../context/ThemeContext';
 
@@ -14,6 +14,7 @@ const UsersPage = () => {
   const [filterBySquad, setFilterBySquad] = useState('');
   const [filterByType, setFilterByType] = useState('');
   const [filterByFunction, setFilterByFunction] = useState('');
+  const [showOverCapacityOnly, setShowOverCapacityOnly] = useState(false);
   const [squads, setSquads] = useState([]);
   const [uniqueFunctions, setUniqueFunctions] = useState([]);
 
@@ -51,7 +52,7 @@ const UsersPage = () => {
     fetchData();
   }, []);
   
-  // Filter users based on search term, squad filter, function filter, and employment type filter
+  // Filter users based on search term, squad filter, function filter, employment type filter, and capacity filter
   useEffect(() => {
     let result = users;
     
@@ -77,11 +78,15 @@ const UsersPage = () => {
       result = result.filter(user => user.function === filterByFunction);
     }
     
+    if (showOverCapacityOnly) {
+      result = result.filter(user => user.capacity > 1.0);
+    }
+    
     // Sort users alphabetically by name
     result = result.sort((a, b) => a.name.localeCompare(b.name));
     
     setFilteredUsers(result);
-  }, [searchTerm, filterBySquad, filterByType, filterByFunction, users]);
+  }, [searchTerm, filterBySquad, filterByType, filterByFunction, showOverCapacityOnly, users]);
   
   // Function to generate initials from name
   const getInitials = (name) => {
@@ -189,6 +194,23 @@ const UsersPage = () => {
               <option value="core">Core Employees</option>
               <option value="subcon">Contractors</option>
             </select>
+          </div>
+        </div>
+        
+        {/* Over Capacity Filter */}
+        <div className="mt-4 flex items-center">
+          <div className="flex items-center">
+            <input
+              id="over-capacity-filter"
+              type="checkbox"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              checked={showOverCapacityOnly}
+              onChange={(e) => setShowOverCapacityOnly(e.target.checked)}
+            />
+            <label htmlFor="over-capacity-filter" className={`ml-2 flex items-center ${darkMode ? 'text-dark-primary' : 'text-gray-700'}`}>
+              <AlertCircle className="h-4 w-4 mr-1 text-red-500" />
+              Show only over capacity team members (&gt;100%)
+            </label>
           </div>
         </div>
       </div>
